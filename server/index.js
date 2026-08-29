@@ -16,6 +16,11 @@ const AIRTABLE_FARMERS_TABLE_ID =
 const AIRTABLE_LANDS_TABLE_ID =
   process.env.AIRTABLE_LANDS_TABLE_ID || 'tblBm9ogzVK08cje4';
 const AIRTABLE_CROPS_TABLE_ID = process.env.AIRTABLE_CROPS_TABLE_ID || 'Crops';
+const AIRTABLE_ORDERS_TABLE_ID =
+  process.env.AIRTABLE_ORDERS_TABLE_ID || 'tblq9p8G9oreglq2l';
+const AIRTABLE_PRODUCTS_TABLE_ID =
+  process.env.AIRTABLE_PRODUCTS_TABLE_ID || 'tblupJLRoF4OZsi8Q';
+const AIRTABLE_SEASONS_TABLE_ID = process.env.AIRTABLE_SEASONS_TABLE_ID || 'Seasons';
 
 // ----------------------------------------------------------------------
 
@@ -253,6 +258,43 @@ function toLandsFields(input) {
   return fields;
 }
 
+function buildOrdersFilter(fpoId, fpoName) {
+  const escapedId = (fpoId || '').replace(/'/g, "''");
+  const escapedName = (fpoName || '').replace(/'/g, "''");
+  const conditions = [];
+
+  if (escapedId) {
+    conditions.push(`FIND('${escapedId}', ARRAYJOIN({FPO}, ',')) > 0`);
+  }
+
+  if (escapedName) {
+    conditions.push(`SEARCH('${escapedName}', ARRAYJOIN({Name (from FPO)}, ',')) > 0`);
+  }
+
+  if (!conditions.length) return '1';
+  if (conditions.length === 1) return conditions[0];
+  return `OR(${conditions.join(', ')})`;
+}
+
+function toOrderFields(input) {
+  const fields = { ...input };
+
+  ['FPO', 'Farmer', 'Season', 'Loans', '(From CS)']
+    .concat(['Input 1', 'Input 2', 'Input 3', 'Input 4', 'Input 5'])
+    .forEach((key) => {
+      if (fields[key] && typeof fields[key] === 'string') {
+        fields[key] = [fields[key]];
+      }
+    });
+
+  // Defaults for new orders.
+  if (!fields['Order Status']) {
+    fields['Order Status'] = 'Open';
+  }
+
+  return fields;
+}
+
 // ----------------------------------------------------------------------
 
 app.get('/api/v1/farmers', requireAuth, async (req, res) => {
@@ -479,6 +521,149 @@ app.delete('/api/v1/lands/:id', requireAuth, async (req, res) => {
     return res.status(status).json({
       error: 'AIRTABLE_ERROR',
       message: error?.response?.data?.error?.message || 'Unable to delete land.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/seasons', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.post(`/${AIRTABLE_SEASONS_TABLE_ID}/listRecords`, {
+      maxRecords: 100,
+    });
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/seasons error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch seasons.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/input-products', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.post(`/${AIRTABLE_PRODUCTS_TABLE_ID}/listRecords`, {
+      maxRecords: 1000,
+    });
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/input-products error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch products.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/input-orders', requireAuth, async (req, res) => {
+  try {
+    const { fpoId, fpoName } = req.query;
+
+    if (!fpoId && !fpoName) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId or fpoName is required.' });
+    }
+
+    const filter = buildOrdersFilter(fpoId, fpoName);
+    const { data } = await airtableApi.post(`/${AIRTABLE_ORDERS_TABLE_ID}/listRecords`, {
+      filterByFormula: filter,
+      maxRecords: 100,
+    });
+
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/input-orders error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch orders.',
+    });
+  }
+});
+
+app.get('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.get(`/${AIRTABLE_ORDERS_TABLE_ID}/${req.params.id}`);
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/input-orders/:id error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch order.',
+    });
+  }
+});
+
+app.post('/api/v1/input-orders', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ fields: toOrderFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_ORDERS_TABLE_ID}`, payload);
+    return res.status(201).json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/input-orders POST error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to create order.',
+    });
+  }
+});
+
+app.patch('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ id: req.params.id, fields: toOrderFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.patch(`/${AIRTABLE_ORDERS_TABLE_ID}`, payload);
+    return res.json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/input-orders PATCH error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to update order.',
+    });
+  }
+});
+
+app.delete('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.delete(
+      `/${AIRTABLE_ORDERS_TABLE_ID}?records[]=${req.params.id}`
+    );
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/input-orders DELETE error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to delete order.',
     });
   }
 });

@@ -1,6 +1,6 @@
 import { CONFIG } from 'src/global-config';
 
-import { FpoRelatedView } from 'src/sections/fpo/view';
+import { InputOrderView } from 'src/sections/input-order/view';
 
 // ----------------------------------------------------------------------
 
@@ -11,7 +11,7 @@ export default function InputOrdersPage() {
     <>
       <title>{metadata.title}</title>
 
-      <FpoRelatedView title="Input Orders" />
+      <InputOrderView />
     </>
   );
 }
