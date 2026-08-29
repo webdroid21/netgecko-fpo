@@ -17,6 +17,9 @@ import { usePathname } from '../hooks';
 // Overview
 const IndexPage = lazy(() => import('src/pages/dashboard'));
 const FarmersPage = lazy(() => import('src/pages/dashboard/farmers'));
+const LandsPage = lazy(() => import('src/pages/dashboard/lands'));
+const InputOrdersPage = lazy(() => import('src/pages/dashboard/input-orders'));
+const LoansPage = lazy(() => import('src/pages/dashboard/loans'));
 // ----------------------------------------------------------------------
 
 function SuspenseOutlet() {
@@ -41,6 +44,9 @@ export const dashboardRoutes: RouteObject[] = [
     children: [
       { index: true, element: <IndexPage /> },
       { path: 'farmers', element: <FarmersPage /> },
+      { path: 'lands', element: <LandsPage /> },
+      { path: 'input-orders', element: <InputOrdersPage /> },
+      { path: 'loans', element: <LoansPage /> },
       {
         path: 'subpaths',
         children: [

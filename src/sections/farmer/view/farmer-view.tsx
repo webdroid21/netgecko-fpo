@@ -7,13 +7,17 @@ import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
+import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
+
+import { RouterLink } from 'src/routes/components/router-link';
 
 import { fNumber } from 'src/utils/format-number';
 
@@ -68,8 +72,16 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
-function DetailRow({ label, value }: { label: string; value?: any }) {
-  return (
+function DetailRow({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value?: any;
+  href?: string;
+}) {
+  const content = (
     <Box>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
@@ -77,6 +89,27 @@ function DetailRow({ label, value }: { label: string; value?: any }) {
       <Typography variant="body1">{value ?? '—'}</Typography>
     </Box>
   );
+
+  if (href) {
+    return (
+      <MuiLink
+        component={RouterLink}
+        href={href}
+        underline="none"
+        color="text.primary"
+        sx={{
+          p: 1,
+          display: 'block',
+          borderRadius: 1,
+          '&:hover': { bgcolor: 'action.hover' },
+        }}
+      >
+        {content}
+      </MuiLink>
+    );
+  }
+
+  return <Box sx={{ p: 1 }}>{content}</Box>;
 }
 
 // ----------------------------------------------------------------------
@@ -90,6 +123,7 @@ export function FarmerView() {
   const [search, setSearch] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editingFarmer, setEditingFarmer] = useState<Farmer | null>(null);
+  const [fullFarmer, setFullFarmer] = useState<Farmer | null>(null);
 
   const fetchFarmers = useCallback(async () => {
     if (!activeFbo) return;
@@ -128,6 +162,22 @@ export function FarmerView() {
     () => farmers.find((f) => f.id === selectedId) || filteredFarmers[0] || null,
     [farmers, filteredFarmers, selectedId]
   );
+
+  useEffect(() => {
+    const first = filteredFarmers[0];
+    if (!selectedId && first) {
+      setSelectedId(first.id);
+    }
+  }, [filteredFarmers, selectedId]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    setFullFarmer(null);
+    axios
+      .get(`/api/v1/farmers/${selectedId}`)
+      .then(({ data }) => setFullFarmer(data.record))
+      .catch((error: any) => console.error('Fetch farmer error:', error?.message));
+  }, [selectedId]);
 
   const stats = useMemo(() => {
     const total = farmers.length;
@@ -266,10 +316,18 @@ export function FarmerView() {
       );
     }
 
-    const f = selectedFarmer.fields;
+    const detailFarmer =
+      fullFarmer && fullFarmer.id === selectedFarmer?.id ? fullFarmer : selectedFarmer;
+
+    if (!detailFarmer) return null;
+
+    const f = detailFarmer.fields;
     const cropValue = Array.isArray(f['Main crop sold to Cooperative'])
       ? f['Main crop sold to Cooperative'][0]
       : f['Main crop sold to Cooperative'];
+
+    const makeLink = (module: string) =>
+      `/dashboard/${module}?farmerId=${detailFarmer.id}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`;
 
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
@@ -289,10 +347,10 @@ export function FarmerView() {
             </Box>
 
             <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" onClick={() => handleEdit(selectedFarmer)}>
+              <Button variant="outlined" size="small" onClick={() => handleEdit(detailFarmer)}>
                 Edit
               </Button>
-              <IconButton color="error" onClick={() => handleDelete(selectedFarmer)}>
+              <IconButton color="error" onClick={() => handleDelete(detailFarmer)}>
                 <Iconify icon={'solar:trash-bin-trash-bold' as any} />
               </IconButton>
             </Stack>
@@ -301,7 +359,7 @@ export function FarmerView() {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Given Name"
                 label="Given Name"
                 value={f['Given Name']}
@@ -310,7 +368,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Surname"
                 label="Surname"
                 value={f.Surname}
@@ -319,7 +377,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Gender"
                 label="Gender"
                 value={f.Gender}
@@ -330,7 +388,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Birth date"
                 label="Birth date"
                 value={f['Birth date']}
@@ -343,16 +401,21 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Farmer Code"
                 label="Farmer Code"
                 value={f['Farmer Code']}
                 onSaved={fetchFarmers}
               />
             </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Phone Number"
                 label="Phone Number"
                 value={f['Phone Number']}
@@ -361,7 +424,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Mobile Money Number"
                 label="Mobile Money Number"
                 value={f['Mobile Money Number']}
@@ -370,16 +433,21 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Email"
                 label="Email"
                 value={f.Email}
                 onSaved={fetchFarmers}
               />
             </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Village"
                 label="Village"
                 value={f.Village}
@@ -388,7 +456,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Parish"
                 label="Parish"
                 value={f.Parish}
@@ -397,7 +465,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Sub-county"
                 label="Sub-county"
                 value={f['Sub-county']}
@@ -406,7 +474,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="District (form)"
                 label="District"
                 value={f['District (form)']}
@@ -418,7 +486,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Member since (date)"
                 label="Member since"
                 value={f['Member since (date)']}
@@ -429,9 +497,14 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label="Member since (year)" value={f['Member since (year)']} />
             </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Main crop sold to Cooperative"
                 label="Main crop sold to Cooperative"
                 value={cropValue}
@@ -440,7 +513,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Volume sold last season A to Cooperative (kg)"
                 label="Volume sold last season A (kg)"
                 value={f['Volume sold last season A to Cooperative (kg)']}
@@ -450,7 +523,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="Volume sold last season B to Cooperative (kg) copy"
                 label="Volume sold last season B (kg)"
                 value={f['Volume sold last season B to Cooperative (kg) copy']}
@@ -460,7 +533,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="# seasonal/temporary workers hired & paid by farmer"
                 label="# seasonal/temporary workers"
                 value={f['# seasonal/temporary workers hired & paid by farmer']}
@@ -470,7 +543,7 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={selectedFarmer.id}
+                farmerId={detailFarmer.id}
                 name="# permanent workers hired & paid by farmer"
                 label="# permanent workers"
                 value={f['# permanent workers hired & paid by farmer']}
@@ -478,14 +551,40 @@ export function FarmerView() {
                 onSaved={fetchFarmers}
               />
             </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="# Lands" value={f['# Lands']} />
+              <DetailRow href={makeLink('lands')} label="# Lands" value={f['# Lands']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="# Input Orders" value={f['# Input Orders']} />
+              <DetailRow
+                href={makeLink('lands')}
+                label="Lands"
+                value={f['Lands']?.join(', ')}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="# Loans" value={f['# Loans']} />
+              <DetailRow href={makeLink('input-orders')} label="# Input Orders" value={f['# Input Orders']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                href={makeLink('input-orders')}
+                label="Input Orders"
+                value={f['Input Orders']?.join(', ')}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow href={makeLink('loans')} label="# Loans" value={f['# Loans']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                href={makeLink('loans')}
+                label="Loans"
+                value={f['Loans']?.join(', ')}
+              />
             </Grid>
           </Grid>
         </CardContent>
