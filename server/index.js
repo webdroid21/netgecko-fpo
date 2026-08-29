@@ -13,6 +13,9 @@ const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 const AIRTABLE_USERS_TABLE_ID = process.env.AIRTABLE_USERS_TABLE_ID;
 const AIRTABLE_FARMERS_TABLE_ID =
   process.env.AIRTABLE_FARMERS_TABLE_ID || 'tblQkW4jmj1BDsByN';
+const AIRTABLE_LANDS_TABLE_ID =
+  process.env.AIRTABLE_LANDS_TABLE_ID || 'tblBm9ogzVK08cje4';
+const AIRTABLE_CROPS_TABLE_ID = process.env.AIRTABLE_CROPS_TABLE_ID || 'Crops';
 
 // ----------------------------------------------------------------------
 
@@ -216,6 +219,27 @@ function toAirtableFields(input, fpoId) {
   return fields;
 }
 
+function buildLandsFilter(fpoId) {
+  const escaped = fpoId.replace(/'/g, "''");
+  return `FIND('${escaped}', ARRAYJOIN({FPO from farmers}, ',')) > 0`;
+}
+
+function toLandsFields(input) {
+  const fields = { ...input };
+
+  [
+    'Farmer',
+    'Main Crop (1)',
+    'Other crop (2)',
+  ].forEach((key) => {
+    if (fields[key] && typeof fields[key] === 'string') {
+      fields[key] = [fields[key]];
+    }
+  });
+
+  return fields;
+}
+
 // ----------------------------------------------------------------------
 
 app.get('/api/v1/farmers', requireAuth, async (req, res) => {
@@ -316,6 +340,129 @@ app.delete('/api/v1/farmers/:id', requireAuth, async (req, res) => {
     return res.status(status).json({
       error: 'AIRTABLE_ERROR',
       message: error?.response?.data?.error?.message || 'Unable to delete farmer.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/crops', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.post(`/${AIRTABLE_CROPS_TABLE_ID}/listRecords`, {
+      maxRecords: 1000,
+    });
+
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/crops error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch crops.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/lands', requireAuth, async (req, res) => {
+  try {
+    const { fpoId } = req.query;
+
+    if (!fpoId) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId is required.' });
+    }
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_LANDS_TABLE_ID}/listRecords`, {
+      filterByFormula: buildLandsFilter(fpoId),
+      maxRecords: 100,
+    });
+
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/lands error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch lands.',
+    });
+  }
+});
+
+app.get('/api/v1/lands/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.get(`/${AIRTABLE_LANDS_TABLE_ID}/${req.params.id}`);
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/lands/:id error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch land.',
+    });
+  }
+});
+
+app.post('/api/v1/lands', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ fields: toLandsFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_LANDS_TABLE_ID}`, payload);
+    return res.status(201).json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/lands POST error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to create land.',
+    });
+  }
+});
+
+app.patch('/api/v1/lands/:id', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ id: req.params.id, fields: toLandsFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.patch(`/${AIRTABLE_LANDS_TABLE_ID}`, payload);
+    return res.json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/lands PATCH error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to update land.',
+    });
+  }
+});
+
+app.delete('/api/v1/lands/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.delete(`/${AIRTABLE_LANDS_TABLE_ID}?records[]=${req.params.id}`);
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/lands DELETE error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to delete land.',
     });
   }
 });

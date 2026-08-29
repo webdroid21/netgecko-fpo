@@ -55,7 +55,7 @@ type FarmerFormDialogProps = {
   farmer?: Farmer | null;
   fpoId?: string;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved?: (farmer?: Farmer) => void;
 };
 
 function getDefaultValues(farmer?: Farmer | null): FormValues {
@@ -118,12 +118,13 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
     }
 
     try {
+      let response;
       if (isEdit && farmer) {
-        await axios.patch(`/api/v1/farmers/${farmer.id}`, { fields: payload });
+        response = await axios.patch(`/api/v1/farmers/${farmer.id}`, { fields: payload });
       } else {
-        await axios.post('/api/v1/farmers', { fpoId, fields: payload });
+        response = await axios.post('/api/v1/farmers', { fpoId, fields: payload });
       }
-      onSaved();
+      onSaved?.(response?.data?.record);
       onClose();
     } catch (error: any) {
       console.error('Farmer save error:', error?.message);

@@ -1,17 +1,17 @@
 import { CONFIG } from 'src/global-config';
 
-import { FpoRelatedView } from 'src/sections/fpo/view';
+import { LandView } from 'src/sections/land/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Lands - ${CONFIG.appName}` };
+const metadata = { title: `Land Management - ${CONFIG.appName}` };
 
 export default function LandsPage() {
   return (
     <>
       <title>{metadata.title}</title>
 
-      <FpoRelatedView title="Lands" />
+      <LandView />
     </>
   );
 }
