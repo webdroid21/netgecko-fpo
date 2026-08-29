@@ -1,0 +1,71 @@
+{
+  "page": {
+    "title": "Gestion des terres",
+    "subtitle": "{{count}} parcelles · {{acres}} acres au total",
+    "addParcel": "Ajouter une parcelle"
+  },
+  "summary": {
+    "totalParcels": {
+      "title": "Nombre total de parcelles",
+      "subtext": "Parcelles de terre enregistrées"
+    },
+    "totalAcres": {
+      "title": "Nombre total d’acres",
+      "subtext": "Superficie totale des terres"
+    },
+    "seasonAHarvest": {
+      "title": "Récolte saison A",
+      "subtext": "KG (culture principale)"
+    },
+    "seasonBHarvest": {
+      "title": "Récolte saison B",
+      "subtext": "KG (culture principale)"
+    }
+  },
+  "searchPlaceholder": "Rechercher des parcelles ou des cultures...",
+  "emptyDetail": "Sélectionnez une parcelle pour voir les détails",
+  "unnamedLand": "Parcelle sans nom",
+  "confirmDeleteLand": "Supprimer {{name}} ?",
+  "actions": {
+    "edit": "Modifier"
+  },
+  "fields": {
+    "farmer": "Agriculteur",
+    "landOwnership": "Type de propriété de la terre",
+    "landSize": "Superficie de la terre (acres)",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "mainCrop": "Culture principale",
+    "numPlantsCrop1": "Nombre de plants (culture 1)",
+    "crop1HarvestSeasonA": "Récolte estimée culture 1 (KG) saison A",
+    "crop1HarvestSeasonB": "Récolte estimée culture 1 (KG) saison B",
+    "otherCrop": "Autre culture",
+    "numPlantsCrop2": "Nombre de plants (culture 2)",
+    "crop2HarvestSeasonA": "Récolte estimée culture 2 (KG) saison A",
+    "crop2HarvestSeasonB": "Récolte estimée culture 2 (KG) saison B",
+    "estimatedHarvestSeasonA": "Récolte totale estimée saison A",
+    "estimatedHarvestSeasonB": "Récolte totale estimée saison B"
+  },
+  "form": {
+    "title": {
+      "new": "Enregistrer une nouvelle parcelle",
+      "edit": "Modifier la parcelle"
+    },
+    "addNew": "Ajouter un nouveau",
+    "farmer": "Agriculteur",
+    "landSize": "Superficie de la terre (acres)",
+    "landOwnership": "Type de propriété de la terre",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "mainCrop": "Culture principale (1)",
+    "numPlantsCrop1": "Nombre de plants (culture 1)",
+    "crop1HarvestSeasonA": "Récolte estimée culture 1 (KG) saison A",
+    "crop1HarvestSeasonB": "Récolte estimée culture 1 (KG) saison B",
+    "otherCrop": "Autre culture (2)",
+    "numPlantsCrop2": "Nombre de plants (culture 2)",
+    "crop2HarvestSeasonA": "Récolte estimée culture 2 (KG) saison A",
+    "crop2HarvestSeasonB": "Récolte estimée culture 2 (KG) saison B",
+    "noneOption": "Aucune",
+    "selectPlaceholder": "Sélectionner..."
+  }
+}

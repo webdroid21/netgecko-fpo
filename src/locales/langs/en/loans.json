@@ -1,0 +1,64 @@
+{
+  "page": {
+    "title": "Loans",
+    "subtitle": "Manage input loans and cash advances",
+    "newLoan": "New loan"
+  },
+  "summary": {
+    "totalAmount": {
+      "title": "Total loan amount",
+      "subtext": "UGX"
+    },
+    "totalPending": {
+      "title": "Total pending",
+      "subtext": "UGX"
+    },
+    "statusCards": {
+      "Open": "Open",
+      "Active": "Active",
+      "Closed": "Closed",
+      "Cancelled": "Cancelled"
+    }
+  },
+  "searchPlaceholder": "Search loans...",
+  "emptyDetail": "Select a loan to view details",
+  "unnamedLoan": "Unnamed loan",
+  "confirmDeleteLoan": "Delete {{reference}}?",
+  "actions": {
+    "edit": "Edit"
+  },
+  "fields": {
+    "loanStatus": "Loan status",
+    "farmer": "Farmer",
+    "loanType": "Loan type",
+    "issueDate": "Issue date",
+    "totalAmount": "Total amount",
+    "principal": "Principal",
+    "interest": "Interest",
+    "downpayment": "Downpayment",
+    "principalPlusInterest": "Principal + interest",
+    "repaymentDueDate": "Repayment due date",
+    "totalAmountPending": "Total amount pending",
+    "repaymentStatus": "Repayment status",
+    "sumPaymentReceived": "Sum payment received",
+    "inputOrder": "Input order",
+    "paymentsReceived": "Payments received"
+  },
+  "form": {
+    "title": {
+      "new": "Enter a new loan",
+      "edit": "Edit loan"
+    },
+    "addNew": "Add new",
+    "farmer": "Farmer",
+    "loanType": "Loan type",
+    "loanStatus": "Loan status",
+    "issueDate": "Issue date",
+    "downpaymentDueDate": "Downpayment due date",
+    "repaymentDueDate": "Repayment due date",
+    "ordersInput": "Orders (input)",
+    "seasonCashAdvance": "Season cash advance",
+    "amountCashAdvanceOnly": "Amount (cash advance only)",
+    "selectPlaceholder": "Select..."
+  }
+}

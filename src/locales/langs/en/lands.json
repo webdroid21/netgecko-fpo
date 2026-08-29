@@ -1,0 +1,71 @@
+{
+  "page": {
+    "title": "Land management",
+    "subtitle": "{{count}} parcels · {{acres}} total acres",
+    "addParcel": "Add parcel"
+  },
+  "summary": {
+    "totalParcels": {
+      "title": "Total parcels",
+      "subtext": "Land parcels registered"
+    },
+    "totalAcres": {
+      "title": "Total acres",
+      "subtext": "Combined land size"
+    },
+    "seasonAHarvest": {
+      "title": "Season A harvest",
+      "subtext": "KG (main crop)"
+    },
+    "seasonBHarvest": {
+      "title": "Season B harvest",
+      "subtext": "KG (main crop)"
+    }
+  },
+  "searchPlaceholder": "Search parcels or crops...",
+  "emptyDetail": "Select a parcel to view details",
+  "unnamedLand": "Unnamed land",
+  "confirmDeleteLand": "Delete {{name}}?",
+  "actions": {
+    "edit": "Edit"
+  },
+  "fields": {
+    "farmer": "Farmer",
+    "landOwnership": "Land ownership",
+    "landSize": "Land size (acres)",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "mainCrop": "Main crop",
+    "numPlantsCrop1": "Number of plants (crop 1)",
+    "crop1HarvestSeasonA": "Crop 1 estimated harvest (KG) Season A",
+    "crop1HarvestSeasonB": "Crop 1 estimated harvest (KG) Season B",
+    "otherCrop": "Other crop",
+    "numPlantsCrop2": "Number of plants (crop 2)",
+    "crop2HarvestSeasonA": "Crop 2 estimated harvest (KG) Season A",
+    "crop2HarvestSeasonB": "Crop 2 estimated harvest (KG) Season B",
+    "estimatedHarvestSeasonA": "Estimated harvest Season A",
+    "estimatedHarvestSeasonB": "Estimated harvest Season B"
+  },
+  "form": {
+    "title": {
+      "new": "Enter a new land",
+      "edit": "Edit land"
+    },
+    "addNew": "Add new",
+    "farmer": "Farmer",
+    "landSize": "Land size (acres)",
+    "landOwnership": "Land ownership",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "mainCrop": "Main crop (1)",
+    "numPlantsCrop1": "Number of plants (crop 1)",
+    "crop1HarvestSeasonA": "Crop 1 estimated harvest (KG) Season A",
+    "crop1HarvestSeasonB": "Crop 1 estimated harvest (KG) Season B",
+    "otherCrop": "Other crop (2)",
+    "numPlantsCrop2": "Number of plants (crop 2)",
+    "crop2HarvestSeasonA": "Crop 2 estimated harvest (KG) Season A",
+    "crop2HarvestSeasonB": "Crop 2 estimated harvest (KG) Season B",
+    "noneOption": "None",
+    "selectPlaceholder": "Select..."
+  }
+}

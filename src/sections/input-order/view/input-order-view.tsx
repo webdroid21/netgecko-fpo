@@ -23,6 +23,7 @@ import { useSearchParams } from 'src/routes/hooks/use-search-params';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -123,6 +124,8 @@ function DetailRow({
 
 export function InputOrderView() {
   const { activeFbo } = useAuthContext();
+  const { t } = useTranslate('inputOrders');
+  const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
 
@@ -253,7 +256,8 @@ export function InputOrderView() {
   };
 
   const handleDelete = async (order: InputOrder) => {
-    if (!confirm(`Delete ${order.fields['Order number'] ?? 'this order'}?`)) return;
+    const reference = order.fields['Order number'] ?? t('unnamedOrder');
+    if (!confirm(t('confirmDeleteOrder', { reference }))) return;
     try {
       await axios.delete(`/api/v1/input-orders/${order.id}`);
       fetchOrders();
@@ -279,27 +283,27 @@ export function InputOrderView() {
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <SummaryCard
-            title="Total orders"
+            title={t('summary.totalOrders.title')}
             total={stats.total}
-            subtext={`${fNumber(stats.value)} UGX total value`}
+            subtext={t('summary.totalOrders.subtext', { value: fNumber(stats.value) })}
             color="primary"
             icon="solar:cart-4-bold-duotone"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <SummaryCard
-            title="Total value"
+            title={t('summary.totalValue.title')}
             total={stats.value}
-            subtext="UGX"
+            subtext={t('summary.totalValue.subtext')}
             color="success"
             icon="solar:tag-price-bold-duotone"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <SummaryCard
-            title="Total weight"
+            title={t('summary.totalWeight.title')}
             total={stats.weight}
-            subtext="kg"
+            subtext={t('summary.totalWeight.subtext')}
             color="info"
             icon="solar:scale-bold-duotone"
           />
@@ -316,7 +320,7 @@ export function InputOrderView() {
                 </Box>
                 <Box>
                   <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                    {s.label}
+                    {t(`summary.statusCards.${s.key}`)}
                   </Typography>
                   <Typography variant="h4" sx={{ my: 0.5 }}>
                     {fNumber(statusCounts[s.key])}
@@ -339,7 +343,7 @@ export function InputOrderView() {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search orders..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -350,7 +354,7 @@ export function InputOrderView() {
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {loading ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>Loading…</Box>
+          <Box sx={{ p: 3, textAlign: 'center' }}>{tCommon('loading')}</Box>
         ) : (
           <List disablePadding>
             {filteredOrders.map((order) => {
@@ -365,7 +369,7 @@ export function InputOrderView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={order.fields['Order number'] || 'Unnamed order'}
+                      primary={order.fields['Order number'] || t('unnamedOrder')}
                       primaryTypographyProps={{ variant: 'subtitle2' }}
                     />
                     {order.fields['Order Status'] && (
@@ -396,7 +400,7 @@ export function InputOrderView() {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Select an order to view details
+            {t('emptyDetail')}
           </Typography>
         </Card>
       );
@@ -429,7 +433,7 @@ export function InputOrderView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{f['Order number'] || 'Unnamed order'}</Typography>
+              <Typography variant="h5">{f['Order number'] || t('unnamedOrder')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {formattedDate}
               </Typography>
@@ -437,7 +441,7 @@ export function InputOrderView() {
 
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" onClick={() => handleEdit(selectedOrder)}>
-                Edit
+                {t('actions.edit')}
               </Button>
               <IconButton color="error" onClick={() => handleDelete(selectedOrder)}>
                 <Iconify icon={'solar:trash-bin-trash-bold' as any} />
@@ -447,32 +451,32 @@ export function InputOrderView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Order Status" value={f['Order Status']} />
+              <DetailRow label={t('fields.orderStatus')} value={f['Order Status']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label="Farmer"
+                label={t('fields.farmer')}
                 value={(f['Name (from Farmers)'] || []).join(', ')}
                 href={farmerHref}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label="Season"
+                label={t('fields.season')}
                 value={(f['Name (from Season)'] || []).join(', ')}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="PayNow PayLater" value={f['PayNow PayLater']} />
+              <DetailRow label={t('fields.payNowPayLater')} value={f['PayNow PayLater']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Order date" value={formattedDate} />
+              <DetailRow label={t('fields.orderDate')} value={formattedDate} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Total Order Value" value={f['Total Order Value (UGX)']} />
+              <DetailRow label={t('fields.totalOrderValue')} value={f['Total Order Value (UGX)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Total Weight" value={f['Total Weight (kg)']} />
+              <DetailRow label={t('fields.totalWeight')} value={f['Total Weight (kg)']} />
             </Grid>
 
             {[1, 2, 3, 4, 5].map((idx) => {
@@ -494,7 +498,7 @@ export function InputOrderView() {
                     }}
                   >
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Input {idx}
+                      {t('fields.input', { index: idx })}
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid size={{ xs: 12, sm: 6 }}>
@@ -523,25 +527,25 @@ export function InputOrderView() {
                           )}
                         </Box>
                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          Image Input {idx}
+                          {t('fields.imageInput', { index: idx })}
                         </Typography>
                       </Grid>
 
                       <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailRow label={`Input ${idx}`} value={productName} />
+                        <DetailRow label={t('fields.input', { index: idx })} value={productName} />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailRow label={`Quantity Input ${idx}`} value={qty} />
+                        <DetailRow label={t('fields.quantityInput', { index: idx })} value={qty} />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <DetailRow
-                          label={`Retail Price Input ${idx}`}
+                          label={t('fields.retailPriceInput', { index: idx })}
                           value={f[`Retail Price Input ${idx}`]}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <DetailRow
-                          label={`Total Value Input ${idx}`}
+                          label={t('fields.totalValueInput', { index: idx })}
                           value={f[`Total Value Input ${idx}`]}
                         />
                       </Grid>
@@ -560,9 +564,9 @@ export function InputOrderView() {
     <DashboardContent maxWidth="xl">
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h4">Input Order Queue</Typography>
+          <Typography variant="h4">{t('page.title')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Manage seed, fertilizer, and tool distribution
+            {t('page.subtitle')}
           </Typography>
         </Box>
         <Button
@@ -570,7 +574,7 @@ export function InputOrderView() {
           startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
           onClick={handleAdd}
         >
-          New Order
+          {t('page.newOrder')}
         </Button>
       </Stack>
 

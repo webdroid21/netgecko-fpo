@@ -1,0 +1,59 @@
+{
+  "page": {
+    "title": "File d’attente des commandes d’intrants",
+    "subtitle": "Gérer la distribution des semences, engrais et outils",
+    "newOrder": "Nouvelle commande"
+  },
+  "summary": {
+    "totalOrders": {
+      "title": "Nombre total de commandes",
+      "subtext": "{{value}} UGX de valeur totale"
+    },
+    "totalValue": {
+      "title": "Valeur totale",
+      "subtext": "UGX"
+    },
+    "totalWeight": {
+      "title": "Poids total",
+      "subtext": "kg"
+    },
+    "statusCards": {
+      "Open": "En attente de livraison",
+      "Active": "Demandée",
+      "Closed": "Livrée",
+      "Cancelled": "Annulée"
+    }
+  },
+  "searchPlaceholder": "Rechercher des commandes...",
+  "emptyDetail": "Sélectionnez une commande pour voir les détails",
+  "unnamedOrder": "Commande sans nom",
+  "confirmDeleteOrder": "Supprimer {{reference}} ?",
+  "actions": {
+    "edit": "Modifier"
+  },
+  "fields": {
+    "orderStatus": "Statut de la commande",
+    "farmer": "Agriculteur",
+    "season": "Saison",
+    "payNowPayLater": "PayNow / PayLater",
+    "orderDate": "Date de commande",
+    "totalOrderValue": "Valeur totale de la commande",
+    "totalWeight": "Poids total (kg)",
+    "imageInput": "Image intrant {{index}}",
+    "input": "Intrant {{index}}",
+    "quantityInput": "Quantité intrant {{index}}",
+    "retailPriceInput": "Prix de détail intrant {{index}}",
+    "totalValueInput": "Valeur totale intrant {{index}}"
+  },
+  "form": {
+    "title": {
+      "new": "Saisir une commande d’intrants",
+      "edit": "Modifier la commande d’intrants"
+    },
+    "addNew": "Ajouter un nouveau",
+    "farmer": "Agriculteur",
+    "season": "Saison",
+    "payOption": "PayNow / PayLater",
+    "selectPlaceholder": "Sélectionner..."
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "page": {
+    "title": "Enteekateeka y’ebisabibwa by’inputs",
+    "subtitle": "Tegeka n’okugaba ensigo, fuyiters n’ebikozesebwa",
+    "newOrder": "Oteekeako ekiwandiiko kipya"
+  },
+  "summary": {
+    "totalOrders": {
+      "title": "Ebisabibwa byonna",
+      "subtext": "{{value}} UGX omuwendo gwonna"
+    },
+    "totalValue": {
+      "title": "Omuwendo gwonna",
+      "subtext": "UGX"
+    },
+    "totalWeight": {
+      "title": "Obuzito bwonna",
+      "subtext": "kg"
+    },
+    "statusCards": {
+      "Open": "Birindiriddwa okuweebwa",
+      "Active": "Bisabye",
+      "Closed": "Biwedde okuweebwa",
+      "Cancelled": "Bisaziddwamu"
+    }
+  },
+  "searchPlaceholder": "Noonya biragiro by’inputs...",
+  "emptyDetail": "Londako ekiragiro okulaba ebirimu",
+  "unnamedOrder": "Kiwandiiko ekitalinnya",
+  "confirmDeleteOrder": "Osangula {{reference}}?",
+  "actions": {
+    "edit": "Kyusa"
+  },
+  "fields": {
+    "orderStatus": "Embeera y’ekiragiro",
+    "farmer": "Mulimi",
+    "season": "Sizoni",
+    "payNowPayLater": "PayNow / PayLater",
+    "orderDate": "Olunaku lw’ekiragiro",
+    "totalOrderValue": "Omuwendo gwonna gw’ekiragiro",
+    "totalWeight": "Obuzito bwonna (kg)",
+    "imageInput": "Ekifaananyi ky’input {{index}}",
+    "input": "Input {{index}}",
+    "quantityInput": "Obungi bwa input {{index}}",
+    "retailPriceInput": "Omuwendo gw’input ogw’okutunda {{index}}",
+    "totalValueInput": "Omuwendo gwonna gw’input {{index}}"
+  },
+  "form": {
+    "title": {
+      "new": "Yingiza kiragiro ky’inputs",
+      "edit": "Kyusa kiragiro ky’inputs"
+    },
+    "addNew": "Yongerako omupya",
+    "farmer": "Mulimi",
+    "season": "Sizoni",
+    "payOption": "PayNow / PayLater",
+    "selectPlaceholder": "Londako..."
+  }
+}

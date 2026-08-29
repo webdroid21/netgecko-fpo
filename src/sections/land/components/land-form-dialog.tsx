@@ -19,6 +19,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 
 import { Form, Field } from 'src/components/hook-form';
 
@@ -91,6 +92,9 @@ export function LandFormDialog({
   const isEdit = Boolean(land);
   const [farmerFormOpen, setFarmerFormOpen] = useState(false);
 
+  const { t } = useTranslate('lands');
+  const { t: tCommon } = useTranslate('common');
+
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(land),
     resolver: zodResolver(schema),
@@ -149,7 +153,7 @@ export function LandFormDialog({
   ) => (
     <Field.Select name={name} label={label} required={required}>
       <MenuItem value="">
-        <em>Select...</em>
+        <em>{t('form.selectPlaceholder')}</em>
       </MenuItem>
       {options.map((opt) => (
         <MenuItem key={opt.value} value={opt.value}>
@@ -161,7 +165,7 @@ export function LandFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? 'Edit land' : 'Enter a new land'}</DialogTitle>
+      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
 
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent dividers>
@@ -171,7 +175,7 @@ export function LandFormDialog({
                 <Box sx={{ flexGrow: 1 }}>
                   {renderSelectField(
                     'Farmer',
-                    'Farmer',
+                    t('form.farmer'),
                     farmers.map((f) => ({ value: f.id, label: f.fields.Name || 'Unnamed' })),
                     true
                   )}
@@ -186,7 +190,7 @@ export function LandFormDialog({
                     </Typography>
                   }
                 >
-                  Add New
+                  {t('form.addNew')}
                 </Button>
               </Stack>
             </Grid>
@@ -195,31 +199,31 @@ export function LandFormDialog({
               <Field.Text
                 type="number"
                 name="Land Size (Acres)"
-                label="Land Size (Acres)"
+                label={t('form.landSize')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelectField(
                 'Land Ownership',
-                'Land Ownership',
+                t('form.landOwnership'),
                 OWNERSHIP_OPTIONS.map((o) => ({ value: o, label: o })),
                 true
               )}
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text type="number" name="Latitude" label="Latitude" />
+              <Field.Text type="number" name="Latitude" label={t('form.latitude')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text type="number" name="Longitude" label="Longitude" />
+              <Field.Text type="number" name="Longitude" label={t('form.longitude')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelectField(
                 'Main Crop (1)',
-                'Main Crop (1)',
+                t('form.mainCrop'),
                 crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.id })),
                 true
               )}
@@ -229,7 +233,7 @@ export function LandFormDialog({
               <Field.Text
                 type="number"
                 name="Number of plants (Crop 1)"
-                label="Number of plants (Crop 1)"
+                label={t('form.numPlantsCrop1')}
               />
             </Grid>
 
@@ -237,7 +241,7 @@ export function LandFormDialog({
               <Field.Text
                 type="number"
                 name="Crop 1 Estimated Harvest (KG) Season A"
-                label="Crop 1 Estimated Harvest (KG) Season A"
+                label={t('form.crop1HarvestSeasonA')}
               />
             </Grid>
 
@@ -245,15 +249,18 @@ export function LandFormDialog({
               <Field.Text
                 type="number"
                 name="Crop 1 Estimated Harvest (KG) Season B"
-                label="Crop 1 Estimated Harvest (KG) Season B"
+                label={t('form.crop1HarvestSeasonB')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelectField(
                 'Other crop (2)',
-                'Other crop (2)',
-                [{ value: '', label: 'None' }, ...crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.id }))]
+                t('form.otherCrop'),
+                [
+                  { value: '', label: t('form.noneOption') },
+                  ...crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.id })),
+                ]
               )}
             </Grid>
 
@@ -261,7 +268,7 @@ export function LandFormDialog({
               <Field.Text
                 type="number"
                 name="Number of plants (Crop 2)"
-                label="Number of plants (Crop 2)"
+                label={t('form.numPlantsCrop2')}
               />
             </Grid>
 
@@ -269,7 +276,7 @@ export function LandFormDialog({
               <Field.Text
                 type="number"
                 name="Crop 2 Estimated Harvest (KG) Season A"
-                label="Crop 2 Estimated Harvest (KG) Season A"
+                label={t('form.crop2HarvestSeasonA')}
               />
             </Grid>
 
@@ -277,7 +284,7 @@ export function LandFormDialog({
               <Field.Text
                 type="number"
                 name="Crop 2 Estimated Harvest (KG) Season B"
-                label="Crop 2 Estimated Harvest (KG) Season B"
+                label={t('form.crop2HarvestSeasonB')}
               />
             </Grid>
           </Grid>
@@ -285,10 +292,10 @@ export function LandFormDialog({
 
         <DialogActions>
           <Button onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Save
+            {tCommon('save')}
           </LoadingButton>
         </DialogActions>
       </Form>

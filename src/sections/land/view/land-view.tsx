@@ -23,6 +23,7 @@ import { useSearchParams } from 'src/routes/hooks/use-search-params';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -116,6 +117,8 @@ function DetailRow({
 
 export function LandView() {
   const { activeFbo } = useAuthContext();
+  const { t } = useTranslate('lands');
+  const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
 
@@ -227,7 +230,8 @@ export function LandView() {
   };
 
   const handleDelete = async (land: Land) => {
-    if (!confirm(`Delete ${land.fields.Land ?? 'this land'}?`)) return;
+    const name = land.fields.Land ?? t('unnamedLand');
+    if (!confirm(t('confirmDeleteLand', { name }))) return;
     try {
       await axios.delete(`/api/v1/lands/${land.id}`);
       fetchLands();
@@ -244,36 +248,36 @@ export function LandView() {
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title="Total parcels"
+          title={t('summary.totalParcels.title')}
           total={stats.total}
-          subtext="Land parcels registered"
+          subtext={t('summary.totalParcels.subtext')}
           color="success"
           icon="solar:map-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title="Total acres"
+          title={t('summary.totalAcres.title')}
           total={stats.acres}
-          subtext="Combined land size"
+          subtext={t('summary.totalAcres.subtext')}
           color="primary"
           icon="solar:ruler-angular-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title="Season A harvest"
+          title={t('summary.seasonAHarvest.title')}
           total={stats.seasonA}
-          subtext="KG (main crop)"
+          subtext={t('summary.seasonAHarvest.subtext')}
           color="warning"
           icon="solar:chart-square-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title="Season B harvest"
+          title={t('summary.seasonBHarvest.title')}
           total={stats.seasonB}
-          subtext="KG (main crop)"
+          subtext={t('summary.seasonBHarvest.subtext')}
           color="info"
           icon="solar:chart-2-bold-duotone"
         />
@@ -287,7 +291,7 @@ export function LandView() {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search parcels or crops..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -298,7 +302,7 @@ export function LandView() {
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {loading ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>Loading…</Box>
+          <Box sx={{ p: 3, textAlign: 'center' }}>{tCommon('loading')}</Box>
         ) : (
           <List disablePadding>
             {filteredLands.map((land) => {
@@ -313,7 +317,7 @@ export function LandView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={land.fields.Land || 'Unnamed land'}
+                      primary={land.fields.Land || t('unnamedLand')}
                       primaryTypographyProps={{ variant: 'subtitle2' }}
                     />
                     {land.fields['Land Ownership'] && (
@@ -345,7 +349,7 @@ export function LandView() {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Select a parcel to view details
+            {t('emptyDetail')}
           </Typography>
         </Card>
       );
@@ -364,7 +368,7 @@ export function LandView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{f.Land || 'Unnamed land'}</Typography>
+              <Typography variant="h5">{f.Land || t('unnamedLand')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {(f['Name (from Owner)'] || []).join(', ')}
               </Typography>
@@ -372,7 +376,7 @@ export function LandView() {
 
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
-                Edit
+                {t('actions.edit')}
               </Button>
               <IconButton color="error" onClick={() => handleDelete(selectedLand)}>
                 <Iconify icon={'solar:trash-bin-trash-bold' as any} />
@@ -383,7 +387,7 @@ export function LandView() {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label="Farmer"
+                label={t('lands:fields.farmer')}
                 value={(f['Name (from Owner)'] || []).join(', ')}
                 href={
                   f.Farmer?.[0]
@@ -393,46 +397,61 @@ export function LandView() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Land Ownership" value={f['Land Ownership']} />
+              <DetailRow label={t('lands:fields.landOwnership')} value={f['Land Ownership']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Land Size (Acres)" value={f['Land Size (Acres)']} />
+              <DetailRow label={t('lands:fields.landSize')} value={f['Land Size (Acres)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Latitude" value={f.Latitude} />
+              <DetailRow label={t('lands:fields.latitude')} value={f.Latitude} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Longitude" value={f.Longitude} />
+              <DetailRow label={t('lands:fields.longitude')} value={f.Longitude} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Main Crop" value={(f['Crop Name (from Crop)'] || []).join(', ')} />
+              <DetailRow label={t('lands:fields.mainCrop')} value={(f['Crop Name (from Crop)'] || []).join(', ')} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Number of plants (Crop 1)" value={f['Number of plants (Crop 1)']} />
+              <DetailRow label={t('lands:fields.numPlantsCrop1')} value={f['Number of plants (Crop 1)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Crop 1 Estimated Harvest (KG) Season A" value={f['Crop 1 Estimated Harvest (KG) Season A']} />
+              <DetailRow
+                label={t('lands:fields.crop1HarvestSeasonA')}
+                value={f['Crop 1 Estimated Harvest (KG) Season A']}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Crop 1 Estimated Harvest (KG) Season B" value={f['Crop 1 Estimated Harvest (KG) Season B']} />
+              <DetailRow
+                label={t('lands:fields.crop1HarvestSeasonB')}
+                value={f['Crop 1 Estimated Harvest (KG) Season B']}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Other crop" value={(f['Crop 2 Name (from Other crop (2))'] || []).join(', ') || (f['Other crop (2)']?.join(', '))} />
+              <DetailRow
+                label={t('lands:fields.otherCrop')}
+                value={(f['Crop 2 Name (from Other crop (2))'] || []).join(', ') || (f['Other crop (2)']?.join(', '))}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Number of plants (Crop 2)" value={f['Number of plants (Crop 2)']} />
+              <DetailRow label={t('lands:fields.numPlantsCrop2')} value={f['Number of plants (Crop 2)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Crop 2 Estimated Harvest (KG) Season A" value={f['Crop 2 Estimated Harvest (KG) Season A']} />
+              <DetailRow
+                label={t('lands:fields.crop2HarvestSeasonA')}
+                value={f['Crop 2 Estimated Harvest (KG) Season A']}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Crop 2 Estimated Harvest (KG) Season B" value={f['Crop 2 Estimated Harvest (KG) Season B']} />
+              <DetailRow
+                label={t('lands:fields.crop2HarvestSeasonB')}
+                value={f['Crop 2 Estimated Harvest (KG) Season B']}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Estimated harvest Season A" value={f['Estimated harvest Season A']} />
+              <DetailRow label={t('lands:fields.estimatedHarvestSeasonA')} value={f['Estimated harvest Season A']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Estimated harvest Season B" value={f['Estimated harvest Season B']} />
+              <DetailRow label={t('lands:fields.estimatedHarvestSeasonB')} value={f['Estimated harvest Season B']} />
             </Grid>
           </Grid>
         </CardContent>
@@ -444,9 +463,9 @@ export function LandView() {
     <DashboardContent maxWidth="xl">
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h4">Land Management</Typography>
+          <Typography variant="h4">{t('page.title')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {stats.total} parcels · {fNumber(stats.acres)} total acres
+            {t('page.subtitle', { count: stats.total, acres: fNumber(stats.acres) })}
           </Typography>
         </Box>
         <Button
@@ -454,7 +473,7 @@ export function LandView() {
           startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
           onClick={handleAdd}
         >
-          Add Parcel
+          {t('page.addParcel')}
         </Button>
       </Stack>
 

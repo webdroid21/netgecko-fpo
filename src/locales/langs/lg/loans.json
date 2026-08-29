@@ -1,0 +1,64 @@
+{
+  "page": {
+    "title": "Loans",
+    "subtitle": "Fuga loans z’inputs n’ensimbi z’empewo",
+    "newLoan": "Loan empya"
+  },
+  "summary": {
+    "totalAmount": {
+      "title": "Ssente z’aloan zonna",
+      "subtext": "UGX"
+    },
+    "totalPending": {
+      "title": "Ssente ezisigadde okusasulwa",
+      "subtext": "UGX"
+    },
+    "statusCards": {
+      "Open": "Ekigguddwawo",
+      "Active": "Ekikolamu",
+      "Closed": "Kiwedde",
+      "Cancelled": "Kisaziddwamu"
+    }
+  },
+  "searchPlaceholder": "Noonya loans...",
+  "emptyDetail": "Londako loan okulaba ebirimu",
+  "unnamedLoan": "Loan etali na linnya",
+  "confirmDeleteLoan": "Osangula {{reference}}?",
+  "actions": {
+    "edit": "Kyusa"
+  },
+  "fields": {
+    "loanStatus": "Embeera ya loan",
+    "farmer": "Mulimi",
+    "loanType": "Ekika kya loan",
+    "issueDate": "Olunaku lwa loan okuweebwa",
+    "totalAmount": "Omuwendo gwonna",
+    "principal": "Ssente enkulu (principal)",
+    "interest": "Interest",
+    "downpayment": "Downpayment",
+    "principalPlusInterest": "Principal + interest",
+    "repaymentDueDate": "Olunaku lw’okumaliriza okusasula",
+    "totalAmountPending": "Omuwendo ogusigadde",
+    "repaymentStatus": "Embeera y’okusasula",
+    "sumPaymentReceived": "Ssente zonna ezifunye",
+    "inputOrder": "Kiwandiiko ky’inputs",
+    "paymentsReceived": "Ensasula ezifunye"
+  },
+  "form": {
+    "title": {
+      "new": "Yingiza loan empya",
+      "edit": "Kyusa loan"
+    },
+    "addNew": "Yongerako ekipya",
+    "farmer": "Mulimi",
+    "loanType": "Ekika kya loan",
+    "loanStatus": "Embeera ya loan",
+    "issueDate": "Olunaku lwa loan okuweebwa",
+    "downpaymentDueDate": "Olunaku lw’okusasula downpayment",
+    "repaymentDueDate": "Olunaku lw’okumaliriza okusasula",
+    "ordersInput": "Ebiragiro by’inputs",
+    "seasonCashAdvance": "Sizoni ya cash advance",
+    "amountCashAdvanceOnly": "Omuwendo (cash advance yokka)",
+    "selectPlaceholder": "Londako..."
+  }
+}

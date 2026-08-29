@@ -1,0 +1,64 @@
+{
+  "page": {
+    "title": "Prêts",
+    "subtitle": "Gérer les prêts d’intrants et les avances de trésorerie",
+    "newLoan": "Nouveau prêt"
+  },
+  "summary": {
+    "totalAmount": {
+      "title": "Montant total des prêts",
+      "subtext": "UGX"
+    },
+    "totalPending": {
+      "title": "Montant total en attente",
+      "subtext": "UGX"
+    },
+    "statusCards": {
+      "Open": "Ouvert",
+      "Active": "Actif",
+      "Closed": "Clôturé",
+      "Cancelled": "Annulé"
+    }
+  },
+  "searchPlaceholder": "Rechercher des prêts...",
+  "emptyDetail": "Sélectionnez un prêt pour voir les détails",
+  "unnamedLoan": "Prêt sans nom",
+  "confirmDeleteLoan": "Supprimer {{reference}} ?",
+  "actions": {
+    "edit": "Modifier"
+  },
+  "fields": {
+    "loanStatus": "Statut du prêt",
+    "farmer": "Agriculteur",
+    "loanType": "Type de prêt",
+    "issueDate": "Date d’émission",
+    "totalAmount": "Montant total",
+    "principal": "Principal",
+    "interest": "Intérêts",
+    "downpayment": "Acompte",
+    "principalPlusInterest": "Principal + intérêts",
+    "repaymentDueDate": "Date d’échéance du remboursement",
+    "totalAmountPending": "Montant total en attente",
+    "repaymentStatus": "Statut du remboursement",
+    "sumPaymentReceived": "Total des paiements reçus",
+    "inputOrder": "Commande d’intrants",
+    "paymentsReceived": "Paiements reçus"
+  },
+  "form": {
+    "title": {
+      "new": "Enregistrer un nouveau prêt",
+      "edit": "Modifier le prêt"
+    },
+    "addNew": "Ajouter un nouveau",
+    "farmer": "Agriculteur",
+    "loanType": "Type de prêt",
+    "loanStatus": "Statut du prêt",
+    "issueDate": "Date d’émission",
+    "downpaymentDueDate": "Date d’échéance de l’acompte",
+    "repaymentDueDate": "Date d’échéance du remboursement",
+    "ordersInput": "Commandes (intrants)",
+    "seasonCashAdvance": "Saison de l’avance de trésorerie",
+    "amountCashAdvanceOnly": "Montant (avance de trésorerie uniquement)",
+    "selectPlaceholder": "Sélectionner..."
+  }
+}

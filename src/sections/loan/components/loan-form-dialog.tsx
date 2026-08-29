@@ -20,6 +20,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 
 import { Form, Field } from 'src/components/hook-form';
 
@@ -98,6 +99,9 @@ export function LoanFormDialog({
   const isEdit = Boolean(loan);
   const [farmerFormOpen, setFarmerFormOpen] = useState(false);
 
+  const { t } = useTranslate('loans');
+  const { t: tCommon } = useTranslate('common');
+
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(loan),
     resolver: zodResolver(baseSchema),
@@ -170,7 +174,7 @@ export function LoanFormDialog({
   ) => (
     <Field.Select name={name} label={label} required={required}>
       <MenuItem value="">
-        <em>Select...</em>
+        <em>{t('form.selectPlaceholder')}</em>
       </MenuItem>
       {options.map((opt) => (
         <MenuItem key={opt.value} value={opt.value}>
@@ -182,7 +186,7 @@ export function LoanFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? 'Edit loan' : 'Enter a new loan'}</DialogTitle>
+      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
 
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent dividers>
@@ -192,7 +196,7 @@ export function LoanFormDialog({
                 <Box sx={{ flexGrow: 1 }}>
                   {renderSelect(
                     'Farmer',
-                    'Farmer',
+                    t('form.farmer'),
                     farmers.map((f) => ({ value: f.id, label: f.fields.Name || 'Unnamed' })),
                     true
                   )}
@@ -207,7 +211,7 @@ export function LoanFormDialog({
                     </Box>
                   }
                 >
-                  Add New
+                  {t('form.addNew')}
                 </Button>
               </Stack>
             </Grid>
@@ -215,7 +219,7 @@ export function LoanFormDialog({
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelect(
                 'Loan Type',
-                'Loan Type',
+                t('form.loanType'),
                 loanTypes.map((t) => ({
                   value: t.id,
                   label: getLoanObject(t) || 'Unnamed',
@@ -227,27 +231,33 @@ export function LoanFormDialog({
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelect(
                 'Loan Status',
-                'Loan Status',
+                t('form.loanStatus'),
                 LOAN_STATUS_OPTIONS.map((o) => ({ value: o, label: o })),
                 true
               )}
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <Field.DatePicker name="Issue Date" label="Issue Date" />
+              <Field.DatePicker name="Issue Date" label={t('form.issueDate')} />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Field.DatePicker name="Downpayment Due Date" label="Downpayment Due Date" />
+              <Field.DatePicker
+                name="Downpayment Due Date"
+                label={t('form.downpaymentDueDate')}
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Field.DatePicker name="Repayment Due Date" label="Repayment Due Date" />
+              <Field.DatePicker
+                name="Repayment Due Date"
+                label={t('form.repaymentDueDate')}
+              />
             </Grid>
 
             {isInputLoan && (
               <Grid size={{ xs: 12 }}>
                 {renderSelect(
                   'Orders (Input)',
-                  'Orders (Input)',
+                  t('form.ordersInput'),
                   inputOrders.map((o) => ({
                     value: o.id,
                     label: o.fields['Order number'] || 'Unnamed',
@@ -261,7 +271,7 @@ export function LoanFormDialog({
                 <Grid size={{ xs: 12, md: 6 }}>
                   {renderSelect(
                     'Season Cash Advance',
-                    'Season Cash Advance',
+                    t('form.seasonCashAdvance'),
                     seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' }))
                   )}
                 </Grid>
@@ -269,7 +279,7 @@ export function LoanFormDialog({
                   <Field.Text
                     type="number"
                     name="Amount (cash advance only)"
-                    label="Amount (cash advance only)"
+                    label={t('form.amountCashAdvanceOnly')}
                   />
                 </Grid>
               </>
@@ -279,10 +289,10 @@ export function LoanFormDialog({
 
         <DialogActions>
           <Button onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Save
+            {tCommon('save')}
           </LoadingButton>
         </DialogActions>
       </Form>

@@ -18,6 +18,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 
 import { Form, Field } from 'src/components/hook-form';
 
@@ -122,6 +123,9 @@ export function InputOrderFormDialog({
   const isEdit = Boolean(order);
   const [farmerFormOpen, setFarmerFormOpen] = useState(false);
 
+  const { t } = useTranslate('inputOrders');
+  const { t: tCommon } = useTranslate('common');
+
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(order),
     resolver: zodResolver(schema),
@@ -202,7 +206,7 @@ export function InputOrderFormDialog({
   ) => (
     <Field.Select name={name} label={label} required={required}>
       <MenuItem value="">
-        <em>Select...</em>
+        <em>{t('form.selectPlaceholder')}</em>
       </MenuItem>
       {options.map((opt) => (
         <MenuItem key={opt.value} value={opt.value}>
@@ -214,7 +218,9 @@ export function InputOrderFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? 'Edit input order' : 'Enter Inputs Order'}</DialogTitle>
+      <DialogTitle>
+        {isEdit ? t('form.title.edit') : t('form.title.new')}
+      </DialogTitle>
 
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent dividers>
@@ -224,7 +230,7 @@ export function InputOrderFormDialog({
                 <Box sx={{ flexGrow: 1 }}>
                   {renderSelect(
                     'Farmer',
-                    'Farmer',
+                    t('form.farmer'),
                     farmers.map((f) => ({ value: f.id, label: f.fields.Name || 'Unnamed' })),
                     true
                   )}
@@ -239,7 +245,7 @@ export function InputOrderFormDialog({
                     </Box>
                   }
                 >
-                  Add New
+                  {t('form.addNew')}
                 </Button>
               </Stack>
             </Grid>
@@ -247,7 +253,7 @@ export function InputOrderFormDialog({
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelect(
                 'Season',
-                'Season',
+                t('form.season'),
                 seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' })),
                 true
               )}
@@ -256,7 +262,7 @@ export function InputOrderFormDialog({
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelect(
                 'PayNow PayLater',
-                'PayNow PayLater',
+                t('form.payOption'),
                 PAY_OPTIONS.map((o) => ({ value: o, label: o })),
                 true
               )}
@@ -268,7 +274,7 @@ export function InputOrderFormDialog({
                   <Box sx={{ flex: 1 }}>
                     {renderSelect(
                       INPUT_KEYS[idx],
-                      INPUT_KEYS[idx],
+                      t('fields.input', { index: idx + 1 }),
                       products.map((p) => ({
                         value: p.id,
                         label: p.fields['Product ID'] || 'Unnamed',
@@ -280,7 +286,7 @@ export function InputOrderFormDialog({
                     <Field.Text
                       type="number"
                       name={QUANTITY_KEYS[idx]}
-                      label={QUANTITY_KEYS[idx]}
+                      label={t('fields.quantityInput', { index: idx + 1 })}
                     />
                   </Box>
                 </Stack>
@@ -291,10 +297,10 @@ export function InputOrderFormDialog({
 
         <DialogActions>
           <Button onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Save
+            {tCommon('save')}
           </LoadingButton>
         </DialogActions>
       </Form>

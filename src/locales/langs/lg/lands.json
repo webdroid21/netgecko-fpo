@@ -1,0 +1,71 @@
+{
+  "page": {
+    "title": "Okufuga ettaka",
+    "subtitle": "{{count}} ettaka · {{acres}} acres zonna",
+    "addParcel": "Yongerako ekitundu ky’ettaka"
+  },
+  "summary": {
+    "totalParcels": {
+      "title": "Ebitundu by’ettaka byonna",
+      "subtext": "Ebitundu by’ettaka ebyewandiikiddwa"
+    },
+    "totalAcres": {
+      "title": "Acres zonna",
+      "subtext": "Obugazi bw’ettaka bwonna"
+    },
+    "seasonAHarvest": {
+      "title": "Empeke ezisubirwa mu sizoni A",
+      "subtext": "KG (ekirime ekikulu)"
+    },
+    "seasonBHarvest": {
+      "title": "Empeke ezisubirwa mu sizoni B",
+      "subtext": "KG (ekirime ekikulu)"
+    }
+  },
+  "searchPlaceholder": "Noonya ettaka oba ebirime...",
+  "emptyDetail": "Londako ekitundu ky’ettaka okulaba ebikikwataako",
+  "unnamedLand": "Ettaka eritali na linnya",
+  "confirmDeleteLand": "Osangula {{name}}?",
+  "actions": {
+    "edit": "Kyusa"
+  },
+  "fields": {
+    "farmer": "Mulimi",
+    "landOwnership": "Engeri y’okusika ettaka",
+    "landSize": "Obugazi bw’ettaka (acres)",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "mainCrop": "Ekirime ekikulu",
+    "numPlantsCrop1": "Omuwendo gw’emmuli (ekirime 1)",
+    "crop1HarvestSeasonA": "Empeke ezisubirwa (KG) ekirime 1 sizoni A",
+    "crop1HarvestSeasonB": "Empeke ezisubirwa (KG) ekirime 1 sizoni B",
+    "otherCrop": "Ekirime ekirala",
+    "numPlantsCrop2": "Omuwendo gw’emmuli (ekirime 2)",
+    "crop2HarvestSeasonA": "Empeke ezisubirwa (KG) ekirime 2 sizoni A",
+    "crop2HarvestSeasonB": "Empeke ezisubirwa (KG) ekirime 2 sizoni B",
+    "estimatedHarvestSeasonA": "Empeke ezisubirwa sizoni A",
+    "estimatedHarvestSeasonB": "Empeke ezisubirwa sizoni B"
+  },
+  "form": {
+    "title": {
+      "new": "Yingiza ettaka epya",
+      "edit": "Kyusa ettaka"
+    },
+    "addNew": "Yongerako ekipya",
+    "farmer": "Mulimi",
+    "landSize": "Obugazi bw’ettaka (acres)",
+    "landOwnership": "Engeri y’okusika ettaka",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "mainCrop": "Ekirime ekikulu (1)",
+    "numPlantsCrop1": "Omuwendo gw’emmuli (ekirime 1)",
+    "crop1HarvestSeasonA": "Empeke ezisubirwa (KG) ekirime 1 sizoni A",
+    "crop1HarvestSeasonB": "Empeke ezisubirwa (KG) ekirime 1 sizoni B",
+    "otherCrop": "Ekirime ekirala (2)",
+    "numPlantsCrop2": "Omuwendo gw’emmuli (ekirime 2)",
+    "crop2HarvestSeasonA": "Empeke ezisubirwa (KG) ekirime 2 sizoni A",
+    "crop2HarvestSeasonB": "Empeke ezisubirwa (KG) ekirime 2 sizoni B",
+    "noneOption": "Tewali",
+    "selectPlaceholder": "Londako..."
+  }
+}

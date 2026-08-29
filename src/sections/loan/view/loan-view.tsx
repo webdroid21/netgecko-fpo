@@ -24,6 +24,7 @@ import { useSearchParams } from 'src/routes/hooks/use-search-params';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -124,6 +125,8 @@ function DetailRow({
 
 export function LoanView() {
   const { activeFbo } = useAuthContext();
+  const { t } = useTranslate('loans');
+  const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
 
@@ -270,7 +273,8 @@ export function LoanView() {
   };
 
   const handleDelete = async (loan: Loan) => {
-    if (!confirm(`Delete ${loan.fields['Loan ID'] ?? 'this loan'}?`)) return;
+    const reference = loan.fields['Loan ID'] ?? t('unnamedLoan');
+    if (!confirm(t('confirmDeleteLoan', { reference }))) return;
     try {
       await axios.delete(`/api/v1/loans/${loan.id}`);
       fetchLoans();
@@ -296,18 +300,18 @@ export function LoanView() {
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 6 }}>
           <SummaryCard
-            title="Total loan amount"
+            title={t('summary.totalAmount.title')}
             total={stats.total}
-            subtext="UGX"
+            subtext={t('summary.totalAmount.subtext')}
             color="primary"
             icon="solar:tag-price-bold-duotone"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 6 }}>
           <SummaryCard
-            title="Total pending"
+            title={t('summary.totalPending.title')}
             total={stats.pending}
-            subtext="UGX"
+            subtext={t('summary.totalPending.subtext')}
             color="warning"
             icon="solar:alarm-bold-duotone"
           />
@@ -324,7 +328,7 @@ export function LoanView() {
                 </Box>
                 <Box>
                   <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                    {s.label}
+                    {t(`summary.statusCards.${s.key}`)}
                   </Typography>
                   <Typography variant="h4" sx={{ my: 0.5 }}>
                     {fNumber(statusCounts[s.key])}
@@ -344,7 +348,7 @@ export function LoanView() {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search loans..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -355,7 +359,7 @@ export function LoanView() {
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {loading ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>Loading…</Box>
+          <Box sx={{ p: 3, textAlign: 'center' }}>{tCommon('loading')}</Box>
         ) : (
           <List disablePadding>
             {filteredLoans.map((loan) => {
@@ -370,7 +374,7 @@ export function LoanView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={loan.fields['Loan ID'] || 'Unnamed loan'}
+                      primary={loan.fields['Loan ID'] || t('unnamedLoan')}
                       primaryTypographyProps={{ variant: 'subtitle2' }}
                     />
                     {loan.fields['Loan Status'] && (
@@ -401,7 +405,7 @@ export function LoanView() {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Select a loan to view details
+            {t('emptyDetail')}
           </Typography>
         </Card>
       );
@@ -423,7 +427,7 @@ export function LoanView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{f['Loan ID'] || 'Unnamed loan'}</Typography>
+              <Typography variant="h5">{f['Loan ID'] || t('unnamedLoan')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {(f['Loan Object'] || []).join(', ')} · {(f['Name (from Season)'] || []).join(', ')}
               </Typography>
@@ -431,7 +435,7 @@ export function LoanView() {
 
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLoan)}>
-                Edit
+                {t('actions.edit')}
               </Button>
               <IconButton color="error" onClick={() => handleDelete(selectedLoan)}>
                 <Iconify icon={'solar:trash-bin-trash-bold' as any} />
@@ -441,53 +445,53 @@ export function LoanView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Loan Status" value={f['Loan Status']} />
+              <DetailRow label={t('fields.loanStatus')} value={f['Loan Status']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label="Farmer"
+                label={t('fields.farmer')}
                 value={(f['Name (from Farmer)'] || []).join(', ')}
                 href={farmerHref}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Loan Type" value={(f['Loan Object'] || []).join(', ')} />
+              <DetailRow label={t('fields.loanType')} value={(f['Loan Object'] || []).join(', ')} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Issue Date" value={f['Issue Date']} />
+              <DetailRow label={t('fields.issueDate')} value={f['Issue Date']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Total amount" value={f['Total amount']} />
+              <DetailRow label={t('fields.totalAmount')} value={f['Total amount']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Principal" value={f['Principal']} />
+              <DetailRow label={t('fields.principal')} value={f['Principal']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Interest" value={f['Interest']} />
+              <DetailRow label={t('fields.interest')} value={f['Interest']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Downpayment" value={f['Downpayment']} />
+              <DetailRow label={t('fields.downpayment')} value={f['Downpayment']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Principal + Interest" value={f['Principal + Interest']} />
+              <DetailRow label={t('fields.principalPlusInterest')} value={f['Principal + Interest']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Repayment Due Date" value={f['Repayment Due Date']} />
+              <DetailRow label={t('fields.repaymentDueDate')} value={f['Repayment Due Date']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Total Amount Pending" value={f['Total Amount Pending']} />
+              <DetailRow label={t('fields.totalAmountPending')} value={f['Total Amount Pending']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Repayment Status" value={f['Repayment Status']} />
+              <DetailRow label={t('fields.repaymentStatus')} value={f['Repayment Status']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Sum payment received" value={f['Sum payment received']} />
+              <DetailRow label={t('fields.sumPaymentReceived')} value={f['Sum payment received']} />
             </Grid>
 
             {f['Orders (Input)']?.[0] && (
               <Grid size={{ xs: 12, sm: 6 }}>
                 <DetailRow
-                  label="Input Order"
+                  label={t('fields.inputOrder')}
                   value={(f['Order number (from Orders (Input))'] || []).join(', ')}
                   href={`/dashboard/input-orders?farmerId=${f.Farmer?.[0] ?? ''}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`}
                 />
@@ -497,7 +501,7 @@ export function LoanView() {
             {f['Payments Received Link']?.length ? (
               <Grid size={{ xs: 12 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Payments received
+                  {t('fields.paymentsReceived')}
                 </Typography>
                 {f['Payment ID (from Payments Link)'].map((pid: any, idx: number) => (
                   <Typography key={idx} variant="body2" sx={{ color: 'text.secondary' }}>
@@ -517,9 +521,9 @@ export function LoanView() {
     <DashboardContent maxWidth="xl">
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h4">Loans</Typography>
+          <Typography variant="h4">{t('page.title')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Manage input loans and cash advances
+            {t('page.subtitle')}
           </Typography>
         </Box>
         <Button
@@ -527,7 +531,7 @@ export function LoanView() {
           startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
           onClick={handleAdd}
         >
-          New Loan
+          {t('page.newLoan')}
         </Button>
       </Stack>
 

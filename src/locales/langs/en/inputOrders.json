@@ -1,0 +1,59 @@
+{
+  "page": {
+    "title": "Input Order Queue",
+    "subtitle": "Manage seed, fertilizer, and tool distribution",
+    "newOrder": "New order"
+  },
+  "summary": {
+    "totalOrders": {
+      "title": "Total orders",
+      "subtext": "{{value}} UGX total value"
+    },
+    "totalValue": {
+      "title": "Total value",
+      "subtext": "UGX"
+    },
+    "totalWeight": {
+      "title": "Total weight",
+      "subtext": "kg"
+    },
+    "statusCards": {
+      "Open": "Pending fulfillment",
+      "Active": "Requested",
+      "Closed": "Delivered",
+      "Cancelled": "Cancelled"
+    }
+  },
+  "searchPlaceholder": "Search orders...",
+  "emptyDetail": "Select an order to view details",
+  "unnamedOrder": "Unnamed order",
+  "confirmDeleteOrder": "Delete {{reference}}?",
+  "actions": {
+    "edit": "Edit"
+  },
+  "fields": {
+    "orderStatus": "Order status",
+    "farmer": "Farmer",
+    "season": "Season",
+    "payNowPayLater": "PayNow / PayLater",
+    "orderDate": "Order date",
+    "totalOrderValue": "Total order value",
+    "totalWeight": "Total weight (kg)",
+    "imageInput": "Image input {{index}}",
+    "input": "Input {{index}}",
+    "quantityInput": "Quantity input {{index}}",
+    "retailPriceInput": "Retail price input {{index}}",
+    "totalValueInput": "Total value input {{index}}"
+  },
+  "form": {
+    "title": {
+      "new": "Enter inputs order",
+      "edit": "Edit input order"
+    },
+    "addNew": "Add new",
+    "farmer": "Farmer",
+    "season": "Season",
+    "payOption": "PayNow / PayLater",
+    "selectPlaceholder": "Select..."
+  }
+}
