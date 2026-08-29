@@ -242,7 +242,7 @@ export function SignInView() {
         value={tabs.value}
         onChange={tabs.onChange}
         variant="fullWidth"
-        indicatorColor="primary"
+        indicatorColor="custom"
         sx={{ borderRadius: 1, mb: 3 }}
       >
         {TABS.map((tab) => (
