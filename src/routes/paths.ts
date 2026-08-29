@@ -89,5 +89,11 @@ export const paths = {
       file: `${ROOTS.DASHBOARD}/file`,
       course: `${ROOTS.DASHBOARD}/course`,
     },
+    fpo: {
+      farmers: `${ROOTS.DASHBOARD}/farmers`,
+      lands: `${ROOTS.DASHBOARD}/lands`,
+      inputOrders: `${ROOTS.DASHBOARD}/input-orders`,
+      loans: `${ROOTS.DASHBOARD}/loans`,
+    },
   },
 };
