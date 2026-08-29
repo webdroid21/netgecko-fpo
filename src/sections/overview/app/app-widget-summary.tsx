@@ -75,17 +75,18 @@ export function AppWidgetSummary({ title, percent, total, chart, sx, ...other }:
           p: 3,
           display: 'flex',
           zIndex: 'unset',
-          overflow: 'unset',
-          alignItems: 'center',
+          overflow: 'hidden',
+          alignItems: 'flex-start',
+          flexDirection: 'column',
         }),
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
       {...other}
     >
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ width: 1, minWidth: 0 }}>
         <Box sx={{ typography: 'subtitle2' }}>{title}</Box>
 
-        <Box sx={{ mt: 1.5, mb: 1, typography: 'h3' }}>{fNumber(total)}</Box>
+        <Box sx={{ mt: 1, mb: 0.5, typography: 'h4' }}>{fNumber(total)}</Box>
 
         {percent !== 0 && renderTrending()}
       </Box>
@@ -94,7 +95,7 @@ export function AppWidgetSummary({ title, percent, total, chart, sx, ...other }:
         type="bar"
         series={[{ data: chart.series }]}
         options={chartOptions}
-        sx={{ width: 60, height: 40 }}
+        sx={{ width: 1, height: 60, mt: 1 }}
       />
     </Card>
   );

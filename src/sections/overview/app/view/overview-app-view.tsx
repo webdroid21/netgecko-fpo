@@ -311,7 +311,7 @@ export function OverviewAppView() {
 
         {summarySkeleton}
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Farmers"
             percent={0}
@@ -320,7 +320,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Lands"
             percent={0}
@@ -329,7 +329,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Acres"
             percent={0}
@@ -338,7 +338,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Input Orders"
             percent={0}
@@ -347,7 +347,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Input Value"
             percent={0}
@@ -356,7 +356,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Loans"
             percent={0}
@@ -365,7 +365,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Loans Pending"
             percent={0}
@@ -374,7 +374,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Payments"
             percent={0}
@@ -383,7 +383,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Payments Received"
             percent={0}
@@ -392,7 +392,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Sales"
             percent={0}
@@ -401,7 +401,7 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <AppWidgetSummary
             title="Sales Revenue"
             percent={0}
