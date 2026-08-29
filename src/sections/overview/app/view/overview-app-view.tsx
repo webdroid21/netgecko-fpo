@@ -483,6 +483,98 @@ export function OverviewAppView() {
           </Stack>
         </Grid>
 
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
+            title={t('quickAccessFarmers')}
+            total={stats.farmers}
+            icon="solar:users-group-rounded-bold"
+            color="primary"
+            href={paths.dashboard.fpo.farmers}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
+            title={t('quickAccessInputOrders')}
+            total={stats.inputOrders}
+            icon="solar:cart-3-bold"
+            color="info"
+            href={paths.dashboard.fpo.inputOrders}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
+            title={t('quickAccessLoans')}
+            total={stats.loans}
+            icon="solar:bill-list-bold"
+            color="warning"
+            href={paths.dashboard.fpo.loans}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
+            title={t('quickAccessPayments')}
+            total={stats.payments}
+            icon="solar:wad-of-money-bold"
+            color="success"
+            href={paths.dashboard.fpo.payments}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
+            title={t('quickAccessSales')}
+            total={stats.sales}
+            icon="solar:export-bold"
+            color="error"
+            href={paths.dashboard.fpo.sales}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <MemberStatusChart data={stats.memberStatus} loading={loading} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          {loading ? (
+            <Card sx={{ height: '100%' }}>
+              <CardHeader title={t('inputOrderQueue')} subheader={t('inputOrderQueueSubheader')} />
+              <Box sx={{ p: 3 }}>
+                <Skeleton variant="circular" width={240} height={240} sx={{ mx: 'auto' }} />
+              </Box>
+            </Card>
+          ) : hasOrderData ? (
+            <AppCurrentDownload
+              title={t('inputOrderQueue')}
+              subheader={t('inputOrderQueueSubheader')}
+              chart={{
+                series: [
+                  { label: 'Open', value: stats.orderStatus.open },
+                  { label: 'Active', value: stats.orderStatus.active },
+                  { label: 'Closed', value: stats.orderStatus.closed },
+                  { label: 'Cancelled', value: stats.orderStatus.cancelled },
+                ],
+              }}
+            />
+          ) : (
+            <Card sx={{ height: '100%' }}>
+              <CardHeader title={t('inputOrderQueue')} />
+              <CardContent>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {t('noInputOrders')}
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
+        </Grid>
+
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
@@ -568,98 +660,6 @@ export function OverviewAppView() {
             subtext={t('totalRevenue')}
             icon="solar:cup-star-bold"
             color="primary"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <MemberStatusChart data={stats.memberStatus} loading={loading} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          {loading ? (
-            <Card sx={{ height: '100%' }}>
-              <CardHeader title={t('inputOrderQueue')} subheader={t('inputOrderQueueSubheader')} />
-              <Box sx={{ p: 3 }}>
-                <Skeleton variant="circular" width={240} height={240} sx={{ mx: 'auto' }} />
-              </Box>
-            </Card>
-          ) : hasOrderData ? (
-            <AppCurrentDownload
-              title={t('inputOrderQueue')}
-              subheader={t('inputOrderQueueSubheader')}
-              chart={{
-                series: [
-                  { label: 'Open', value: stats.orderStatus.open },
-                  { label: 'Active', value: stats.orderStatus.active },
-                  { label: 'Closed', value: stats.orderStatus.closed },
-                  { label: 'Cancelled', value: stats.orderStatus.cancelled },
-                ],
-              }}
-            />
-          ) : (
-            <Card sx={{ height: '100%' }}>
-              <CardHeader title={t('inputOrderQueue')} />
-              <CardContent>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {t('noInputOrders')}
-                </Typography>
-              </CardContent>
-            </Card>
-          )}
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <QuickAccessCard
-            loading={loading}
-            title={t('quickAccessFarmers')}
-            total={stats.farmers}
-            icon="solar:users-group-rounded-bold"
-            color="primary"
-            href={paths.dashboard.fpo.farmers}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <QuickAccessCard
-            loading={loading}
-            title={t('quickAccessInputOrders')}
-            total={stats.inputOrders}
-            icon="solar:cart-3-bold"
-            color="info"
-            href={paths.dashboard.fpo.inputOrders}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <QuickAccessCard
-            loading={loading}
-            title={t('quickAccessLoans')}
-            total={stats.loans}
-            icon="solar:bill-list-bold"
-            color="warning"
-            href={paths.dashboard.fpo.loans}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <QuickAccessCard
-            loading={loading}
-            title={t('quickAccessPayments')}
-            total={stats.payments}
-            icon="solar:wad-of-money-bold"
-            color="success"
-            href={paths.dashboard.fpo.payments}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-          <QuickAccessCard
-            loading={loading}
-            title={t('quickAccessSales')}
-            total={stats.sales}
-            icon="solar:export-bold"
-            color="error"
-            href={paths.dashboard.fpo.sales}
           />
         </Grid>
 
