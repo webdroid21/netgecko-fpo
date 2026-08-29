@@ -22,6 +22,7 @@ export function AuthCenteredContent({
       sx={[
         (theme) => ({
           p: 4,
+          my: 'auto',
           width: 1,
           zIndex: 2,
           mx: 'auto',
