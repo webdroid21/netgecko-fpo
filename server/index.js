@@ -219,9 +219,22 @@ function toAirtableFields(input, fpoId) {
   return fields;
 }
 
-function buildLandsFilter(fpoId) {
-  const escaped = fpoId.replace(/'/g, "''");
-  return `FIND('${escaped}', ARRAYJOIN({FPO from farmers}, ',')) > 0`;
+function buildLandsFilter(fpoId, fpoName) {
+  const escapedId = (fpoId || '').replace(/'/g, "''");
+  const escapedName = (fpoName || '').replace(/'/g, "''");
+  const conditions = [];
+
+  if (escapedId) {
+    conditions.push(`FIND('${escapedId}', ARRAYJOIN({FPO from farmers}, ',')) > 0`);
+  }
+
+  if (escapedName) {
+    conditions.push(`SEARCH('${escapedName}', ARRAYJOIN({FPO from farmers}, ',')) > 0`);
+  }
+
+  if (!conditions.length) return '1';
+  if (conditions.length === 1) return conditions[0];
+  return `OR(${conditions.join(', ')})`;
 }
 
 function toLandsFields(input) {
@@ -367,17 +380,20 @@ app.get('/api/v1/crops', requireAuth, async (req, res) => {
 
 app.get('/api/v1/lands', requireAuth, async (req, res) => {
   try {
-    const { fpoId } = req.query;
+    const { fpoId, fpoName } = req.query;
 
-    if (!fpoId) {
-      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId is required.' });
+    if (!fpoId && !fpoName) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId or fpoName is required.' });
     }
 
+    const filter = buildLandsFilter(fpoId, fpoName);
+    console.log('[Lands filter]', fpoId, fpoName, filter);
     const { data } = await airtableApi.post(`/${AIRTABLE_LANDS_TABLE_ID}/listRecords`, {
-      filterByFormula: buildLandsFilter(fpoId),
+      filterByFormula: filter,
       maxRecords: 100,
     });
 
+    console.log('[Lands result]', data.records?.length, data.error);
     return res.json({ records: data.records || [] });
   } catch (error) {
     console.error('/api/v1/lands error:', error?.response?.data || error.message);

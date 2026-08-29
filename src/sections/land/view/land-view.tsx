@@ -101,7 +101,11 @@ export function LandView() {
     if (!activeFbo) return;
     setLoading(true);
     try {
-      const { data } = await axios.get(`/api/v1/lands?fpoId=${activeFbo.id}`);
+      const query = new URLSearchParams({
+        fpoId: activeFbo.id,
+        fpoName: activeFbo.name,
+      }).toString();
+      const { data } = await axios.get(`/api/v1/lands?${query}`);
       setLands(data.records || []);
     } catch (error: any) {
       console.error('Fetch lands error:', error?.message);
