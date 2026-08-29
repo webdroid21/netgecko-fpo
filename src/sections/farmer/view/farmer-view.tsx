@@ -24,6 +24,7 @@ import { useSearchParams } from 'src/routes/hooks/use-search-params';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -140,6 +141,8 @@ function RelatedLink({ label, value, href, color = 'primary' }: RelatedLinkProps
 
 export function FarmerView() {
   const { activeFbo } = useAuthContext();
+  const { t } = useTranslate('farmers');
+  const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerId = searchParams.get('farmerId');
 
@@ -225,7 +228,8 @@ export function FarmerView() {
   };
 
   const handleDelete = async (farmer: Farmer) => {
-    if (!confirm(`Delete ${farmer.fields.Name ?? 'this farmer'}?`)) return;
+    const name = farmer.fields.Name ?? t('unnamed');
+    if (!confirm(t('confirmDeleteFarmer', { name }))) return;
     try {
       await axios.delete(`/api/v1/farmers/${farmer.id}`);
       fetchFarmers();
@@ -238,36 +242,36 @@ export function FarmerView() {
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title="Total members"
+          title={t('summary.totalMembers.title')}
           total={stats.total}
-          subtext="Total registered farmers"
+          subtext={t('summary.totalMembers.subtext')}
           color="primary"
           icon="solar:users-group-rounded-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title="Active farmers"
+          title={t('summary.activeFarmers.title')}
           total={stats.active}
-          subtext="60% active"
+          subtext={t('summary.activeFarmers.subtext')}
           color="success"
           icon="solar:user-check-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title="Pending approval"
+          title={t('summary.pendingApproval.title')}
           total={0}
-          subtext="Review and activate"
+          subtext={t('summary.pendingApproval.subtext')}
           color="warning"
           icon="solar:user-id-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title="Inactive"
+          title={t('summary.inactive.title')}
           total={stats.inactive}
-          subtext="Non-participating members"
+          subtext={t('summary.inactive.subtext')}
           color="error"
           icon="solar:user-cross-bold-duotone"
         />
@@ -281,7 +285,7 @@ export function FarmerView() {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search farmers..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -292,7 +296,7 @@ export function FarmerView() {
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {loading ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>Loading…</Box>
+          <Box sx={{ p: 3, textAlign: 'center' }}>{tCommon('loading')}</Box>
         ) : (
           <List disablePadding>
             {filteredFarmers.map((farmer) => {
@@ -308,7 +312,7 @@ export function FarmerView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={farmer.fields.Name || 'Unnamed'}
+                      primary={farmer.fields.Name || t('unnamed')}
                       primaryTypographyProps={{ variant: 'subtitle2' }}
                     />
                     {gender && (
@@ -338,7 +342,7 @@ export function FarmerView() {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Select a farmer to view details
+            {t('emptyDetail')}
           </Typography>
         </Card>
       );
@@ -368,7 +372,7 @@ export function FarmerView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{f.Name || 'Unnamed'}</Typography>
+              <Typography variant="h5">{f.Name || t('unnamed')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {f['NIN (National Identification Number)']}
               </Typography>
@@ -376,7 +380,7 @@ export function FarmerView() {
 
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" onClick={() => handleEdit(detailFarmer)}>
-                Edit
+                {t('actions.edit')}
               </Button>
               <IconButton color="error" onClick={() => handleDelete(detailFarmer)}>
                 <Iconify icon={'solar:trash-bin-trash-bold' as any} />
@@ -389,7 +393,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Given Name"
-                label="Given Name"
+                label={t('fields.givenName')}
                 value={f['Given Name']}
                 onSaved={fetchFarmers}
               />
@@ -398,7 +402,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Surname"
-                label="Surname"
+                label={t('fields.surname')}
                 value={f.Surname}
                 onSaved={fetchFarmers}
               />
@@ -407,7 +411,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Gender"
-                label="Gender"
+                label={t('fields.gender')}
                 value={f.Gender}
                 type="select"
                 options={['Male', 'Female']}
@@ -418,20 +422,20 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Birth date"
-                label="Birth date"
+                label={t('fields.birthDate')}
                 value={f['Birth date']}
                 type="date"
                 onSaved={fetchFarmers}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Age" value={f.Age} />
+              <DetailRow label={t('fields.age')} value={f.Age} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Farmer Code"
-                label="Farmer Code"
+                label={t('fields.farmerCode')}
                 value={f['Farmer Code']}
                 onSaved={fetchFarmers}
               />
@@ -445,7 +449,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Phone Number"
-                label="Phone Number"
+                label={t('fields.phoneNumber')}
                 value={f['Phone Number']}
                 onSaved={fetchFarmers}
               />
@@ -454,7 +458,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Mobile Money Number"
-                label="Mobile Money Number"
+                label={t('fields.mobileMoneyNumber')}
                 value={f['Mobile Money Number']}
                 onSaved={fetchFarmers}
               />
@@ -463,7 +467,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Email"
-                label="Email"
+                label={t('fields.email')}
                 value={f.Email}
                 onSaved={fetchFarmers}
               />
@@ -477,7 +481,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Village"
-                label="Village"
+                label={t('fields.village')}
                 value={f.Village}
                 onSaved={fetchFarmers}
               />
@@ -486,7 +490,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Parish"
-                label="Parish"
+                label={t('fields.parish')}
                 value={f.Parish}
                 onSaved={fetchFarmers}
               />
@@ -495,7 +499,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Sub-county"
-                label="Sub-county"
+                label={t('fields.subCounty')}
                 value={f['Sub-county']}
                 onSaved={fetchFarmers}
               />
@@ -504,26 +508,26 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="District (form)"
-                label="District"
+                label={t('fields.district')}
                 value={f['District (form)']}
                 onSaved={fetchFarmers}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Region" value={f['Region Name']?.[0] ?? f.Region} />
+              <DetailRow label={t('fields.region')} value={f['Region Name']?.[0] ?? f.Region} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Member since (date)"
-                label="Member since"
+                label={t('fields.memberSince')}
                 value={f['Member since (date)']}
                 type="date"
                 onSaved={fetchFarmers}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Member since (year)" value={f['Member since (year)']} />
+              <DetailRow label={t('fields.memberSinceYear')} value={f['Member since (year)']} />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
@@ -534,7 +538,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Main crop sold to Cooperative"
-                label="Main crop sold to Cooperative"
+                label={t('fields.mainCropSold')}
                 value={cropValue}
                 onSaved={fetchFarmers}
               />
@@ -543,7 +547,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Volume sold last season A to Cooperative (kg)"
-                label="Volume sold last season A (kg)"
+                label={t('fields.volumeSeasonA')}
                 value={f['Volume sold last season A to Cooperative (kg)']}
                 type="number"
                 onSaved={fetchFarmers}
@@ -553,7 +557,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Volume sold last season B to Cooperative (kg) copy"
-                label="Volume sold last season B (kg)"
+                label={t('fields.volumeSeasonB')}
                 value={f['Volume sold last season B to Cooperative (kg) copy']}
                 type="number"
                 onSaved={fetchFarmers}
@@ -563,7 +567,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="# seasonal/temporary workers hired & paid by farmer"
-                label="# seasonal/temporary workers"
+                label={t('fields.seasonalWorkers')}
                 value={f['# seasonal/temporary workers hired & paid by farmer']}
                 type="number"
                 onSaved={fetchFarmers}
@@ -573,7 +577,7 @@ export function FarmerView() {
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="# permanent workers hired & paid by farmer"
-                label="# permanent workers"
+                label={t('fields.permanentWorkers')}
                 value={f['# permanent workers hired & paid by farmer']}
                 type="number"
                 onSaved={fetchFarmers}
@@ -587,7 +591,7 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <RelatedLink
                 href={makeLink('lands')}
-                label="# Lands"
+                label={t('fields.landsCount')}
                 value={f['# Lands']}
                 color="success"
               />
@@ -595,7 +599,7 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <RelatedLink
                 href={makeLink('lands')}
-                label="Lands"
+                label={t('fields.lands')}
                 value={f['Lands']?.join(', ')}
                 color="success"
               />
@@ -603,7 +607,7 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <RelatedLink
                 href={makeLink('input-orders')}
-                label="# Input Orders"
+                label={t('fields.inputOrdersCount')}
                 value={f['# Input Orders']}
                 color="info"
               />
@@ -611,7 +615,7 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <RelatedLink
                 href={makeLink('input-orders')}
-                label="Input Orders"
+                label={t('fields.inputOrders')}
                 value={f['Input Orders']?.join(', ')}
                 color="info"
               />
@@ -619,7 +623,7 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <RelatedLink
                 href={makeLink('loans')}
-                label="# Loans"
+                label={t('fields.loansCount')}
                 value={f['# Loans']}
                 color="warning"
               />
@@ -627,7 +631,7 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <RelatedLink
                 href={makeLink('loans')}
-                label="Loans"
+                label={t('fields.loans')}
                 value={f['Loans']?.join(', ')}
                 color="warning"
               />
@@ -642,13 +646,13 @@ export function FarmerView() {
     <DashboardContent maxWidth="xl">
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h4">Farmers</Typography>
+          <Typography variant="h4">{t('page.title')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Manage cooperative members
+            {t('page.subtitle')}
           </Typography>
         </Box>
         <Button variant="contained" startIcon={<Iconify icon={'solar:add-circle-bold' as any} />} onClick={handleAdd}>
-          Add Farmer
+          {t('page.addFarmer')}
         </Button>
       </Stack>
 

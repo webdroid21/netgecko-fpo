@@ -1,0 +1,61 @@
+{
+  "page": {
+    "title": "Abalimi",
+    "subtitle": "Fuga n’okulondoola bamemba b’ekibiina",
+    "addFarmer": "Yongerako mulimi"
+  },
+  "summary": {
+    "totalMembers": {
+      "title": "Bamemba bonna",
+      "subtext": "Abalimi abawandiikiddwa bonna"
+    },
+    "activeFarmers": {
+      "title": "Abalimi abakolamu",
+      "subtext": "60% bakolamu"
+    },
+    "pendingApproval": {
+      "title": "Balindiriddwa okukakasebwa",
+      "subtext": "Basuulirako omukono obakkirizibwe"
+    },
+    "inactive": {
+      "title": "Abatalina musomo",
+      "subtext": "Bamemba abatakyetaba mu nkola"
+    }
+  },
+  "searchPlaceholder": "Noonya abalimi...",
+  "emptyDetail": "Londako mulimi okulaba ebimukwatako",
+  "unnamed": "Talinnya",
+  "confirmDeleteFarmer": "Sangula {{name}}?",
+  "actions": {
+    "edit": "Kyusa"
+  },
+  "fields": {
+    "givenName": "Erinnya erisooka",
+    "surname": "Erinnya ery’omulembe",
+    "gender": "Obutonde",
+    "birthDate": "Olunaku lw’okuzalibwa",
+    "age": "Emyaaka",
+    "farmerCode": "Akabonero ka mulimi",
+    "phoneNumber": "Ennamba y’essimu",
+    "mobileMoneyNumber": "Ennamba ya Mobile Money",
+    "email": "Email",
+    "village": "Kyalo",
+    "parish": "Parish",
+    "subCounty": "Sub-county",
+    "district": "Disitulikiti",
+    "region": "Ekitundu",
+    "memberSince": "Bazzaayo obumemba okuva",
+    "memberSinceYear": "Omwaka gw’atandika obumemba",
+    "mainCropSold": "Ekikulu ky’alimira ky’atunda mu kibiina",
+    "volumeSeasonA": "Obungi obwatundiddwa mu kiseera A (kg)",
+    "volumeSeasonB": "Obungi obwatundiddwa mu kiseera B (kg)",
+    "seasonalWorkers": "# bakozi ba kiseera/ab’ekiseera",
+    "permanentWorkers": "# bakozi abakkakkamu",
+    "landsCount": "# ettaka",
+    "lands": "Ettaka",
+    "inputOrdersCount": "# bisabibwa by’inputs",
+    "inputOrders": "Bisabibwa by’inputs",
+    "loansCount": "# loans",
+    "loans": "Loans"
+  }
+}

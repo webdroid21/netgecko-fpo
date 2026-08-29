@@ -1,0 +1,61 @@
+{
+  "page": {
+    "title": "Agriculteurs",
+    "subtitle": "Gérer les membres de la coopérative",
+    "addFarmer": "Ajouter un agriculteur"
+  },
+  "summary": {
+    "totalMembers": {
+      "title": "Nombre total de membres",
+      "subtext": "Nombre total d’agriculteurs enregistrés"
+    },
+    "activeFarmers": {
+      "title": "Agriculteurs actifs",
+      "subtext": "60 % actifs"
+    },
+    "pendingApproval": {
+      "title": "En attente de validation",
+      "subtext": "Examiner et valider"
+    },
+    "inactive": {
+      "title": "Inactifs",
+      "subtext": "Membres non participants"
+    }
+  },
+  "searchPlaceholder": "Rechercher des agriculteurs...",
+  "emptyDetail": "Sélectionnez un agriculteur pour voir les détails",
+  "unnamed": "Sans nom",
+  "confirmDeleteFarmer": "Supprimer {{name}} ?",
+  "actions": {
+    "edit": "Modifier"
+  },
+  "fields": {
+    "givenName": "Prénom",
+    "surname": "Nom de famille",
+    "gender": "Sexe",
+    "birthDate": "Date de naissance",
+    "age": "Âge",
+    "farmerCode": "Code agriculteur",
+    "phoneNumber": "Numéro de téléphone",
+    "mobileMoneyNumber": "Numéro Mobile Money",
+    "email": "E-mail",
+    "village": "Village",
+    "parish": "Paroisse",
+    "subCounty": "Sous-comté",
+    "district": "District",
+    "region": "Région",
+    "memberSince": "Membre depuis",
+    "memberSinceYear": "Membre depuis (année)",
+    "mainCropSold": "Culture principale vendue à la coopérative",
+    "volumeSeasonA": "Volume vendu la saison A (kg)",
+    "volumeSeasonB": "Volume vendu la saison B (kg)",
+    "seasonalWorkers": "Nombre d’ouvriers saisonniers/tempora ires",
+    "permanentWorkers": "Nombre d’ouvriers permanents",
+    "landsCount": "Nombre de terres",
+    "lands": "Terres",
+    "inputOrdersCount": "Nombre de commandes d’intrants",
+    "inputOrders": "Commandes d’intrants",
+    "loansCount": "Nombre de prêts",
+    "loans": "Prêts"
+  }
+}

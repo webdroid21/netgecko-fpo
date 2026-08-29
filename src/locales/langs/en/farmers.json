@@ -1,0 +1,61 @@
+{
+  "page": {
+    "title": "Farmers",
+    "subtitle": "Manage cooperative members",
+    "addFarmer": "Add farmer"
+  },
+  "summary": {
+    "totalMembers": {
+      "title": "Total members",
+      "subtext": "Total registered farmers"
+    },
+    "activeFarmers": {
+      "title": "Active farmers",
+      "subtext": "60% active"
+    },
+    "pendingApproval": {
+      "title": "Pending approval",
+      "subtext": "Review and activate"
+    },
+    "inactive": {
+      "title": "Inactive",
+      "subtext": "Non-participating members"
+    }
+  },
+  "searchPlaceholder": "Search farmers...",
+  "emptyDetail": "Select a farmer to view details",
+  "unnamed": "Unnamed",
+  "confirmDeleteFarmer": "Delete {{name}}?",
+  "actions": {
+    "edit": "Edit"
+  },
+  "fields": {
+    "givenName": "Given Name",
+    "surname": "Surname",
+    "gender": "Gender",
+    "birthDate": "Birth date",
+    "age": "Age",
+    "farmerCode": "Farmer Code",
+    "phoneNumber": "Phone Number",
+    "mobileMoneyNumber": "Mobile Money Number",
+    "email": "Email",
+    "village": "Village",
+    "parish": "Parish",
+    "subCounty": "Sub-county",
+    "district": "District",
+    "region": "Region",
+    "memberSince": "Member since",
+    "memberSinceYear": "Member since (year)",
+    "mainCropSold": "Main crop sold to Cooperative",
+    "volumeSeasonA": "Volume sold last season A (kg)",
+    "volumeSeasonB": "Volume sold last season B (kg)",
+    "seasonalWorkers": "# seasonal/temporary workers",
+    "permanentWorkers": "# permanent workers",
+    "landsCount": "# Lands",
+    "lands": "Lands",
+    "inputOrdersCount": "# Input Orders",
+    "inputOrders": "Input Orders",
+    "loansCount": "# Loans",
+    "loans": "Loans"
+  }
+}
