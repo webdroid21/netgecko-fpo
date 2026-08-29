@@ -94,8 +94,6 @@ export function AuthCenteredLayout({
       {...slotProps?.main}
       sx={[
         (theme) => ({
-          alignItems: 'center',
-          justifyContent: 'center',
           p: theme.spacing(3, 2, 10, 2),
           [theme.breakpoints.up(layoutQuery)]: {
             p: theme.spacing(10, 0, 10, 0),
@@ -104,7 +102,16 @@ export function AuthCenteredLayout({
         ...(Array.isArray(slotProps?.main?.sx) ? slotProps.main.sx : [slotProps?.main?.sx]),
       ]}
     >
-      <AuthCenteredContent {...slotProps?.content}>{children}</AuthCenteredContent>
+      <Box
+        sx={{
+          flex: 1,
+          width: 1,
+          display: 'grid',
+          placeItems: 'center',
+        }}
+      >
+        <AuthCenteredContent {...slotProps?.content}>{children}</AuthCenteredContent>
+      </Box>
     </MainSection>
   );
 
