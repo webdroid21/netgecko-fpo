@@ -20,28 +20,47 @@ import { CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
-export type WorkspacesPopoverProps = ButtonBaseProps & {
-  data?: {
-    id: string;
-    name: string;
-    logo: string;
-    plan: string;
-  }[];
+export type Workspace = {
+  id: string;
+  name: string;
+  logo?: string;
+  plan?: string;
 };
 
-export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopoverProps) {
+export type WorkspacesPopoverProps = Omit<ButtonBaseProps, 'value' | 'onChange' | 'onSelect' | 'selected'> & {
+  data?: Workspace[];
+  current?: Workspace;
+  onWorkspaceChange?: (value: Workspace) => void;
+  onCreate?: () => void;
+};
+
+export function WorkspacesPopover({
+  data = [],
+  current,
+  onWorkspaceChange,
+  onCreate,
+  sx,
+  ...other
+}: WorkspacesPopoverProps) {
   const mediaQuery = 'sm';
 
   const { open, anchorEl, onClose, onOpen } = usePopover();
 
-  const [workspace, setWorkspace] = useState(data[0]);
+  const isControlled = current !== undefined;
+
+  const [internalWorkspace, setInternalWorkspace] = useState(data[0]);
+
+  const workspace = isControlled ? current : internalWorkspace;
 
   const handleChangeWorkspace = useCallback(
-    (newValue: (typeof data)[0]) => {
-      setWorkspace(newValue);
+    (newValue: Workspace) => {
+      onWorkspaceChange?.(newValue);
+      if (!isControlled) {
+        setInternalWorkspace(newValue);
+      }
       onClose();
     },
-    [onClose]
+    [onWorkspaceChange, isControlled, onClose]
   );
 
   const buttonBg: SxProps<Theme> = {
@@ -79,11 +98,10 @@ export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopover
       ]}
       {...other}
     >
-      <Box
-        component="img"
+      <Avatar
         alt={workspace?.name}
         src={workspace?.logo}
-        sx={{ width: 24, height: 24, borderRadius: '50%' }}
+        sx={{ width: 24, height: 24, fontSize: 12 }}
       />
 
       <Box
@@ -93,16 +111,18 @@ export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopover
         {workspace?.name}
       </Box>
 
-      <Label
-        color={workspace?.plan === 'Free' ? 'default' : 'info'}
-        sx={{
-          height: 22,
-          cursor: 'inherit',
-          display: { xs: 'none', [mediaQuery]: 'inline-flex' },
-        }}
-      >
-        {workspace?.plan}
-      </Label>
+      {!!workspace?.plan && (
+        <Label
+          color={workspace?.plan === 'Free' ? 'default' : 'info'}
+          sx={{
+            height: 22,
+            cursor: 'inherit',
+            display: { xs: 'none', [mediaQuery]: 'inline-flex' },
+          }}
+        >
+          {workspace?.plan}
+        </Label>
+      )}
 
       <Iconify width={16} icon="carbon:chevron-sort" sx={{ color: 'text.disabled' }} />
     </ButtonBase>
@@ -138,36 +158,41 @@ export function WorkspacesPopover({ data = [], sx, ...other }: WorkspacesPopover
                 {option.name}
               </Typography>
 
-              <Label color={option.plan === 'Free' ? 'default' : 'info'}>{option.plan}</Label>
+              {!!option.plan && <Label color={option.plan === 'Free' ? 'default' : 'info'}>{option.plan}</Label>}
             </MenuItem>
           ))}
         </MenuList>
       </Scrollbar>
 
-      <Divider sx={{ my: 0.5, borderStyle: 'dashed' }} />
+      {!!onCreate && (
+        <>
+          <Divider sx={{ my: 0.5, borderStyle: 'dashed' }} />
 
-      <Button
-        fullWidth
-        startIcon={<Iconify width={18} icon="mingcute:add-line" />}
-        onClick={() => {
-          onClose();
-        }}
-        sx={{
-          gap: 2,
-          justifyContent: 'flex-start',
-          fontWeight: 'fontWeightMedium',
-          [`& .${buttonClasses.startIcon}`]: {
-            m: 0,
-            width: 24,
-            height: 24,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          },
-        }}
-      >
-        Create workspace
-      </Button>
+          <Button
+            fullWidth
+            startIcon={<Iconify width={18} icon="mingcute:add-line" />}
+            onClick={() => {
+              onClose();
+              onCreate();
+            }}
+            sx={{
+              gap: 2,
+              justifyContent: 'flex-start',
+              fontWeight: 'fontWeightMedium',
+              [`& .${buttonClasses.startIcon}`]: {
+                m: 0,
+                width: 24,
+                height: 24,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+            }}
+          >
+            Create workspace
+          </Button>
+        </>
+      )}
     </CustomPopover>
   );
 

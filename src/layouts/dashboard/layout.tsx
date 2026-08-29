@@ -2,6 +2,7 @@ import type { Breakpoint } from '@mui/material/styles';
 import type { NavItemProps, NavSectionProps } from 'src/components/nav-section';
 import type { MainSectionProps, HeaderSectionProps, LayoutSectionProps } from '../core';
 
+import { useMemo } from 'react';
 import { merge } from 'es-toolkit';
 import { useBoolean } from 'minimal-shared/hooks';
 
@@ -23,17 +24,16 @@ import { NavVertical } from './nav-vertical';
 import { NavHorizontal } from './nav-horizontal';
 import { _account } from '../nav-config-account';
 import { Searchbar } from '../components/searchbar';
-import { _workspaces } from '../nav-config-workspace';
 import { MenuButton } from '../components/menu-button';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { ContactsPopover } from '../components/contacts-popover';
-import { WorkspacesPopover } from '../components/workspaces-popover';
 import { navData as dashboardNavData } from '../nav-config-dashboard';
 import { dashboardLayoutVars, dashboardNavColorVars } from './css-vars';
 import { NotificationsDrawer } from '../components/notifications-drawer';
 import { MainSection, layoutClasses, HeaderSection, LayoutSection } from '../core';
+import { type Workspace, WorkspacesPopover } from '../components/workspaces-popover';
 
 // ----------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const theme = useTheme();
 
-  const { user } = useAuthContext();
+  const { user, activeFbo, selectFbo } = useAuthContext();
 
   const settings = useSettingsContext();
 
@@ -69,12 +69,29 @@ export function DashboardLayout({
 
   const navData = slotProps?.nav?.data ?? dashboardNavData;
 
+  const fboData: Workspace[] = useMemo(
+    () =>
+      user?.fbos.map((fbo) => ({
+        id: fbo.id,
+        name: fbo.name,
+        logo: '',
+        plan: '',
+      })) ?? [],
+    [user]
+  );
+
+  const activeWorkspace = fboData.find((item) => item.id === activeFbo?.id);
+
+  const handleFboChange = (selected: Workspace) => {
+    selectFbo({ id: selected.id, name: selected.name });
+  };
+
   const isNavMini = settings.state.navLayout === 'mini';
   const isNavHorizontal = settings.state.navLayout === 'horizontal';
   const isNavVertical = isNavMini || settings.state.navLayout === 'vertical';
 
   const canDisplayItemByRole = (allowedRoles: NavItemProps['allowedRoles']): boolean =>
-    !allowedRoles?.includes(user?.role);
+    !allowedRoles || !!allowedRoles.includes(user?.role ?? '');
 
   const renderHeader = () => {
     const headerSlotProps: HeaderSectionProps['slotProps'] = {
@@ -137,7 +154,9 @@ export function DashboardLayout({
 
           {/** @slot Workspace popover */}
           <WorkspacesPopover
-            data={_workspaces}
+            data={fboData}
+            current={activeWorkspace}
+            onWorkspaceChange={handleFboChange}
             sx={{ ...(isNavHorizontal && { color: 'var(--layout-nav-text-primary-color)' }) }}
           />
         </>
