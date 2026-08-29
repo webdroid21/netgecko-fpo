@@ -1,7 +1,7 @@
 {
   "languageSwitch": {
-    "success": "Language has been changed!",
-    "error": "Error changing language!",
-    "loading": "Loading..."
+    "success": "Olulimi lukoze obupya!",
+    "error": "Wazzewo ensobi mu kukyusa olulimi!",
+    "loading": "Ebitikka..."
   }
 }

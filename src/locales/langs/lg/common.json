@@ -1,21 +1,21 @@
 {
   "demo": {
-    "lang": "English",
-    "description": "The starting point for your next project is based on MUI. Easy customization helps you build apps faster and better."
+    "lang": "Luganda",
+    "description": "Olutandikirwako lw'enterinayi eno lubakanyiziddwa ku MUI. Okukyusa mangu kukuyamba okuzimba pulogulaamu mangu era obulungi."
   },
-  "viewAll": "View all",
-  "save": "Save changes",
-  "cancel": "Cancel",
-  "search": "Search",
-  "loading": "Loading…",
-  "noData": "No data yet",
-  "active": "Active",
-  "pending": "Pending",
-  "inactive": "Inactive",
-  "open": "Open",
-  "closed": "Closed",
-  "cancelled": "Cancelled",
-  "status": "Status",
-  "error": "Something went wrong",
-  "close": "Close"
+  "viewAll": "Laba byonna",
+  "save": "Tereka enkyukakyuka",
+  "cancel": "Sazaamu",
+  "search": "Noonya",
+  "loading": "Ebitikka…",
+  "noData": "Tewannabaawo bikwata",
+  "active": "Ekikolamu",
+  "pending": "Kilindiriddwa",
+  "inactive": "Tekikolamu",
+  "open": "Kigguddwawo",
+  "closed": "Kiggaliddwa",
+  "cancelled": "Kisaziddwamu",
+  "status": "Embeera",
+  "error": "Wabadeewo ensobi",
+  "close": "Ggalawo"
 }

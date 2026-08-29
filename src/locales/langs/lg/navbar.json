@@ -1,11 +1,11 @@
 {
   "app": "App",
-  "subheader": "FPO modules",
-  "home": "Home",
-  "farmers": "Farmers",
-  "lands": "Lands",
-  "inputOrders": "Input orders",
+  "subheader": "Emitendera gya FPO",
+  "home": "Awaka",
+  "farmers": "Abalimi",
+  "lands": "Ettaka",
+  "inputOrders": "Bisabibwa by'inputs",
   "loans": "Loans",
-  "payments": "Payments",
-  "sales": "Sales"
+  "payments": "Ensasula",
+  "sales": "Okutunda"
 }
