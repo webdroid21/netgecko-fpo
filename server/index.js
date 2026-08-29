@@ -51,10 +51,17 @@ function initFirebase() {
   }
 
   if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+    // Extract the PEM block. The env value may be wrapped in quotes or contain trailing punctuation.
+    const raw = process.env.FIREBASE_PRIVATE_KEY.trim();
+    const pemMatch = raw.match(/(-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----)/);
+    const privateKey = pemMatch
+      ? pemMatch[1].replace(/\\n/g, '\n')
+      : raw.replace(/\\n/g, '\n');
+
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        privateKey,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       }),
     });
