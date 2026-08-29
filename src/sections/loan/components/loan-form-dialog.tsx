@@ -111,7 +111,7 @@ export function LoanFormDialog({
   const { isSubmitting } = formState;
 
   const loanTypeId = useWatch({ control, name: 'Loan Type' });
-  const selectedLoanType = loanTypes.find((t) => t.id === loanTypeId);
+  const selectedLoanType = loanTypes.find((loanType) => loanType.id === loanTypeId);
   const loanObject = getLoanObject(selectedLoanType);
   const isInputLoan = loanObject === 'Input Loan';
 
