@@ -16,6 +16,7 @@ import { usePathname } from '../hooks';
 
 // Overview
 const IndexPage = lazy(() => import('src/pages/dashboard'));
+const FarmersPage = lazy(() => import('src/pages/dashboard/farmers'));
 // ----------------------------------------------------------------------
 
 function SuspenseOutlet() {
@@ -39,6 +40,7 @@ export const dashboardRoutes: RouteObject[] = [
     element: CONFIG.auth.skip ? dashboardLayout() : <AuthGuard>{dashboardLayout()}</AuthGuard>,
     children: [
       { index: true, element: <IndexPage /> },
+      { path: 'farmers', element: <FarmersPage /> },
       {
         path: 'subpaths',
         children: [

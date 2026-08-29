@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 5001;
 const AIRTABLE_PAT = process.env.AIRTABLE_PAT;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 const AIRTABLE_USERS_TABLE_ID = process.env.AIRTABLE_USERS_TABLE_ID;
+const AIRTABLE_FARMERS_TABLE_ID =
+  process.env.AIRTABLE_FARMERS_TABLE_ID || 'tblQkW4jmj1BDsByN';
 
 // ----------------------------------------------------------------------
 
@@ -169,6 +171,151 @@ app.post('/api/v1/auth/verify', async (req, res) => {
     return res.status(status).json({
       error: 'INTERNAL_ERROR',
       message: error.message || 'Unable to verify access.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+// ----------------------------------------------------------------------
+
+async function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Missing Firebase ID token.' });
+  }
+
+  try {
+    req.user = await admin.auth().verifyIdToken(token);
+    return next();
+  } catch (error) {
+    console.error('Token verification failed:', error.message);
+    return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid or expired token.' });
+  }
+}
+
+function buildFpoFilter(fpoId) {
+  const escaped = fpoId.replace(/'/g, "''");
+  return `FIND('${escaped}', ARRAYJOIN(FPO, ',')) > 0`;
+}
+
+function toAirtableFields(input, fpoId) {
+  const fields = { ...input };
+
+  // Link fields expect arrays of record IDs.
+  if (fields['Main crop sold to Cooperative'] && typeof fields['Main crop sold to Cooperative'] === 'string') {
+    fields['Main crop sold to Cooperative'] = [fields['Main crop sold to Cooperative']];
+  }
+
+  if (fpoId) {
+    fields.FPO = [fpoId];
+  }
+
+  return fields;
+}
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/farmers', requireAuth, async (req, res) => {
+  try {
+    const { fpoId } = req.query;
+
+    if (!fpoId) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId is required.' });
+    }
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_FARMERS_TABLE_ID}/listRecords`, {
+      filterByFormula: buildFpoFilter(fpoId),
+      maxRecords: 100,
+    });
+
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/farmers error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch farmers.',
+    });
+  }
+});
+
+app.get('/api/v1/farmers/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.get(`/${AIRTABLE_FARMERS_TABLE_ID}/${req.params.id}`);
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/farmers/:id error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch farmer.',
+    });
+  }
+});
+
+app.post('/api/v1/farmers', requireAuth, async (req, res) => {
+  try {
+    const { fpoId, fields } = req.body;
+
+    if (!fpoId || !fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId and fields are required.' });
+    }
+
+    const payload = {
+      records: [{ fields: toAirtableFields(fields, fpoId) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_FARMERS_TABLE_ID}`, payload);
+    return res.status(201).json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/farmers POST error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to create farmer.',
+    });
+  }
+});
+
+app.patch('/api/v1/farmers/:id', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ id: req.params.id, fields: toAirtableFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.patch(`/${AIRTABLE_FARMERS_TABLE_ID}`, payload);
+    return res.json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/farmers PATCH error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to update farmer.',
+    });
+  }
+});
+
+app.delete('/api/v1/farmers/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.delete(`/${AIRTABLE_FARMERS_TABLE_ID}?records[]=${req.params.id}`);
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/farmers DELETE error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to delete farmer.',
     });
   }
 });
