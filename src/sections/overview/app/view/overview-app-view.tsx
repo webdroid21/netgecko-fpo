@@ -12,7 +12,6 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
-import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
@@ -34,7 +33,6 @@ import { Chart, useChart } from 'src/components/chart';
 import { useAuthContext } from 'src/auth/hooks';
 
 import { AppWelcome } from '../app-welcome';
-import { AppWidgetSummary } from '../app-widget-summary';
 import { AppCurrentDownload } from '../app-current-download';
 
 // ----------------------------------------------------------------------
@@ -77,12 +75,53 @@ const initialStats: DashboardStats = {
   orderStatus: { open: 0, active: 0, closed: 0, cancelled: 0 },
 };
 
-function chartData(value: number, color?: string) {
-  return {
-    colors: color ? [color] : undefined,
-    categories: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-    series: [value * 0.6, value * 0.8, value * 0.5, value * 0.9, value * 0.7, value * 0.4, value],
-  };
+// ----------------------------------------------------------------------
+
+type StatCardProps = {
+  title: string;
+  value: number;
+  subtext: string;
+  icon: string;
+  color: 'primary' | 'success' | 'info' | 'warning' | 'error';
+};
+
+function StatCard({ title, value, subtext, icon, color }: StatCardProps) {
+  return (
+    <Card sx={{ p: 3, height: '100%' }}>
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
+        <Typography
+          variant="overline"
+          sx={{ color: 'text.secondary', letterSpacing: 1 }}
+        >
+          {title}
+        </Typography>
+
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            flexShrink: 0,
+            display: 'flex',
+            borderRadius: 1.5,
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: `${color}.dark`,
+            bgcolor: (theme) => `${theme.vars.palette[color].lighter}`,
+          }}
+        >
+          <Iconify icon={icon as any} width={22} />
+        </Box>
+      </Stack>
+
+      <Typography variant="h3" sx={{ mt: 1 }}>
+        {fNumber(value)}
+      </Typography>
+
+      <Typography variant="body2" sx={{ mt: 0.5, color: 'text.secondary' }}>
+        {subtext}
+      </Typography>
+    </Card>
+  );
 }
 
 // ----------------------------------------------------------------------
@@ -130,7 +169,6 @@ function MemberStatusChart({ data }: MemberStatusChartProps) {
 
 export function OverviewAppView() {
   const { user, activeFbo } = useAuthContext();
-  const theme = useTheme();
   const [stats, setStats] = useState<DashboardStats>(initialStats);
   const [loading, setLoading] = useState(true);
 
@@ -312,101 +350,82 @@ export function OverviewAppView() {
         {summarySkeleton}
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
-            title="Farmers"
-            percent={0}
-            total={stats.farmers}
-            chart={chartData(stats.farmers, theme.palette.primary.main)}
+          <StatCard
+            title="Active Farmers"
+            value={stats.farmers}
+            subtext={`${stats.activeFarmers} verified members`}
+            icon="solar:users-group-rounded-bold"
+            color="primary"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
-            title="Lands"
-            percent={0}
-            total={stats.lands}
-            chart={chartData(stats.lands, theme.palette.success.main)}
+          <StatCard
+            title="Number of Lands"
+            value={stats.lands}
+            subtext="Registered parcels"
+            icon="solar:box-minimalistic-bold"
+            color="success"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
-            title="Acres"
-            percent={0}
-            total={stats.totalAcres}
-            chart={chartData(stats.totalAcres, theme.palette.info.main)}
+          <StatCard
+            title="Total Land Area"
+            value={stats.totalAcres}
+            subtext="Sum of parcel sizes (acres)"
+            icon="solar:flag-bold"
+            color="info"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
+          <StatCard
             title="Input Orders"
-            percent={0}
-            total={stats.inputOrders}
-            chart={chartData(stats.inputOrders, theme.palette.warning.main)}
+            value={stats.inputOrders}
+            subtext={`${fNumber(stats.inputOrderValue)} UGX total value`}
+            icon="solar:cart-3-bold"
+            color="warning"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
-            title="Input Value"
-            percent={0}
-            total={stats.inputOrderValue}
-            chart={chartData(stats.inputOrderValue / 1000, theme.palette.error.main)}
+          <StatCard
+            title="Loan Balances"
+            value={stats.loansPending}
+            subtext={`Outstanding across ${stats.loans} loans (UGX)`}
+            icon="solar:bill-list-bold"
+            color="error"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
-            title="Loans"
-            percent={0}
-            total={stats.loans}
-            chart={chartData(stats.loans, theme.palette.secondary.main)}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
-            title="Loans Pending"
-            percent={0}
-            total={stats.loansPending}
-            chart={chartData(stats.loansPending / 1000, theme.palette.error.main)}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
-            title="Payments"
-            percent={0}
-            total={stats.payments}
-            chart={chartData(stats.payments, theme.palette.info.main)}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
+          <StatCard
             title="Payments Received"
-            percent={0}
-            total={stats.paymentsTotal}
-            chart={chartData(stats.paymentsTotal / 1000, theme.palette.success.main)}
+            value={stats.paymentsTotal}
+            subtext={`${stats.payments} transactions (UGX)`}
+            icon="solar:wad-of-money-bold"
+            color="success"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
-            title="Sales"
-            percent={0}
-            total={stats.sales}
-            chart={chartData(stats.sales, theme.palette.warning.main)}
+          <StatCard
+            title="Sales Orders"
+            value={stats.sales}
+            subtext="Crop and produce sales"
+            icon="solar:export-bold"
+            color="info"
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <AppWidgetSummary
+          <StatCard
             title="Sales Revenue"
-            percent={0}
-            total={stats.salesRevenue}
-            chart={chartData(stats.salesRevenue / 1000, theme.palette.primary.main)}
+            value={stats.salesRevenue}
+            subtext="Total revenue (UGX)"
+            icon="solar:cup-star-bold"
+            color="primary"
           />
         </Grid>
 
