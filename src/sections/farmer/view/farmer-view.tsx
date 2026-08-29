@@ -19,6 +19,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { RouterLink } from 'src/routes/components/router-link';
+import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
 import { fNumber } from 'src/utils/format-number';
 
@@ -139,6 +140,8 @@ function RelatedLink({ label, value, href, color = 'primary' }: RelatedLinkProps
 
 export function FarmerView() {
   const { activeFbo } = useAuthContext();
+  const searchParams = useSearchParams();
+  const farmerId = searchParams.get('farmerId');
 
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -187,11 +190,13 @@ export function FarmerView() {
   );
 
   useEffect(() => {
-    const first = filteredFarmers[0];
-    if (!selectedId && first) {
+    if (selectedId) return;
+    const fromQuery = farmerId ? farmers.find((f) => f.id === farmerId) : null;
+    const first = fromQuery || filteredFarmers[0];
+    if (first) {
       setSelectedId(first.id);
     }
-  }, [filteredFarmers, selectedId]);
+  }, [farmers, filteredFarmers, farmerId, selectedId]);
 
   useEffect(() => {
     if (!selectedId) return;
