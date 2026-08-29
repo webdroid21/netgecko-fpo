@@ -12,6 +12,8 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
@@ -25,17 +27,17 @@ import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { SeoIllustration } from 'src/assets/illustrations';
 
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
 
 import { useAuthContext } from 'src/auth/hooks';
 
-import { AppWelcome } from '../app-welcome';
 import { AppCurrentDownload } from '../app-current-download';
 
 // ----------------------------------------------------------------------
+
+type PaletteColor = 'primary' | 'success' | 'info' | 'warning' | 'error';
 
 type DashboardStats = {
   farmers: number;
@@ -77,40 +79,59 @@ const initialStats: DashboardStats = {
 
 // ----------------------------------------------------------------------
 
+function IconBadge({ icon, color }: { icon: string; color: PaletteColor }) {
+  return (
+    <Box
+      sx={{
+        width: 44,
+        height: 44,
+        flexShrink: 0,
+        display: 'flex',
+        borderRadius: 1.5,
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: `${color}.dark`,
+        bgcolor: (theme) => `${theme.vars.palette[color].lighter}`,
+      }}
+    >
+      <Iconify icon={icon as any} width={24} />
+    </Box>
+  );
+}
+
+// ----------------------------------------------------------------------
+
 type StatCardProps = {
   title: string;
   value: number;
   subtext: string;
   icon: string;
-  color: 'primary' | 'success' | 'info' | 'warning' | 'error';
+  color: PaletteColor;
+  loading?: boolean;
 };
 
-function StatCard({ title, value, subtext, icon, color }: StatCardProps) {
+function StatCard({ title, value, subtext, icon, color, loading }: StatCardProps) {
+  if (loading) {
+    return (
+      <Card sx={{ p: 3, height: '100%' }}>
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
+          <Skeleton width="60%" height={20} />
+          <Skeleton variant="rounded" width={44} height={44} />
+        </Stack>
+        <Skeleton width="40%" height={44} sx={{ mt: 1 }} />
+        <Skeleton width="70%" height={18} sx={{ mt: 0.5 }} />
+      </Card>
+    );
+  }
+
   return (
     <Card sx={{ p: 3, height: '100%' }}>
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
-        <Typography
-          variant="overline"
-          sx={{ color: 'text.secondary', letterSpacing: 1 }}
-        >
+        <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 1 }}>
           {title}
         </Typography>
 
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            flexShrink: 0,
-            display: 'flex',
-            borderRadius: 1.5,
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: `${color}.dark`,
-            bgcolor: (theme) => `${theme.vars.palette[color].lighter}`,
-          }}
-        >
-          <Iconify icon={icon as any} width={22} />
-        </Box>
+        <IconBadge icon={icon} color={color} />
       </Stack>
 
       <Typography variant="h3" sx={{ mt: 1 }}>
@@ -126,9 +147,166 @@ function StatCard({ title, value, subtext, icon, color }: StatCardProps) {
 
 // ----------------------------------------------------------------------
 
-type MemberStatusChartProps = { data: DashboardStats['memberStatus'] };
+type QuickAccessCardProps = {
+  title: string;
+  total: number;
+  icon: string;
+  color: PaletteColor;
+  href: string;
+  loading?: boolean;
+};
 
-function MemberStatusChart({ data }: MemberStatusChartProps) {
+function QuickAccessCard({ title, total, icon, color, href, loading }: QuickAccessCardProps) {
+  if (loading) {
+    return (
+      <Card sx={{ p: 2.5 }}>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Skeleton variant="rounded" width={44} height={44} />
+          <Box sx={{ flexGrow: 1 }}>
+            <Skeleton width="50%" height={26} />
+            <Skeleton width="70%" height={18} />
+          </Box>
+        </Stack>
+      </Card>
+    );
+  }
+
+  return (
+    <MuiLink component={RouterLink} href={href} underline="none" sx={{ display: 'block' }}>
+      <Card
+        sx={{
+          p: 2.5,
+          transition: (theme) =>
+            theme.transitions.create(['box-shadow', 'transform'], { duration: 200 }),
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: (theme) => theme.vars.customShadows?.z12 ?? theme.shadows[12],
+          },
+        }}
+      >
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <IconBadge icon={icon} color={color} />
+
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography variant="h5" sx={{ lineHeight: 1.2 }}>
+              {fNumber(total)}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
+              {title}
+            </Typography>
+          </Box>
+
+          <Iconify
+            icon={'solar:double-alt-arrow-right-bold-duotone' as any}
+            width={20}
+            sx={{ color: 'text.disabled' }}
+          />
+        </Stack>
+      </Card>
+    </MuiLink>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+type RecentListCardProps = {
+  title: string;
+  viewAllHref: string;
+  icon: string;
+  color: PaletteColor;
+  loading?: boolean;
+  emptyText: string;
+  items: {
+    id: string;
+    primary: string;
+    secondary?: string;
+    amount?: string;
+    href: string;
+  }[];
+};
+
+function RecentListCard({
+  title,
+  viewAllHref,
+  icon,
+  color,
+  loading,
+  emptyText,
+  items,
+}: RecentListCardProps) {
+  return (
+    <Card sx={{ height: '100%' }}>
+      <CardHeader
+        title={title}
+        action={
+          <Button
+            size="small"
+            component={RouterLink}
+            href={viewAllHref}
+            endIcon={<Iconify icon={'solar:double-alt-arrow-right-bold-duotone' as any} width={16} />}
+          >
+            View all
+          </Button>
+        }
+      />
+
+      <CardContent sx={{ pt: 2 }}>
+        {loading ? (
+          <Stack spacing={2}>
+            {[...Array(3)].map((_, i) => (
+              <Stack key={i} direction="row" alignItems="center" spacing={2}>
+                <Skeleton variant="rounded" width={44} height={44} />
+                <Box sx={{ flexGrow: 1 }}>
+                  <Skeleton width="60%" height={20} />
+                  <Skeleton width="40%" height={16} />
+                </Box>
+                <Skeleton width={64} height={20} />
+              </Stack>
+            ))}
+          </Stack>
+        ) : items.length ? (
+          <Stack divider={<Divider sx={{ borderStyle: 'dashed' }} />}>
+            {items.map((item) => (
+              <ListItemButton
+                key={item.id}
+                component={RouterLink}
+                href={item.href}
+                sx={{ borderRadius: 1, px: 1, py: 1.5 }}
+              >
+                <Stack direction="row" alignItems="center" spacing={2} sx={{ width: 1 }}>
+                  <IconBadge icon={icon} color={color} />
+
+                  <ListItemText
+                    primary={item.primary}
+                    secondary={item.secondary}
+                    primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
+                    secondaryTypographyProps={{ variant: 'caption', noWrap: true }}
+                  />
+
+                  {item.amount && (
+                    <Typography variant="subtitle2" sx={{ flexShrink: 0 }}>
+                      {item.amount}
+                    </Typography>
+                  )}
+                </Stack>
+              </ListItemButton>
+            ))}
+          </Stack>
+        ) : (
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {emptyText}
+          </Typography>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+type MemberStatusChartProps = { data: DashboardStats['memberStatus']; loading?: boolean };
+
+function MemberStatusChart({ data, loading }: MemberStatusChartProps) {
   const chartOptions = useChart({
     chart: { stacked: true },
     stroke: { width: 0 },
@@ -140,9 +318,13 @@ function MemberStatusChart({ data }: MemberStatusChartProps) {
   const hasData = data.active + data.pending + data.inactive > 0;
 
   return (
-    <Card>
+    <Card sx={{ height: '100%' }}>
       <CardHeader title="Member Status" subheader="Distribution of farmers across states" />
-      {hasData ? (
+      {loading ? (
+        <Box sx={{ p: 3 }}>
+          <Skeleton variant="rounded" height={300} />
+        </Box>
+      ) : hasData ? (
         <Chart
           type="bar"
           series={[{ name: 'Farmers', data: [data.active, data.pending, data.inactive] }]}
@@ -232,10 +414,7 @@ export function OverviewAppView() {
           0
         ),
         sales: sales.length,
-        salesRevenue: sales.reduce(
-          (sum, s) => sum + (Number(s.fields.Revenue) || 0),
-          0
-        ),
+        salesRevenue: sales.reduce((sum, s) => sum + (Number(s.fields.Revenue) || 0), 0),
         recentInputOrders: orders.slice(0, 5),
         recentPayments: payments.slice(0, 5),
         memberStatus: { active, pending: 0, inactive: farmers.length - active },
@@ -262,95 +441,49 @@ export function OverviewAppView() {
     fetchStats();
   }, [fetchStats]);
 
-  const welcomeAction = (
-    <Button
-      variant="contained"
-      color="primary"
-      component={RouterLink}
-      href={paths.dashboard.fpo.farmers}
-    >
-      View farmers
-    </Button>
-  );
-
-  const QuickLinkCard = ({
-    title,
-    total,
-    icon,
-    color,
-    href,
-  }: {
-    title: string;
-    total: number;
-    icon: string;
-    color: 'primary' | 'success' | 'info' | 'warning';
-    href: string;
-  }) => (
-    <MuiLink component={RouterLink} href={href} underline="none" sx={{ display: 'block' }}>
-      <Card
-        sx={{
-          bgcolor: `${color}.dark`,
-          color: 'common.white',
-          '&:hover': { bgcolor: `${color}.main` },
-          transition: 'background-color 0.2s',
-        }}
-      >
-        <CardContent>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-            <Box>
-              <Typography variant="h4">{fNumber(total)}</Typography>
-              <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
-                {title}
-              </Typography>
-            </Box>
-
-            <Box sx={{ position: 'relative' }}>
-              <Iconify icon={icon as any} width={40} height={40} />
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
-    </MuiLink>
-  );
-
   const hasOrderData =
     stats.orderStatus.open +
     stats.orderStatus.active +
     stats.orderStatus.closed +
     stats.orderStatus.cancelled;
 
-  const summarySkeleton = loading ? (
-    <Grid size={{ xs: 12 }}>
-      <Box sx={{ p: 3, textAlign: 'center' }}>Loading dashboard…</Box>
-    </Grid>
-  ) : null;
+  const firstName = user?.displayName?.split(' ')[0] ?? '';
 
   return (
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <AppWelcome
-            title={`Welcome back 👋 \n ${user?.displayName}`}
-            description={`${activeFbo?.name} FPO dashboard. Overview of farmers, input orders, loans, payments and sales.`}
-            img={<SeoIllustration hideBackground />}
-            action={welcomeAction}
-          />
-        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            justifyContent="space-between"
+            spacing={2}
+          >
+            <Box>
+              <Typography variant="h4">
+                {activeFbo?.name} Cooperative Overview
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                Welcome back{firstName ? `, ${firstName}` : ''} 👋 Real-time health and
+                operational metrics for the farming network.
+              </Typography>
+            </Box>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <QuickLinkCard
-            title="Farmers"
-            total={stats.farmers}
-            icon="solar:users-group-rounded-bold"
-            color="primary"
-            href={paths.dashboard.fpo.farmers}
-          />
+            <Button
+              variant="contained"
+              color="primary"
+              component={RouterLink}
+              href={paths.dashboard.fpo.farmers}
+              startIcon={<Iconify icon={'solar:user-plus-bold' as any} />}
+            >
+              Add Farmer
+            </Button>
+          </Stack>
         </Grid>
-
-        {summarySkeleton}
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
+            loading={loading}
             title="Active Farmers"
             value={stats.farmers}
             subtext={`${stats.activeFarmers} verified members`}
@@ -361,6 +494,7 @@ export function OverviewAppView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
+            loading={loading}
             title="Number of Lands"
             value={stats.lands}
             subtext="Registered parcels"
@@ -371,6 +505,7 @@ export function OverviewAppView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
+            loading={loading}
             title="Total Land Area"
             value={stats.totalAcres}
             subtext="Sum of parcel sizes (acres)"
@@ -381,6 +516,7 @@ export function OverviewAppView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
+            loading={loading}
             title="Input Orders"
             value={stats.inputOrders}
             subtext={`${fNumber(stats.inputOrderValue)} UGX total value`}
@@ -391,6 +527,7 @@ export function OverviewAppView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
+            loading={loading}
             title="Loan Balances"
             value={stats.loansPending}
             subtext={`Outstanding across ${stats.loans} loans (UGX)`}
@@ -401,6 +538,7 @@ export function OverviewAppView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
+            loading={loading}
             title="Payments Received"
             value={stats.paymentsTotal}
             subtext={`${stats.payments} transactions (UGX)`}
@@ -411,6 +549,7 @@ export function OverviewAppView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
+            loading={loading}
             title="Sales Orders"
             value={stats.sales}
             subtext="Crop and produce sales"
@@ -421,6 +560,7 @@ export function OverviewAppView() {
 
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
+            loading={loading}
             title="Sales Revenue"
             value={stats.salesRevenue}
             subtext="Total revenue (UGX)"
@@ -430,11 +570,18 @@ export function OverviewAppView() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <MemberStatusChart data={stats.memberStatus} />
+          <MemberStatusChart data={stats.memberStatus} loading={loading} />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          {hasOrderData ? (
+          {loading ? (
+            <Card sx={{ height: '100%' }}>
+              <CardHeader title="Input Order Queue" subheader="Current state of all seed and tool requests" />
+              <Box sx={{ p: 3 }}>
+                <Skeleton variant="circular" width={240} height={240} sx={{ mx: 'auto' }} />
+              </Box>
+            </Card>
+          ) : hasOrderData ? (
             <AppCurrentDownload
               title="Input Order Queue"
               subheader="Current state of all seed and tool requests"
@@ -449,10 +596,8 @@ export function OverviewAppView() {
             />
           ) : (
             <Card sx={{ height: '100%' }}>
+              <CardHeader title="Input Order Queue" />
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 1 }}>
-                  Input Order Queue
-                </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                   No input orders yet.
                 </Typography>
@@ -461,8 +606,20 @@ export function OverviewAppView() {
           )}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <QuickLinkCard
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
+            title="Farmers"
+            total={stats.farmers}
+            icon="solar:users-group-rounded-bold"
+            color="primary"
+            href={paths.dashboard.fpo.farmers}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
             title="Input Orders"
             total={stats.inputOrders}
             icon="solar:cart-3-bold"
@@ -471,8 +628,9 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <QuickLinkCard
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
             title="Loans"
             total={stats.loans}
             icon="solar:bill-list-bold"
@@ -481,8 +639,9 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <QuickLinkCard
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
             title="Payments"
             total={stats.payments}
             icon="solar:wad-of-money-bold"
@@ -491,92 +650,51 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <QuickLinkCard
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+          <QuickAccessCard
+            loading={loading}
             title="Sales"
             total={stats.sales}
             icon="solar:export-bold"
-            color="primary"
+            color="error"
             href={paths.dashboard.fpo.sales}
           />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-                <Typography variant="h6">Recent Input Orders</Typography>
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  href={paths.dashboard.fpo.inputOrders}
-                >
-                  View all
-                </Button>
-              </Stack>
-
-              <Stack spacing={1}>
-                {stats.recentInputOrders.length ? (
-                  stats.recentInputOrders.map((order) => (
-                    <ListItemButton
-                      key={order.id}
-                      component={RouterLink}
-                      href={`${paths.dashboard.fpo.inputOrders}?farmerId=${order.fields.Farmer?.[0] ?? ''}`}
-                      sx={{ borderRadius: 1, px: 1 }}
-                    >
-                      <ListItemText
-                        primary={order.fields['Order number'] || 'Unnamed'}
-                        secondary={`${fNumber(order.fields['Total Order Value (UGX)'])} UGX`}
-                      />
-                    </ListItemButton>
-                  ))
-                ) : (
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    No recent input orders
-                  </Typography>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
+          <RecentListCard
+            loading={loading}
+            title="Recent Input Orders"
+            viewAllHref={paths.dashboard.fpo.inputOrders}
+            icon="solar:cart-3-bold"
+            color="info"
+            emptyText="No recent input orders"
+            items={stats.recentInputOrders.map((order) => ({
+              id: order.id,
+              primary: order.fields['Order number'] || 'Unnamed',
+              secondary: (order.fields['Name (from Farmer)'] || []).join(', '),
+              amount: `${fNumber(order.fields['Total Order Value (UGX)'])} UGX`,
+              href: `${paths.dashboard.fpo.inputOrders}?farmerId=${order.fields.Farmer?.[0] ?? ''}`,
+            }))}
+          />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-                <Typography variant="h6">Recent Payments</Typography>
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  href={paths.dashboard.fpo.payments}
-                >
-                  View all
-                </Button>
-              </Stack>
-
-              <Stack spacing={1}>
-                {stats.recentPayments.length ? (
-                  stats.recentPayments.map((payment) => (
-                    <ListItemButton
-                      key={payment.id}
-                      component={RouterLink}
-                      href={paths.dashboard.fpo.payments}
-                      sx={{ borderRadius: 1, px: 1 }}
-                    >
-                      <ListItemText
-                        primary={`Payment #${payment.fields['Payment ID'] ?? '-'}`}
-                        secondary={`${fNumber(payment.fields['Payment Amount (UGX)'])} UGX`}
-                      />
-                    </ListItemButton>
-                  ))
-                ) : (
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    No recent payments
-                  </Typography>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
+          <RecentListCard
+            loading={loading}
+            title="Recent Payments"
+            viewAllHref={paths.dashboard.fpo.payments}
+            icon="solar:wad-of-money-bold"
+            color="success"
+            emptyText="No recent payments"
+            items={stats.recentPayments.map((payment) => ({
+              id: payment.id,
+              primary: `Payment #${payment.fields['Payment ID'] ?? '-'}`,
+              secondary: payment.fields['Payment Date'],
+              amount: `${fNumber(payment.fields['Payment Amount (UGX)'])} UGX`,
+              href: paths.dashboard.fpo.payments,
+            }))}
+          />
         </Grid>
       </Grid>
     </DashboardContent>
