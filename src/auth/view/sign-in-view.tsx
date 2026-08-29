@@ -1,19 +1,22 @@
+import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
-import { useBoolean } from 'minimal-shared/hooks';
 import { isSignInWithEmailLink } from 'firebase/auth';
-import { MuiOtpInput } from 'mui-one-time-password-input';
+import { useTabs, useBoolean } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
+import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 
 import { paths } from 'src/routes/paths';
 
 import { AUTH } from 'src/lib/firebase';
+
+import { Form, Field } from 'src/components/hook-form';
 
 import { useAuthContext } from '../hooks';
 import { FormHead } from '../components/form-head';
@@ -27,19 +30,35 @@ import {
 
 // ----------------------------------------------------------------------
 
-type TabValue = 'email' | 'phone' | 'google';
+const TABS = [
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone' },
+];
+
+type FormValues = {
+  email: string;
+  phone: string;
+  otp: string;
+};
 
 export function SignInView() {
   const { error } = useAuthContext();
 
-  const [tab, setTab] = useState<TabValue>('email');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
+  const tabs = useTabs('email');
+  const isSubmitting = useBoolean();
+
   const [confirmation, setConfirmation] = useState<any>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
-  const isSubmitting = useBoolean();
+
+  const methods = useForm<FormValues>({
+    defaultValues: { email: '', phone: '', otp: '' },
+  });
+
+  const { watch } = methods;
+  const email = watch('email');
+  const phone = watch('phone');
+  const otp = watch('otp');
 
   useEffect(() => {
     if (isSignInWithEmailLink(AUTH, window.location.href)) {
@@ -139,15 +158,14 @@ export function SignInView() {
   };
 
   const renderTabContent = () => {
-    if (tab === 'email') {
+    if (tabs.value === 'email') {
       return (
         <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-          <TextField
-            fullWidth
+          <Field.Text
+            name="email"
             type="email"
             label="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
             slotProps={{ inputLabel: { shrink: true } }}
           />
           <Button
@@ -164,67 +182,38 @@ export function SignInView() {
       );
     }
 
-    if (tab === 'phone') {
-      return (
-        <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-          {confirmation ? (
-            <>
-              <MuiOtpInput
-                value={otp}
-                onChange={(value) => setOtp(value ?? '')}
-                length={6}
-              />
-              <Button
-                fullWidth
-                size="large"
-                variant="contained"
-                color="inherit"
-                loading={isSubmitting.value}
-                onClick={handleVerifyOtp}
-              >
-                Verify OTP
-              </Button>
-            </>
-          ) : (
-            <>
-              <TextField
-                fullWidth
-                type="tel"
-                label="Phone number"
-                placeholder="+256700000000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-              <div id="recaptcha-signin" />
-              <Button
-                fullWidth
-                size="large"
-                variant="contained"
-                color="inherit"
-                loading={isSubmitting.value}
-                onClick={handleSendPhoneOtp}
-              >
-                Send OTP
-              </Button>
-            </>
-          )}
-        </Box>
-      );
-    }
-
     return (
       <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-        <Button
-          fullWidth
-          size="large"
-          variant="outlined"
-          color="inherit"
-          loading={isSubmitting.value}
-          onClick={handleGoogle}
-        >
-          Sign in with Google
-        </Button>
+        {confirmation ? (
+          <>
+            <Field.Code name="otp" length={6} />
+            <Button
+              fullWidth
+              size="large"
+              variant="contained"
+              color="inherit"
+              loading={isSubmitting.value}
+              onClick={handleVerifyOtp}
+            >
+              Verify code
+            </Button>
+          </>
+        ) : (
+          <>
+            <Field.Phone name="phone" label="Phone number" defaultCountry="UG" />
+            <div id="recaptcha-signin" />
+            <Button
+              fullWidth
+              size="large"
+              variant="contained"
+              color="inherit"
+              loading={isSubmitting.value}
+              onClick={handleSendPhoneOtp}
+            >
+              Send OTP
+            </Button>
+          </>
+        )}
       </Box>
     );
   };
@@ -232,9 +221,9 @@ export function SignInView() {
   return (
     <>
       <FormHead
-        title="Sign in to FPO App"
-        description="Choose how you want to sign in."
-        sx={{ textAlign: { xs: 'center', md: 'left' } }}
+        title="Sign in"
+        description="Access your FPO dashboard"
+        sx={{ textAlign: 'center', mb: 3 }}
       />
 
       {!!(localError || error) && (
@@ -250,17 +239,44 @@ export function SignInView() {
       )}
 
       <Tabs
-        value={tab}
-        onChange={(_e, value) => setTab(value)}
+        value={tabs.value}
+        onChange={tabs.onChange}
         variant="fullWidth"
-        sx={{ mb: 3 }}
+        indicatorColor="primary"
+        sx={{ borderRadius: 1, mb: 3 }}
       >
-        <Tab value="email" label="Email" />
-        <Tab value="phone" label="Phone" />
-        <Tab value="google" label="Google" />
+        {TABS.map((tab) => (
+          <Tab key={tab.value} value={tab.value} label={tab.label} />
+        ))}
       </Tabs>
 
-      {renderTabContent()}
+      <Form methods={methods} onSubmit={() => {}}>
+        {renderTabContent()}
+      </Form>
+
+      <Stack
+        direction="row"
+        spacing={2}
+        alignItems="center"
+        sx={{ my: 3 }}
+      >
+        <Divider sx={{ flex: 1 }} />
+        <Typography variant="body2" color="text.secondary">
+          or
+        </Typography>
+        <Divider sx={{ flex: 1 }} />
+      </Stack>
+
+      <Button
+        fullWidth
+        size="large"
+        variant="outlined"
+        color="inherit"
+        loading={isSubmitting.value}
+        onClick={handleGoogle}
+      >
+        Sign in with Google
+      </Button>
 
       <Typography variant="body2" sx={{ mt: 3, color: 'text.secondary', textAlign: 'center' }}>
         Don&apos;t have access? Contact the system admin.
