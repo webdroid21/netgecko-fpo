@@ -14,6 +14,7 @@ import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
+import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -27,11 +28,14 @@ import axios from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
 
+import { Chart, useChart } from 'src/components/chart';
+
 import { useAuthContext } from 'src/auth/hooks';
 
 import { AppWidget } from '../app-widget';
 import { AppWelcome } from '../app-welcome';
 import { AppWidgetSummary } from '../app-widget-summary';
+import { AppCurrentDownload } from '../app-current-download';
 
 // ----------------------------------------------------------------------
 
@@ -50,6 +54,8 @@ type DashboardStats = {
   salesRevenue: number;
   recentInputOrders: InputOrder[];
   recentPayments: Payment[];
+  memberStatus: { active: number; pending: number; inactive: number };
+  orderStatus: { open: number; active: number; closed: number; cancelled: number };
 };
 
 const initialStats: DashboardStats = {
@@ -67,6 +73,8 @@ const initialStats: DashboardStats = {
   salesRevenue: 0,
   recentInputOrders: [],
   recentPayments: [],
+  memberStatus: { active: 0, pending: 0, inactive: 0 },
+  orderStatus: { open: 0, active: 0, closed: 0, cancelled: 0 },
 };
 
 function chartData(value: number, color?: string) {
@@ -75,6 +83,37 @@ function chartData(value: number, color?: string) {
     categories: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
     series: [value * 0.6, value * 0.8, value * 0.5, value * 0.9, value * 0.7, value * 0.4, value],
   };
+}
+
+// ----------------------------------------------------------------------
+
+type MemberStatusChartProps = { data: DashboardStats['memberStatus'] };
+
+function MemberStatusChart({ data }: MemberStatusChartProps) {
+  const chartOptions = useChart({
+    chart: { stacked: true },
+    stroke: { width: 0 },
+    xaxis: { categories: ['Active', 'Pending', 'Inactive'] },
+    tooltip: { y: { formatter: (value: number) => fNumber(value) } },
+    plotOptions: { bar: { columnWidth: '40%' } },
+  });
+
+  return (
+    <Card>
+      <CardHeader title="Member Status" subheader="Distribution of farmers across states" />
+      <Chart
+        type="bar"
+        series={[{ name: 'Farmers', data: [data.active, data.pending, data.inactive] }]}
+        options={chartOptions}
+        sx={{
+          pl: 1,
+          py: 2.5,
+          pr: 2.5,
+          height: 320,
+        }}
+      />
+    </Card>
+  );
 }
 
 // ----------------------------------------------------------------------
@@ -119,12 +158,14 @@ export function OverviewAppView() {
       const payments: Payment[] = paymentsData.records || [];
       const sales: SalesOrder[] = salesData.records || [];
 
+      const active = farmers.filter((f) => f.fields.Checked === true).length;
+
       setStats({
         farmers: farmers.length,
-        activeFarmers: farmers.filter((f) => f.fields.Checked === true).length,
+        activeFarmers: active,
         lands: lands.length,
         totalAcres: lands.reduce(
-          (sum, l) => sum + (Number(l.fields['Land Size (Acres)']) || 0),
+          (sum: number, l: any) => sum + (Number(l.fields['Land Size (Acres)']) || 0),
           0
         ),
         inputOrders: orders.length,
@@ -149,6 +190,18 @@ export function OverviewAppView() {
         ),
         recentInputOrders: orders.slice(0, 5),
         recentPayments: payments.slice(0, 5),
+        memberStatus: { active, pending: 0, inactive: farmers.length - active },
+        orderStatus: orders.reduce(
+          (acc, o) => {
+            const status = o.fields['Order Status'];
+            if (status === 'Open') acc.open += 1;
+            if (status === 'Active') acc.active += 1;
+            if (status === 'Closed') acc.closed += 1;
+            if (status === 'Cancelled') acc.cancelled += 1;
+            return acc;
+          },
+          { open: 0, active: 0, closed: 0, cancelled: 0 }
+        ),
       });
     } catch (error: any) {
       console.error('Dashboard stats error:', error?.message);
@@ -323,6 +376,25 @@ export function OverviewAppView() {
             percent={0}
             total={stats.salesRevenue}
             chart={chartData(stats.salesRevenue / 1000, theme.palette.primary.main)}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <MemberStatusChart data={stats.memberStatus} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <AppCurrentDownload
+            title="Input Order Queue"
+            subheader="Current state of all seed and tool requests"
+            chart={{
+              series: [
+                { label: 'Open', value: stats.orderStatus.open },
+                { label: 'Active', value: stats.orderStatus.active },
+                { label: 'Closed', value: stats.orderStatus.closed },
+                { label: 'Cancelled', value: stats.orderStatus.cancelled },
+              ],
+            }}
           />
         </Grid>
 
