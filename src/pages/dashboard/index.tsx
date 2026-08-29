@@ -1,15 +1,18 @@
 import { CONFIG } from 'src/global-config';
 
 import { OverviewAppView } from 'src/sections/overview/app/view';
+import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Dashboard - ${CONFIG.appName}` };
-
 export default function OverviewAppPage() {
+  const { t } = useTranslate('dashboard');
+
+  const pageTitle = `${t('title')} - ${CONFIG.appName}`;
+
   return (
     <>
-      <title>{metadata.title}</title>
+      <title>{pageTitle}</title>
 
       <OverviewAppView />
     </>

@@ -1,15 +1,18 @@
 import { CONFIG } from 'src/global-config';
 
 import { FarmerView } from 'src/sections/farmer/view';
+import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Farmers - ${CONFIG.appName}` };
-
 export default function FarmersPage() {
+  const { t } = useTranslate('navbar');
+
+  const pageTitle = `${t('farmers')} - ${CONFIG.appName}`;
+
   return (
     <>
-      <title>{metadata.title}</title>
+      <title>{pageTitle}</title>
 
       <FarmerView />
     </>

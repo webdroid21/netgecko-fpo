@@ -1,15 +1,18 @@
 import { CONFIG } from 'src/global-config';
 
 import { PaymentView } from 'src/sections/payment/view';
+import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Payments - ${CONFIG.appName}` };
-
 export default function PaymentsPage() {
+  const { t } = useTranslate('navbar');
+
+  const pageTitle = `${t('payments')} - ${CONFIG.appName}`;
+
   return (
     <>
-      <title>{metadata.title}</title>
+      <title>{pageTitle}</title>
 
       <PaymentView />
     </>

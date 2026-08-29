@@ -1,15 +1,18 @@
 import { CONFIG } from 'src/global-config';
 
 import { AccountView } from 'src/sections/account/view';
+import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Account - ${CONFIG.appName}` };
-
 export default function AccountPage() {
+  const { t } = useTranslate('account');
+
+  const pageTitle = `${t('title')} - ${CONFIG.appName}`;
+
   return (
     <>
-      <title>{metadata.title}</title>
+      <title>{pageTitle}</title>
 
       <AccountView />
     </>

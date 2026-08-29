@@ -1,15 +1,18 @@
 import { CONFIG } from 'src/global-config';
 
 import { SalesView } from 'src/sections/sales/view';
+import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Sales - ${CONFIG.appName}` };
-
 export default function SalesPage() {
+  const { t } = useTranslate('navbar');
+
+  const pageTitle = `${t('sales')} - ${CONFIG.appName}`;
+
   return (
     <>
-      <title>{metadata.title}</title>
+      <title>{pageTitle}</title>
 
       <SalesView />
     </>

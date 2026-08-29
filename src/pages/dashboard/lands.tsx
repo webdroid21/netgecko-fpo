@@ -1,15 +1,18 @@
 import { CONFIG } from 'src/global-config';
 
 import { LandView } from 'src/sections/land/view';
+import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Land Management - ${CONFIG.appName}` };
-
 export default function LandsPage() {
+  const { t } = useTranslate('navbar');
+
+  const pageTitle = `${t('lands')} - ${CONFIG.appName}`;
+
   return (
     <>
-      <title>{metadata.title}</title>
+      <title>{pageTitle}</title>
 
       <LandView />
     </>

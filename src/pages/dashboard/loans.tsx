@@ -1,15 +1,18 @@
 import { CONFIG } from 'src/global-config';
 
 import { LoanView } from 'src/sections/loan/view';
+import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Loans - ${CONFIG.appName}` };
-
 export default function LoansPage() {
+  const { t } = useTranslate('navbar');
+
+  const pageTitle = `${t('loans')} - ${CONFIG.appName}`;
+
   return (
     <>
-      <title>{metadata.title}</title>
+      <title>{pageTitle}</title>
 
       <LoanView />
     </>
