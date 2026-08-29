@@ -220,9 +220,9 @@ export function LoanFormDialog({
               {renderSelect(
                 'Loan Type',
                 t('form.loanType'),
-                loanTypes.map((t) => ({
-                  value: t.id,
-                  label: getLoanObject(t) || 'Unnamed',
+                loanTypes.map((type) => ({
+                  value: type.id,
+                  label: getLoanObject(type) || 'Unnamed',
                 })),
                 true
               )}
