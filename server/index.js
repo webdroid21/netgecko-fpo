@@ -196,9 +196,9 @@ async function requireAuth(req, res, next) {
   }
 }
 
-function buildFpoFilter(fpoId) {
-  const escaped = fpoId.replace(/'/g, "''");
-  return `FIND('${escaped}', ARRAYJOIN(FPO, ',')) > 0`;
+function buildFpoFilter(fpoName) {
+  const escaped = fpoName.replace(/'/g, "''");
+  return `SEARCH('${escaped}', ARRAYJOIN({Name (from FPO)}, ',')) > 0`;
 }
 
 function toAirtableFields(input, fpoId) {
@@ -220,14 +220,14 @@ function toAirtableFields(input, fpoId) {
 
 app.get('/api/v1/farmers', requireAuth, async (req, res) => {
   try {
-    const { fpoId } = req.query;
+    const { fpoId, fpoName } = req.query;
 
-    if (!fpoId) {
-      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId is required.' });
+    if (!fpoId && !fpoName) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId or fpoName is required.' });
     }
 
     const { data } = await airtableApi.post(`/${AIRTABLE_FARMERS_TABLE_ID}/listRecords`, {
-      filterByFormula: buildFpoFilter(fpoId),
+      filterByFormula: buildFpoFilter(fpoName || fpoId),
       maxRecords: 100,
     });
 

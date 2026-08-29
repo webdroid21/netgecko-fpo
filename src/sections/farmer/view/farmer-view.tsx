@@ -94,7 +94,11 @@ export function FarmerView() {
     if (!activeFbo) return;
     setLoading(true);
     try {
-      const { data } = await axios.get(`/api/v1/farmers?fpoId=${activeFbo.id}`);
+      const query = new URLSearchParams({
+        fpoId: activeFbo.id,
+        fpoName: activeFbo.name,
+      }).toString();
+      const { data } = await axios.get(`/api/v1/farmers?${query}`);
       setFarmers(data.records || []);
     } catch (error: any) {
       console.error('Fetch farmers error:', error?.message);
