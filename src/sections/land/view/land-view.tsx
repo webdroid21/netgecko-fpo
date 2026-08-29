@@ -8,6 +8,7 @@ import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
+import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -16,6 +17,7 @@ import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 
+import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
 import { fNumber } from 'src/utils/format-number';
@@ -70,15 +72,44 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
-function DetailRow({ label, value }: { label: string; value?: any }) {
-  return (
-    <Box sx={{ p: 1 }}>
+function DetailRow({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value?: any;
+  href?: string;
+}) {
+  const content = (
+    <>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
       </Typography>
       <Typography variant="body1">{value ?? '—'}</Typography>
-    </Box>
+    </>
   );
+
+  if (href) {
+    return (
+      <MuiLink
+        component={RouterLink}
+        href={href}
+        underline="none"
+        color="text.primary"
+        sx={{
+          p: 1,
+          display: 'block',
+          borderRadius: 1,
+          '&:hover': { bgcolor: 'action.hover' },
+        }}
+      >
+        {content}
+      </MuiLink>
+    );
+  }
+
+  return <Box sx={{ p: 1 }}>{content}</Box>;
 }
 
 // ----------------------------------------------------------------------
@@ -146,23 +177,25 @@ export function LandView() {
     fetchCrops();
   }, [fetchLands, fetchFarmers, fetchCrops]);
 
+  useEffect(() => {
+    if (selectedId || !lands.length) return;
+    const match = farmerFilter
+      ? lands.find((l) => (l.fields.Farmer ?? []).includes(farmerFilter))
+      : null;
+    setSelectedId(match?.id || lands[0]?.id);
+  }, [lands, farmerFilter, selectedId]);
+
   const filteredLands = useMemo(() => {
-    let list = [...lands];
-
-    if (farmerFilter) {
-      list = list.filter((l) => (l.fields.Farmer ?? []).includes(farmerFilter));
-    }
-
     const term = search.trim().toLowerCase();
-    if (!term) return list;
+    if (!term) return lands;
 
-    return list.filter((l) => {
+    return lands.filter((l) => {
       const landName = String(l.fields.Land || '').toLowerCase();
       const cropName = String((l.fields['Crop Name (from Crop)'] || []).join(' ')).toLowerCase();
       const owner = String((l.fields['Name (from Owner)'] || []).join(' ')).toLowerCase();
       return landName.includes(term) || cropName.includes(term) || owner.includes(term);
     });
-  }, [lands, farmerFilter, search]);
+  }, [lands, search]);
 
   const selectedLand = useMemo(
     () => lands.find((l) => l.id === selectedId) || filteredLands[0] || null,
@@ -349,7 +382,15 @@ export function LandView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Farmer" value={(f['Name (from Owner)'] || []).join(', ')} />
+              <DetailRow
+                label="Farmer"
+                value={(f['Name (from Owner)'] || []).join(', ')}
+                href={
+                  f.Farmer?.[0]
+                    ? `/dashboard/farmers?farmerId=${f.Farmer[0]}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`
+                    : undefined
+                }
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label="Land Ownership" value={f['Land Ownership']} />
