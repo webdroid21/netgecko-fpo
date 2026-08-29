@@ -117,8 +117,8 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     <>
       <AccountButton
         onClick={onOpen}
-        photoURL={user?.photoURL}
-        displayName={user?.displayName}
+        photoURL={user?.photoURL ?? ''}
+        displayName={user?.displayName ?? ''}
         sx={sx}
         {...other}
       />

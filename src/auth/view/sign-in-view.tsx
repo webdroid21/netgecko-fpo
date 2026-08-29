@@ -1,193 +1,270 @@
-import * as z from 'zod';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { isSignInWithEmailLink } from 'firebase/auth';
 import { useBoolean } from 'minimal-shared/hooks';
-import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
+import Tab from '@mui/material/Tab';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
+import Tabs from '@mui/material/Tabs';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import { MuiOtpInput } from 'mui-one-time-password-input';
 
 import { paths } from 'src/routes/paths';
-import { useRouter } from 'src/routes/hooks';
-import { RouterLink } from 'src/routes/components';
 
-import { Iconify } from 'src/components/iconify';
-import { Form, Field, schemaUtils } from 'src/components/hook-form';
+import { AUTH } from 'src/lib/firebase';
 
 import { useAuthContext } from '../hooks';
-import { getErrorMessage } from '../utils';
 import { FormHead } from '../components/form-head';
-import { FormDivider } from '../components/form-divider';
-import { FormSocials } from '../components/form-socials';
 import {
   signInWithGoogle,
-  signInWithGithub,
-  signInWithTwitter,
-  signInWithPassword,
+  sendMagicLink,
+  completeMagicLinkSignIn,
+  sendPhoneOtp,
+  verifyPhoneOtp,
 } from '../context';
 
 // ----------------------------------------------------------------------
 
-export type SignInSchemaType = z.infer<typeof SignInSchema>;
-
-export const SignInSchema = z.object({
-  email: schemaUtils.email(),
-  password: z
-    .string()
-    .min(1, { error: 'Password is required!' })
-    .min(6, { error: 'Password must be at least 6 characters!' }),
-});
-
-// ----------------------------------------------------------------------
+type TabValue = 'email' | 'phone' | 'google';
 
 export function SignInView() {
-  const router = useRouter();
+  const { error } = useAuthContext();
 
-  const showPassword = useBoolean();
+  const [tab, setTab] = useState<TabValue>('email');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [confirmation, setConfirmation] = useState<any>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const isSubmitting = useBoolean();
 
-  const { checkUserSession } = useAuthContext();
+  useEffect(() => {
+    if (isSignInWithEmailLink(AUTH, window.location.href)) {
+      const storedEmail = window.localStorage.getItem('emailForSignIn');
+      if (storedEmail) {
+        handleEmailLinkSignIn(storedEmail);
+      } else {
+        setLocalError('Magic link detected but email is missing. Please enter the same email to continue.');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const defaultValues: SignInSchemaType = {
-    email: '',
-    password: '',
+  const handleEmailLinkSignIn = async (linkEmail: string) => {
+    setLocalError(null);
+    isSubmitting.onTrue();
+    try {
+      await completeMagicLinkSignIn(linkEmail, window.location.href);
+      // AuthProvider/GuestGuard will handle the redirect once the session is verified.
+    } catch (err: any) {
+      setLocalError(err?.message || 'Failed to sign in with email link.');
+    } finally {
+      isSubmitting.onFalse();
+    }
   };
 
-  const methods = useForm({
-    resolver: zodResolver(SignInSchema),
-    defaultValues,
-  });
-
-  const {
-    handleSubmit,
-    formState: { isSubmitting },
-  } = methods;
-
-  const onSubmit = handleSubmit(async (data) => {
-    try {
-      await signInWithPassword({ email: data.email, password: data.password });
-      await checkUserSession?.();
-
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      const feedbackMessage = getErrorMessage(error);
-      setErrorMessage(feedbackMessage);
+  const handleSendMagicLink = async () => {
+    setLocalError(null);
+    setInfo(null);
+    if (!email) {
+      setLocalError('Please enter your email address.');
+      return;
     }
-  });
+    isSubmitting.onTrue();
+    try {
+      const continueUrl = `${window.location.origin}${paths.auth.firebase.signIn}`;
+      await sendMagicLink(email, continueUrl);
+      setInfo('A login link has been sent to your email. Open it in this browser to sign in.');
+    } catch (err: any) {
+      setLocalError(err?.message || 'Failed to send magic link.');
+    } finally {
+      isSubmitting.onFalse();
+    }
+  };
 
-  const handleSignInWithGoogle = async () => {
+  const handleSendPhoneOtp = async () => {
+    setLocalError(null);
+    setInfo(null);
+    if (!phone) {
+      setLocalError('Please enter your phone number.');
+      return;
+    }
+    isSubmitting.onTrue();
+    try {
+      const result = await sendPhoneOtp(phone, 'recaptcha-signin');
+      setConfirmation(result);
+      setInfo('OTP sent. Please enter the code.');
+    } catch (err: any) {
+      setLocalError(err?.message || 'Failed to send OTP.');
+    } finally {
+      isSubmitting.onFalse();
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    setLocalError(null);
+    if (!confirmation) {
+      setLocalError('Request OTP first.');
+      return;
+    }
+    if (otp.length < 6) {
+      setLocalError('Enter the 6-digit OTP.');
+      return;
+    }
+    isSubmitting.onTrue();
+    try {
+      await verifyPhoneOtp({ confirmationResult: confirmation, otp });
+      // AuthProvider/GuestGuard will handle the redirect once the session is verified.
+    } catch (err: any) {
+      setLocalError(err?.message || 'Invalid OTP.');
+    } finally {
+      isSubmitting.onFalse();
+    }
+  };
+
+  const handleGoogle = async () => {
+    setLocalError(null);
+    isSubmitting.onTrue();
     try {
       await signInWithGoogle();
-    } catch (error) {
-      console.error(error);
+      // AuthProvider/GuestGuard will handle the redirect once the session is verified.
+    } catch (err: any) {
+      setLocalError(err?.message || 'Google sign in failed.');
+    } finally {
+      isSubmitting.onFalse();
     }
   };
 
-  const handleSignInWithGithub = async () => {
-    try {
-      await signInWithGithub();
-    } catch (error) {
-      console.error(error);
+  const renderTabContent = () => {
+    if (tab === 'email') {
+      return (
+        <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
+          <TextField
+            fullWidth
+            type="email"
+            label="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+          <Button
+            fullWidth
+            size="large"
+            variant="contained"
+            color="inherit"
+            loading={isSubmitting.value}
+            onClick={handleSendMagicLink}
+          >
+            Send login link
+          </Button>
+        </Box>
+      );
     }
-  };
 
-  const handleSignInWithTwitter = async () => {
-    try {
-      await signInWithTwitter();
-    } catch (error) {
-      console.error(error);
+    if (tab === 'phone') {
+      return (
+        <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
+          {confirmation ? (
+            <>
+              <MuiOtpInput
+                value={otp}
+                onChange={(value) => setOtp(value ?? '')}
+                length={6}
+              />
+              <Button
+                fullWidth
+                size="large"
+                variant="contained"
+                color="inherit"
+                loading={isSubmitting.value}
+                onClick={handleVerifyOtp}
+              >
+                Verify OTP
+              </Button>
+            </>
+          ) : (
+            <>
+              <TextField
+                fullWidth
+                type="tel"
+                label="Phone number"
+                placeholder="+256700000000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+              <div id="recaptcha-signin" />
+              <Button
+                fullWidth
+                size="large"
+                variant="contained"
+                color="inherit"
+                loading={isSubmitting.value}
+                onClick={handleSendPhoneOtp}
+              >
+                Send OTP
+              </Button>
+            </>
+          )}
+        </Box>
+      );
     }
-  };
 
-  const renderForm = () => (
-    <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-      <Field.Text name="email" label="Email address" slotProps={{ inputLabel: { shrink: true } }} />
-
-      <Box sx={{ gap: 1.5, display: 'flex', flexDirection: 'column' }}>
-        <Link
-          component={RouterLink}
-          href={paths.auth.firebase.resetPassword}
-          variant="body2"
+    return (
+      <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
+        <Button
+          fullWidth
+          size="large"
+          variant="outlined"
           color="inherit"
-          sx={{ alignSelf: 'flex-end' }}
+          loading={isSubmitting.value}
+          onClick={handleGoogle}
         >
-          Forgot password?
-        </Link>
-
-        <Field.Text
-          name="password"
-          label="Password"
-          placeholder="6+ characters"
-          type={showPassword.value ? 'text' : 'password'}
-          slotProps={{
-            inputLabel: { shrink: true },
-            input: {
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={showPassword.onToggle} edge="end">
-                    <Iconify
-                      icon={showPassword.value ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
-                    />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
+          Sign in with Google
+        </Button>
       </Box>
-
-      <Button
-        fullWidth
-        color="inherit"
-        size="large"
-        type="submit"
-        variant="contained"
-        loading={isSubmitting}
-        loadingIndicator="Sign in..."
-      >
-        Sign in
-      </Button>
-    </Box>
-  );
+    );
+  };
 
   return (
     <>
       <FormHead
-        title="Sign in to your account"
-        description={
-          <>
-            {`Don’t have an account? `}
-            <Link component={RouterLink} href={paths.auth.firebase.signUp} variant="subtitle2">
-              Get started
-            </Link>
-          </>
-        }
+        title="Sign in to FPO App"
+        description="Choose how you want to sign in."
         sx={{ textAlign: { xs: 'center', md: 'left' } }}
       />
 
-      {!!errorMessage && (
+      {!!(localError || error) && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {errorMessage}
+          {localError || error}
         </Alert>
       )}
 
-      <Form methods={methods} onSubmit={onSubmit}>
-        {renderForm()}
-      </Form>
+      {!!info && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          {info}
+        </Alert>
+      )}
 
-      <FormDivider />
+      <Tabs
+        value={tab}
+        onChange={(_e, value) => setTab(value)}
+        variant="fullWidth"
+        sx={{ mb: 3 }}
+      >
+        <Tab value="email" label="Email" />
+        <Tab value="phone" label="Phone" />
+        <Tab value="google" label="Google" />
+      </Tabs>
 
-      <FormSocials
-        signInWithGoogle={handleSignInWithGoogle}
-        singInWithGithub={handleSignInWithGithub}
-        signInWithTwitter={handleSignInWithTwitter}
-      />
+      {renderTabContent()}
+
+      <Typography variant="body2" sx={{ mt: 3, color: 'text.secondary', textAlign: 'center' }}>
+        Don&apos;t have access? Contact the system admin.
+      </Typography>
     </>
   );
 }

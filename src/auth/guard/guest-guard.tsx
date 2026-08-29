@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { safeReturnUrl } from 'minimal-shared/utils';
 
+import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 import { useSearchParams } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/global-config';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
+import { FboSelectDialog } from '../components/fbo-select-dialog';
 import { useAuthContext } from '../hooks';
 
 // ----------------------------------------------------------------------
@@ -16,7 +19,7 @@ type GuestGuardProps = {
 };
 
 export function GuestGuard({ children }: GuestGuardProps) {
-  const { loading, authenticated } = useAuthContext();
+  const { loading, authenticated, user } = useAuthContext();
 
   const [isChecking, setIsChecking] = useState(true);
 
@@ -46,6 +49,26 @@ export function GuestGuard({ children }: GuestGuardProps) {
 
   if (isChecking) {
     return <SplashScreen />;
+  }
+
+  // User exists but has multiple FBOs and none selected yet
+  if (user && user.fbos.length > 1) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <FboSelectDialog open />
+      </Box>
+    );
+  }
+
+  // User exists but has no FBO assigned
+  if (user && user.fbos.length === 0) {
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">
+          No FBO is assigned to your profile. Please contact the system admin to gain access.
+        </Alert>
+      </Box>
+    );
   }
 
   return <>{children}</>;

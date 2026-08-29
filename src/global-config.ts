@@ -31,16 +31,16 @@ export type ConfigValue = {
 // ----------------------------------------------------------------------
 
 export const CONFIG: ConfigValue = {
-  appName: 'Minimal UI',
+  appName: 'FPO App',
   appVersion: packageJson.version,
-  serverUrl: import.meta.env.VITE_SERVER_URL ?? '',
+  serverUrl: import.meta.env.VITE_SERVER_URL ?? 'http://localhost:5001',
   assetsDir: import.meta.env.VITE_ASSETS_DIR ?? '',
   /**
    * Auth
    * @method jwt | amplify | firebase | supabase | auth0
    */
   auth: {
-    method: 'jwt',
+    method: 'firebase',
     skip: false,
     redirectPath: paths.dashboard.root,
   },

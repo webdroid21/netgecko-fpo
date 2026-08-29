@@ -1,23 +1,24 @@
-import { doc, setDoc, collection } from 'firebase/firestore';
+import { AUTH } from 'src/lib/firebase';
 import {
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  TwitterAuthProvider,
+  RecaptchaVerifier,
+  signInWithEmailLink,
+  sendSignInLinkToEmail,
+  signInWithPhoneNumber,
+  signInWithPopup,
   signOut as _signOut,
-  signInWithPopup as _signInWithPopup,
-  GoogleAuthProvider as _GoogleAuthProvider,
-  GithubAuthProvider as _GithubAuthProvider,
-  TwitterAuthProvider as _TwitterAuthProvider,
-  sendEmailVerification as _sendEmailVerification,
   sendPasswordResetEmail as _sendPasswordResetEmail,
-  signInWithEmailAndPassword as _signInWithEmailAndPassword,
   createUserWithEmailAndPassword as _createUserWithEmailAndPassword,
+  sendEmailVerification as _sendEmailVerification,
 } from 'firebase/auth';
-
-import { AUTH, FIRESTORE } from 'src/lib/firebase';
 
 // ----------------------------------------------------------------------
 
-export type SignInParams = {
-  email: string;
-  password: string;
+export type VerifyOtpParams = {
+  confirmationResult: any;
+  otp: string;
 };
 
 export type SignUpParams = {
@@ -27,84 +28,56 @@ export type SignUpParams = {
   lastName: string;
 };
 
-export type ForgotPasswordParams = {
-  email: string;
+export const signInWithGoogle = async () => {
+  const provider = new GoogleAuthProvider();
+  const result = await signInWithPopup(AUTH, provider);
+  return result.user;
 };
 
-/** **************************************
- * Sign in
- *************************************** */
-export const signInWithPassword = async ({ email, password }: SignInParams): Promise<void> => {
-  try {
-    await _signInWithEmailAndPassword(AUTH, email, password);
-
-    const user = AUTH.currentUser;
-
-    if (!user?.emailVerified) {
-      throw new Error('Email not verified!');
-    }
-  } catch (error) {
-    console.error('Error during sign in with password:', error);
-    throw error;
-  }
+export const signInWithGithub = async () => {
+  const provider = new GithubAuthProvider();
+  await signInWithPopup(AUTH, provider);
 };
 
-export const signInWithGoogle = async (): Promise<void> => {
-  const provider = new _GoogleAuthProvider();
-  await _signInWithPopup(AUTH, provider);
+export const signInWithTwitter = async () => {
+  const provider = new TwitterAuthProvider();
+  await signInWithPopup(AUTH, provider);
 };
 
-export const signInWithGithub = async (): Promise<void> => {
-  const provider = new _GithubAuthProvider();
-  await _signInWithPopup(AUTH, provider);
+export const signUp = async ({ email, password, firstName, lastName }: SignUpParams) => {
+  const newUser = await _createUserWithEmailAndPassword(AUTH, email, password);
+  await _sendEmailVerification(newUser.user);
+  // Note: a matching record in Airtable is still required to log in.
+  return newUser;
 };
 
-export const signInWithTwitter = async (): Promise<void> => {
-  const provider = new _TwitterAuthProvider();
-  await _signInWithPopup(AUTH, provider);
-};
-
-/** **************************************
- * Sign up
- *************************************** */
-export const signUp = async ({
-  email,
-  password,
-  firstName,
-  lastName,
-}: SignUpParams): Promise<void> => {
-  try {
-    const newUser = await _createUserWithEmailAndPassword(AUTH, email, password);
-
-    /*
-     * (1) If skip emailVerified
-     * Remove : await _sendEmailVerification(newUser.user);
-     */
-    await _sendEmailVerification(newUser.user);
-
-    const userProfile = doc(collection(FIRESTORE, 'users'), newUser.user?.uid);
-
-    await setDoc(userProfile, {
-      uid: newUser.user?.uid,
-      email,
-      displayName: `${firstName} ${lastName}`,
-    });
-  } catch (error) {
-    console.error('Error during sign up:', error);
-    throw error;
-  }
-};
-
-/** **************************************
- * Sign out
- *************************************** */
-export const signOut = async (): Promise<void> => {
-  await _signOut(AUTH);
-};
-
-/** **************************************
- * Reset password
- *************************************** */
-export const sendPasswordResetEmail = async ({ email }: ForgotPasswordParams): Promise<void> => {
+export const sendPasswordResetEmail = async ({ email }: { email: string }) => {
   await _sendPasswordResetEmail(AUTH, email);
+};
+
+export const sendMagicLink = async (email: string, continueUrl: string) => {
+  const actionCodeSettings = { url: continueUrl, handleCodeInApp: true };
+  await sendSignInLinkToEmail(AUTH, email, actionCodeSettings);
+  window.localStorage.setItem('emailForSignIn', email);
+};
+
+export const completeMagicLinkSignIn = async (email: string, url: string) => {
+  const result = await signInWithEmailLink(AUTH, email, url);
+  window.localStorage.removeItem('emailForSignIn');
+  return result.user;
+};
+
+export const sendPhoneOtp = async (phone: string, containerId: string) => {
+  const recaptcha = new RecaptchaVerifier(AUTH, containerId, { size: 'invisible' });
+  const confirmationResult = await signInWithPhoneNumber(AUTH, phone, recaptcha);
+  return confirmationResult;
+};
+
+export const verifyPhoneOtp = async ({ confirmationResult, otp }: VerifyOtpParams) => {
+  const result = await confirmationResult.confirm(otp);
+  return result.user;
+};
+
+export const signOut = async () => {
+  await _signOut(AUTH);
 };

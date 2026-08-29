@@ -1,88 +1,117 @@
-import type { AuthState } from '../types';
+import type { AuthState, FboType, UserType } from '../types';
 
-import { doc, getDoc } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, getIdToken } from 'firebase/auth';
 import { useSetState } from 'minimal-shared/hooks';
 import { useMemo, useEffect, useCallback } from 'react';
 
 import axios from 'src/lib/axios';
-import { AUTH, FIRESTORE } from 'src/lib/firebase';
+import { AUTH } from 'src/lib/firebase';
 
+import { signOut } from './action';
 import { AuthContext } from './auth-context';
 
 // ----------------------------------------------------------------------
-
-/**
- * NOTE:
- * We only build demo at basic level.
- * Customer will need to do some extra handling yourself if you want to extend the logic and other features...
- */
 
 type Props = {
   children: React.ReactNode;
 };
 
+function getErrorMessage(error: any): string {
+  if (error?.response?.data?.message) return error.response.data.message;
+  if (error?.response?.data?.error) return error.response.data.error;
+  if (error instanceof Error) return error.message;
+  return 'An unexpected error occurred.';
+}
+
 export function AuthProvider({ children }: Props) {
-  const { state, setState } = useSetState<AuthState>({ user: null, loading: true });
+  const { state, setState } = useSetState<AuthState>({
+    user: null,
+    activeFbo: null,
+    loading: true,
+    error: null,
+  });
+
+  const selectFbo = useCallback(
+    (fbo: FboType) => {
+      setState({ activeFbo: fbo });
+    },
+    [setState]
+  );
+
+  const verifyUser = useCallback(
+    async (firebaseUser: any) => {
+      try {
+        const idToken = await getIdToken(firebaseUser, true);
+        localStorage.setItem('firebaseIdToken', idToken);
+        axios.defaults.headers.common.Authorization = `Bearer ${idToken}`;
+
+        const response = await axios.post('/api/v1/auth/verify', {}, {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+
+        const user = response.data.user as UserType;
+
+        if (!user) throw new Error('User verification failed.');
+
+        const enrichedUser: UserType = {
+          ...user,
+          displayName: user.displayName || user.name,
+          photoURL: user.photoURL || '',
+        };
+
+        const activeFbo = enrichedUser.fbos.length === 1 ? enrichedUser.fbos[0] : null;
+
+        setState({ user: enrichedUser, activeFbo, loading: false, error: null });
+      } catch (error) {
+        console.error('Auth verify error:', error);
+        const message = getErrorMessage(error);
+        await signOut();
+        localStorage.removeItem('firebaseIdToken');
+        delete axios.defaults.headers.common.Authorization;
+        setState({ user: null, activeFbo: null, loading: false, error: message });
+      }
+    },
+    [setState]
+  );
 
   const checkUserSession = useCallback(async () => {
-    try {
-      onAuthStateChanged(AUTH, async (user: AuthState['user']) => {
-        if (user && user.emailVerified) {
-          /*
-           * (1) If skip emailVerified
-           * Remove the condition (if/else) : user.emailVerified
-           */
-          const userProfile = doc(FIRESTORE, 'users', user.uid);
-
-          const docSnap = await getDoc(userProfile);
-
-          const profileData = docSnap.data();
-
-          const { accessToken } = user;
-
-          setState({ user: { ...user, ...profileData }, loading: false });
-          axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-        } else {
-          setState({ user: null, loading: false });
-          delete axios.defaults.headers.common.Authorization;
-        }
-      });
-    } catch (error) {
-      console.error(error);
-      setState({ user: null, loading: false });
-    }
-  }, [setState]);
+    onAuthStateChanged(AUTH, async (firebaseUser) => {
+      if (firebaseUser) {
+        await verifyUser(firebaseUser);
+      } else {
+        localStorage.removeItem('firebaseIdToken');
+        delete axios.defaults.headers.common.Authorization;
+        setState({ user: null, activeFbo: null, loading: false, error: null });
+      }
+    });
+  }, [setState, verifyUser]);
 
   useEffect(() => {
+    const storedToken = localStorage.getItem('firebaseIdToken');
+    if (storedToken) {
+      axios.defaults.headers.common.Authorization = `Bearer ${storedToken}`;
+    }
     checkUserSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ----------------------------------------------------------------------
 
-  const checkAuthenticated = state.user ? 'authenticated' : 'unauthenticated';
-
-  const status = state.loading ? 'loading' : checkAuthenticated;
+  const authenticated = !!state.user && !!state.activeFbo;
+  const status = state.loading ? 'loading' : authenticated ? 'authenticated' : 'unauthenticated';
 
   const memoizedValue = useMemo(
     () => ({
-      user: state.user
-        ? {
-            ...state.user,
-            id: state.user?.uid,
-            accessToken: state.user?.accessToken,
-            displayName: state.user?.displayName,
-            photoURL: state.user?.photoURL,
-            role: state.user?.role ?? 'admin',
-          }
-        : null,
+      user: state.user,
+      activeFbo: state.activeFbo,
+      error: state.error,
+      selectFbo,
       checkUserSession,
       loading: status === 'loading',
       authenticated: status === 'authenticated',
       unauthenticated: status === 'unauthenticated',
     }),
-    [checkUserSession, state.user, status]
+    [state.user, state.activeFbo, state.error, selectFbo, checkUserSession, status]
   );
 
   return <AuthContext value={memoizedValue}>{children}</AuthContext>;
