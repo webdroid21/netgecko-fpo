@@ -87,7 +87,7 @@ export function AppWidgetSummary({ title, percent, total, chart, sx, ...other }:
 
         <Box sx={{ mt: 1.5, mb: 1, typography: 'h3' }}>{fNumber(total)}</Box>
 
-        {renderTrending()}
+        {percent !== 0 && renderTrending()}
       </Box>
 
       <Chart

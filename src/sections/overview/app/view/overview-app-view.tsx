@@ -28,11 +28,11 @@ import axios from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { SeoIllustration } from 'src/assets/illustrations';
 
+import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
 
 import { useAuthContext } from 'src/auth/hooks';
 
-import { AppWidget } from '../app-widget';
 import { AppWelcome } from '../app-welcome';
 import { AppWidgetSummary } from '../app-widget-summary';
 import { AppCurrentDownload } from '../app-current-download';
@@ -98,20 +98,30 @@ function MemberStatusChart({ data }: MemberStatusChartProps) {
     plotOptions: { bar: { columnWidth: '40%' } },
   });
 
+  const hasData = data.active + data.pending + data.inactive > 0;
+
   return (
     <Card>
       <CardHeader title="Member Status" subheader="Distribution of farmers across states" />
-      <Chart
-        type="bar"
-        series={[{ name: 'Farmers', data: [data.active, data.pending, data.inactive] }]}
-        options={chartOptions}
-        sx={{
-          pl: 1,
-          py: 2.5,
-          pr: 2.5,
-          height: 320,
-        }}
-      />
+      {hasData ? (
+        <Chart
+          type="bar"
+          series={[{ name: 'Farmers', data: [data.active, data.pending, data.inactive] }]}
+          options={chartOptions}
+          sx={{
+            pl: 1,
+            py: 2.5,
+            pr: 2.5,
+            height: 320,
+          }}
+        />
+      ) : (
+        <CardContent>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            No member data yet.
+          </Typography>
+        </CardContent>
+      )}
     </Card>
   );
 }
@@ -225,7 +235,7 @@ export function OverviewAppView() {
     </Button>
   );
 
-  const QuickLink = ({
+  const QuickLinkCard = ({
     title,
     total,
     icon,
@@ -239,21 +249,42 @@ export function OverviewAppView() {
     href: string;
   }) => (
     <MuiLink component={RouterLink} href={href} underline="none" sx={{ display: 'block' }}>
-      <AppWidget
-        title={title}
-        total={total}
-        icon={icon as any}
-        chart={{ series: 75, colors: [theme.palette[color].light, theme.palette[color].main] }}
+      <Card
         sx={{
           bgcolor: `${color}.dark`,
           color: 'common.white',
+          '&:hover': { bgcolor: `${color}.main` },
+          transition: 'background-color 0.2s',
         }}
-      />
+      >
+        <CardContent>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+            <Box>
+              <Typography variant="h4">{fNumber(total)}</Typography>
+              <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
+                {title}
+              </Typography>
+            </Box>
+
+            <Box sx={{ position: 'relative' }}>
+              <Iconify icon={icon as any} width={40} height={40} />
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
     </MuiLink>
   );
 
+  const hasOrderData =
+    stats.orderStatus.open +
+    stats.orderStatus.active +
+    stats.orderStatus.closed +
+    stats.orderStatus.cancelled;
+
   const summarySkeleton = loading ? (
-    <Box sx={{ p: 3, textAlign: 'center', width: 1 }}>Loading dashboard…</Box>
+    <Grid size={{ xs: 12 }}>
+      <Box sx={{ p: 3, textAlign: 'center' }}>Loading dashboard…</Box>
+    </Grid>
   ) : null;
 
   return (
@@ -269,7 +300,7 @@ export function OverviewAppView() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <QuickLink
+          <QuickLinkCard
             title="Farmers"
             total={stats.farmers}
             icon="solar:users-group-rounded-bold"
@@ -384,55 +415,68 @@ export function OverviewAppView() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <AppCurrentDownload
-            title="Input Order Queue"
-            subheader="Current state of all seed and tool requests"
-            chart={{
-              series: [
-                { label: 'Open', value: stats.orderStatus.open },
-                { label: 'Active', value: stats.orderStatus.active },
-                { label: 'Closed', value: stats.orderStatus.closed },
-                { label: 'Cancelled', value: stats.orderStatus.cancelled },
-              ],
-            }}
-          />
+          {hasOrderData ? (
+            <AppCurrentDownload
+              title="Input Order Queue"
+              subheader="Current state of all seed and tool requests"
+              chart={{
+                series: [
+                  { label: 'Open', value: stats.orderStatus.open },
+                  { label: 'Active', value: stats.orderStatus.active },
+                  { label: 'Closed', value: stats.orderStatus.closed },
+                  { label: 'Cancelled', value: stats.orderStatus.cancelled },
+                ],
+              }}
+            />
+          ) : (
+            <Card sx={{ height: '100%' }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  Input Order Queue
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  No input orders yet.
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <QuickLink
+          <QuickLinkCard
             title="Input Orders"
             total={stats.inputOrders}
-            icon="solar:cart-4-bold"
+            icon="solar:cart-3-bold"
             color="info"
             href={paths.dashboard.fpo.inputOrders}
           />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <QuickLink
+          <QuickLinkCard
             title="Loans"
             total={stats.loans}
-            icon="solar:banknote-2-bold"
+            icon="solar:bill-list-bold"
             color="warning"
             href={paths.dashboard.fpo.loans}
           />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <QuickLink
+          <QuickLinkCard
             title="Payments"
             total={stats.payments}
-            icon="solar:wallet-money-bold"
+            icon="solar:wad-of-money-bold"
             color="success"
             href={paths.dashboard.fpo.payments}
           />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <QuickLink
+          <QuickLinkCard
             title="Sales"
             total={stats.sales}
-            icon="solar:shop-bold"
+            icon="solar:export-bold"
             color="primary"
             href={paths.dashboard.fpo.sales}
           />
