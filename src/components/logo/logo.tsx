@@ -34,28 +34,28 @@ export function Logo({
   const PRIMARY_MAIN = theme.vars.palette.primary.main;
   const PRIMARY_DARKER = theme.vars.palette.primary.dark;
 
-  /*
-    * OR using local (public folder)
-    *
+
     const singleLogo = (
       <img
         alt="Single logo"
-        src={`${CONFIG.assetsDir}/logo/logo-single.svg`}
-        width="100%"
-        height="100%"
+        src="/logo.jpg"
+        width={48 * 2.5}
+        height={48}
+        style={{ maxWidth: 48 * 2.5 }}
       />
     );
 
     const fullLogo = (
       <img
         alt="Full logo"
-        src={`${CONFIG.assetsDir}/logo/logo-full.svg`}
-        width="100%"
-        height="100%"
+        src="/logo.jpg"
+        width={48 * 2.5}
+        height={48}
+        style={{ maxWidth: 48 * 2.5 }}
       />
     );
-    *
-    */
+
+/*
 
   const singleLogo = (
     <svg
@@ -186,6 +186,7 @@ export function Logo({
       />
     </svg>
   );
+*/
 
   return (
     <LogoRoot
@@ -196,9 +197,9 @@ export function Logo({
       className={mergeClasses([logoClasses.root, className])}
       sx={[
         {
-          width: 40,
-          height: 40,
-          ...(!isSingle && { width: 102, height: 36 }),
+          width: 48 * 2.5,
+          height: 48,
+          ...(!isSingle && { width: 48 * 2.5, height: 48 }),
           ...(disabled && { pointerEvents: 'none' }),
         },
         ...(Array.isArray(sx) ? sx : [sx]),

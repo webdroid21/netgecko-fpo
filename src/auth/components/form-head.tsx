@@ -3,6 +3,8 @@ import type { BoxProps } from '@mui/material/Box';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
+import { Logo } from 'src/components/logo';
+
 // ----------------------------------------------------------------------
 
 type FormHeadProps = BoxProps & {
@@ -34,6 +36,10 @@ export function FormHead({ sx, icon, title, description, ...other }: FormHeadPro
         ]}
         {...other}
       >
+        <Box sx={{ display: 'flex', width: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Logo width={48 * 2.5} />
+        </Box>
+
         <Typography variant="h5">{title}</Typography>
 
         {description && (
