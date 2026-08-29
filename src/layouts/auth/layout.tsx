@@ -95,9 +95,9 @@ export function AuthCenteredLayout({
       sx={[
         (theme) => ({
           alignItems: 'center',
+          justifyContent: 'center',
           p: theme.spacing(3, 2, 10, 2),
           [theme.breakpoints.up(layoutQuery)]: {
-            justifyContent: 'center',
             p: theme.spacing(10, 0, 10, 0),
           },
         }),
@@ -124,7 +124,10 @@ export function AuthCenteredLayout({
       cssVars={{ '--layout-auth-content-width': '420px', ...cssVars }}
       sx={[
         (theme) => ({
+          display: 'flex',
           position: 'relative',
+          minHeight: '100vh',
+          flexDirection: 'column',
           '&::before': backgroundStyles(theme),
         }),
         ...(Array.isArray(sx) ? sx : [sx]),
