@@ -1,13 +1,12 @@
-import type { UserType, FboType } from '../types';
+import type { FboType } from '../types';
 
+import List from '@mui/material/List';
 import Dialog from '@mui/material/Dialog';
-import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import DialogTitle from '@mui/material/DialogTitle';
-import List from '@mui/material/List';
-import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import DialogContent from '@mui/material/DialogContent';
+import ListItemButton from '@mui/material/ListItemButton';
 
 import { useAuthContext } from '../hooks';
 

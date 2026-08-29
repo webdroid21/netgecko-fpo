@@ -1,8 +1,8 @@
-import type { AuthState, FboType, UserType } from '../types';
+import type { FboType, UserType, AuthState } from '../types';
 
-import { onAuthStateChanged, getIdToken } from 'firebase/auth';
 import { useSetState } from 'minimal-shared/hooks';
 import { useMemo, useEffect, useCallback } from 'react';
+import { getIdToken, onAuthStateChanged } from 'firebase/auth';
 
 import axios from 'src/lib/axios';
 import { AUTH } from 'src/lib/firebase';

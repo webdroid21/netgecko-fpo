@@ -3,14 +3,15 @@ import { safeReturnUrl } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
+
 import { useSearchParams } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/global-config';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
-import { FboSelectDialog } from '../components/fbo-select-dialog';
 import { useAuthContext } from '../hooks';
+import { FboSelectDialog } from '../components/fbo-select-dialog';
 
 // ----------------------------------------------------------------------
 

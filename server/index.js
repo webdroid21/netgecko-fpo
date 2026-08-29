@@ -17,6 +17,11 @@ const AIRTABLE_USERS_TABLE_ID = process.env.AIRTABLE_USERS_TABLE_ID;
 function initFirebase() {
   if (admin.apps.length) return;
 
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    admin.initializeApp({ credential: admin.credential.applicationDefault() });
+    return;
+  }
+
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
     admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
@@ -34,13 +39,8 @@ function initFirebase() {
     return;
   }
 
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    admin.initializeApp({ credential: admin.credential.applicationDefault() });
-    return;
-  }
-
   throw new Error(
-    'Missing Firebase admin credentials. Set FIREBASE_SERVICE_ACCOUNT_JSON, FIREBASE_PRIVATE_KEY+FIREBASE_CLIENT_EMAIL, or GOOGLE_APPLICATION_CREDENTIALS.'
+    'Missing Firebase admin credentials. Set GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_SERVICE_ACCOUNT_JSON, or FIREBASE_PRIVATE_KEY+FIREBASE_CLIENT_EMAIL.'
   );
 }
 

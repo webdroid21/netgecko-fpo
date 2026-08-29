@@ -6,14 +6,12 @@ import Grid from '@mui/material/Grid';
 import Divider from '@mui/material/Divider';
 import { styled } from '@mui/material/styles';
 import Container from '@mui/material/Container';
-import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
 import { Logo } from 'src/components/logo';
-import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 

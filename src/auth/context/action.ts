@@ -1,18 +1,19 @@
-import { AUTH } from 'src/lib/firebase';
 import {
+  signInWithPopup,
+  RecaptchaVerifier,
   GoogleAuthProvider,
   GithubAuthProvider,
   TwitterAuthProvider,
-  RecaptchaVerifier,
   signInWithEmailLink,
+  signOut as _signOut,
   sendSignInLinkToEmail,
   signInWithPhoneNumber,
-  signInWithPopup,
-  signOut as _signOut,
+  sendEmailVerification as _sendEmailVerification,
   sendPasswordResetEmail as _sendPasswordResetEmail,
   createUserWithEmailAndPassword as _createUserWithEmailAndPassword,
-  sendEmailVerification as _sendEmailVerification,
 } from 'firebase/auth';
+
+import { AUTH } from 'src/lib/firebase';
 
 // ----------------------------------------------------------------------
 

@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { isSignInWithEmailLink } from 'firebase/auth';
 import { useBoolean } from 'minimal-shared/hooks';
+import { isSignInWithEmailLink } from 'firebase/auth';
+import { MuiOtpInput } from 'mui-one-time-password-input';
 
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import Tabs from '@mui/material/Tabs';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { MuiOtpInput } from 'mui-one-time-password-input';
 
 import { paths } from 'src/routes/paths';
 
@@ -18,11 +18,11 @@ import { AUTH } from 'src/lib/firebase';
 import { useAuthContext } from '../hooks';
 import { FormHead } from '../components/form-head';
 import {
-  signInWithGoogle,
-  sendMagicLink,
-  completeMagicLinkSignIn,
   sendPhoneOtp,
+  sendMagicLink,
   verifyPhoneOtp,
+  signInWithGoogle,
+  completeMagicLinkSignIn,
 } from '../context';
 
 // ----------------------------------------------------------------------
