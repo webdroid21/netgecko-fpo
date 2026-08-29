@@ -26,6 +26,7 @@ import { Iconify } from 'src/components/iconify';
 import { useAuthContext } from 'src/auth/hooks';
 
 import { FarmerFormDialog } from '../components/farmer-form-dialog';
+import { InlineEditField } from '../components/farmer-inline-field';
 
 // ----------------------------------------------------------------------
 
@@ -146,7 +147,6 @@ export function FarmerView() {
   };
 
   const handleDelete = async (farmer: Farmer) => {
-     
     if (!confirm(`Delete ${farmer.fields.Name ?? 'this farmer'}?`)) return;
     try {
       await axios.delete(`/api/v1/farmers/${farmer.id}`);
@@ -267,6 +267,9 @@ export function FarmerView() {
     }
 
     const f = selectedFarmer.fields;
+    const cropValue = Array.isArray(f['Main crop sold to Cooperative'])
+      ? f['Main crop sold to Cooperative'][0]
+      : f['Main crop sold to Cooperative'];
 
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
@@ -297,75 +300,183 @@ export function FarmerView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Given Name" value={f['Given Name']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Given Name"
+                label="Given Name"
+                value={f['Given Name']}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Surname" value={f.Surname} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Surname"
+                label="Surname"
+                value={f.Surname}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Gender" value={f.Gender} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Gender"
+                label="Gender"
+                value={f.Gender}
+                type="select"
+                options={['Male', 'Female']}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Birth date" value={f['Birth date']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Birth date"
+                label="Birth date"
+                value={f['Birth date']}
+                type="date"
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label="Age" value={f.Age} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Phone Number" value={f['Phone Number']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Farmer Code"
+                label="Farmer Code"
+                value={f['Farmer Code']}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Mobile Money Number" value={f['Mobile Money Number']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Phone Number"
+                label="Phone Number"
+                value={f['Phone Number']}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Email" value={f.Email} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Mobile Money Number"
+                label="Mobile Money Number"
+                value={f['Mobile Money Number']}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Village" value={f.Village} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Email"
+                label="Email"
+                value={f.Email}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Parish" value={f.Parish} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Village"
+                label="Village"
+                value={f.Village}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Sub-county" value={f['Sub-county']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Parish"
+                label="Parish"
+                value={f.Parish}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="District" value={f['District (form)']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Sub-county"
+                label="Sub-county"
+                value={f['Sub-county']}
+                onSaved={fetchFarmers}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="District (form)"
+                label="District"
+                value={f['District (form)']}
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label="Region" value={f['Region Name']?.[0] ?? f.Region} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Member since" value={f['Member since (date)']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Member since (date)"
+                label="Member since"
+                value={f['Member since (date)']}
+                type="date"
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label="Member since (year)" value={f['Member since (year)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Main crop sold to Cooperative"
                 label="Main crop sold to Cooperative"
-                value={f['Crop Name (from Main crop sold to Cooperative)']?.[0] ??
-                  f['Main crop sold to Cooperative']?.[0] ??
-                  f['Main crop sold to Cooperative']}
+                value={cropValue}
+                onSaved={fetchFarmers}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Volume sold last season A (kg)" value={f['Volume sold last season A to Cooperative (kg)']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Volume sold last season A to Cooperative (kg)"
+                label="Volume sold last season A (kg)"
+                value={f['Volume sold last season A to Cooperative (kg)']}
+                type="number"
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="Volume sold last season B to Cooperative (kg) copy"
                 label="Volume sold last season B (kg)"
                 value={f['Volume sold last season B to Cooperative (kg) copy']}
+                type="number"
+                onSaved={fetchFarmers}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="# seasonal/temporary workers hired & paid by farmer"
                 label="# seasonal/temporary workers"
                 value={f['# seasonal/temporary workers hired & paid by farmer']}
+                type="number"
+                onSaved={fetchFarmers}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="# permanent workers" value={f['# permanent workers hired & paid by farmer']} />
+              <InlineEditField
+                farmerId={selectedFarmer.id}
+                name="# permanent workers hired & paid by farmer"
+                label="# permanent workers"
+                value={f['# permanent workers hired & paid by farmer']}
+                type="number"
+                onSaved={fetchFarmers}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label="# Lands" value={f['# Lands']} />

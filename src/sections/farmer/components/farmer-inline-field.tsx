@@ -1,0 +1,239 @@
+import dayjs from 'dayjs';
+import { toast } from 'sonner';
+import { useRef, useState } from 'react';
+
+import Box from '@mui/material/Box';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+
+import axios from 'src/lib/axios';
+
+import { Iconify } from 'src/components/iconify';
+
+// ----------------------------------------------------------------------
+
+type InlineEditFieldProps = {
+  farmerId: string;
+  name: string;
+  label: string;
+  value?: any;
+  type?: 'text' | 'date' | 'number' | 'select';
+  options?: string[];
+  readOnly?: boolean;
+  onSaved: () => void;
+};
+
+export function InlineEditField({
+  farmerId,
+  name,
+  label,
+  value,
+  type = 'text',
+  options,
+  readOnly,
+  onSaved,
+}: InlineEditFieldProps) {
+  const [editing, setEditing] = useState(false);
+  const [hover, setHover] = useState(false);
+  const [draft, setDraft] = useState<any>(value ?? '');
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const previousValue = useRef(value);
+
+  const displayValue = value ?? '—';
+
+  const handleStart = () => {
+    if (readOnly) return;
+    previousValue.current = value;
+    setDraft(value ?? '');
+    setDirty(false);
+    setEditing(true);
+  };
+
+  const handleChange = (newValue: any) => {
+    setDraft(newValue);
+    setDirty(true);
+  };
+
+  const handleCancel = () => {
+    setDraft(value ?? '');
+    setDirty(false);
+    setEditing(false);
+  };
+
+  const save = async (nextValue: any) => {
+    if (saving) return;
+
+    // Don't save if nothing changed.
+    if (nextValue === value) {
+      setEditing(false);
+      setDirty(false);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const fields: Record<string, any> = { [name]: nextValue };
+
+      if (type === 'number' && (nextValue === '' || nextValue === null || nextValue === undefined)) {
+        fields[name] = null;
+      }
+
+      await axios.patch(`/api/v1/farmers/${farmerId}`, { fields });
+
+      toast.success(`${label} updated successfully`, {
+        action: {
+          label: 'Click to revert changes',
+          onClick: () => save(previousValue.current),
+        },
+      });
+
+      setEditing(false);
+      setDirty(false);
+      onSaved();
+    } catch (error: any) {
+      toast.error(error?.message || `Failed to update ${label}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleBlur = () => {
+    if (dirty) {
+      save(draft);
+    }
+  };
+
+  const renderInput = () => {
+    if (type === 'date') {
+      return (
+        <DatePicker
+          value={dayjs(draft)}
+          onChange={(newValue) => {
+            const next = newValue ? dayjs(newValue).format('YYYY-MM-DD') : '';
+            setDraft(next);
+            save(next);
+          }}
+          slotProps={{
+            textField: { fullWidth: true, size: 'small' },
+          }}
+        />
+      );
+    }
+
+    if (type === 'select' && options?.length) {
+      return (
+        <TextField
+          select
+          fullWidth
+          size="small"
+          value={draft}
+          onChange={(e) => {
+            const next = e.target.value;
+            setDraft(next);
+            setDirty(true);
+            save(next);
+          }}
+          disabled={saving}
+        >
+          {options.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
+      );
+    }
+
+    return (
+      <TextField
+        fullWidth
+        size="small"
+        type={type === 'number' ? 'number' : 'text'}
+        value={draft}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            save(draft);
+          } else if (e.key === 'Escape') {
+            handleCancel();
+          }
+        }}
+        disabled={saving}
+        autoFocus
+      />
+    );
+  };
+
+  return (
+    <Box
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={handleStart}
+      sx={{
+        p: 1,
+        borderRadius: 1,
+        cursor: readOnly ? 'default' : 'pointer',
+        '&:hover': readOnly
+          ? undefined
+          : {
+              bgcolor: 'action.hover',
+            },
+      }}
+    >
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {label}
+      </Typography>
+
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {editing ? (
+          <Box sx={{ flexGrow: 1 }} onClick={(e) => e.stopPropagation()}>
+            {renderInput()}
+          </Box>
+        ) : (
+          <Typography variant="body1" sx={{ flexGrow: 1 }}>
+            {displayValue}
+          </Typography>
+        )}
+
+        {editing && dirty && type !== 'date' && type !== 'select' && (
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              save(draft);
+            }}
+            disabled={saving}
+          >
+            <Iconify icon={'solar:check-circle-bold' as any} width={20} />
+          </IconButton>
+        )}
+
+        {editing && (
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCancel();
+            }}
+            disabled={saving}
+          >
+            <Iconify icon={'solar:close-circle-bold' as any} width={20} />
+          </IconButton>
+        )}
+
+        {!editing && hover && !readOnly && (
+          <Iconify
+            icon={'solar:pen-bold' as any}
+            width={18}
+            sx={{ color: 'text.disabled' }}
+          />
+        )}
+      </Box>
+    </Box>
+  );
+}
