@@ -21,6 +21,12 @@ const AIRTABLE_ORDERS_TABLE_ID =
 const AIRTABLE_PRODUCTS_TABLE_ID =
   process.env.AIRTABLE_PRODUCTS_TABLE_ID || 'tblupJLRoF4OZsi8Q';
 const AIRTABLE_SEASONS_TABLE_ID = process.env.AIRTABLE_SEASONS_TABLE_ID || 'Seasons';
+const AIRTABLE_LOANS_TABLE_ID =
+  process.env.AIRTABLE_LOANS_TABLE_ID || 'tblXqXRcHSoRC94vA';
+const AIRTABLE_PAYMENTS_TABLE_ID =
+  process.env.AIRTABLE_PAYMENTS_TABLE_ID || 'tblRXGH4krnEOtddP';
+const AIRTABLE_LOAN_TYPES_TABLE_ID =
+  process.env.AIRTABLE_LOAN_TYPES_TABLE_ID || 'Loan Types';
 
 // ----------------------------------------------------------------------
 
@@ -291,6 +297,69 @@ function toOrderFields(input) {
   if (!fields['Order Status']) {
     fields['Order Status'] = 'Open';
   }
+
+  return fields;
+}
+
+function buildLoansFilter(fpoId, fpoName) {
+  const escapedId = (fpoId || '').replace(/'/g, "''");
+  const escapedName = (fpoName || '').replace(/'/g, "''");
+  const conditions = [];
+
+  if (escapedName) {
+    conditions.push(`SEARCH('${escapedName}', {FPO}) > 0`);
+  }
+
+  if (escapedId) {
+    conditions.push(`FIND('${escapedId}', ARRAYJOIN({FPO Input}, ',')) > 0`);
+    conditions.push(`FIND('${escapedId}', ARRAYJOIN({FPO Cash Advance}, ',')) > 0`);
+  }
+
+  if (!conditions.length) return '1';
+  if (conditions.length === 1) return conditions[0];
+  return `OR(${conditions.join(', ')})`;
+}
+
+function toLoansFields(input) {
+  const fields = { ...input };
+
+  ['FPO', 'FPO Cash Advance', 'Farmer', 'Season Cash Advance', 'Loan Type', 'Orders (Input)', 'Insurance']
+    .concat(['Farmers', 'Payments Received Link'])
+    .forEach((key) => {
+      if (fields[key] && typeof fields[key] === 'string') {
+        fields[key] = [fields[key]];
+      }
+    });
+
+  return fields;
+}
+
+function buildPaymentsFilter(fpoId, fpoName) {
+  const escapedId = (fpoId || '').replace(/'/g, "''");
+  const escapedName = (fpoName || '').replace(/'/g, "''");
+  const conditions = [];
+
+  if (escapedName) {
+    conditions.push(`SEARCH('${escapedName}', ARRAYJOIN({FPO (from Loans)}, ',')) > 0`);
+  }
+
+  if (escapedId) {
+    conditions.push(`FIND('${escapedId}', ARRAYJOIN({FPO (from Loans)}, ',')) > 0`);
+  }
+
+  if (!conditions.length) return '1';
+  if (conditions.length === 1) return conditions[0];
+  return `OR(${conditions.join(', ')})`;
+}
+
+function toPaymentsFields(input) {
+  const fields = { ...input };
+
+  ['Loans'].forEach((key) => {
+    if (fields[key] && typeof fields[key] === 'string') {
+      fields[key] = [fields[key]];
+    }
+  });
 
   return fields;
 }
@@ -664,6 +733,238 @@ app.delete('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
     return res.status(status).json({
       error: 'AIRTABLE_ERROR',
       message: error?.response?.data?.error?.message || 'Unable to delete order.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/loan-types', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.post(`/${AIRTABLE_LOAN_TYPES_TABLE_ID}/listRecords`, {
+      maxRecords: 100,
+    });
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/loan-types error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch loan types.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/loans', requireAuth, async (req, res) => {
+  try {
+    const { fpoId, fpoName } = req.query;
+
+    if (!fpoId && !fpoName) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId or fpoName is required.' });
+    }
+
+    const filter = buildLoansFilter(fpoId, fpoName);
+    const { data } = await airtableApi.post(`/${AIRTABLE_LOANS_TABLE_ID}/listRecords`, {
+      filterByFormula: filter,
+      maxRecords: 100,
+    });
+
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/loans error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch loans.',
+    });
+  }
+});
+
+app.get('/api/v1/loans/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.get(`/${AIRTABLE_LOANS_TABLE_ID}/${req.params.id}`);
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/loans/:id error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch loan.',
+    });
+  }
+});
+
+app.post('/api/v1/loans', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ fields: toLoansFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_LOANS_TABLE_ID}`, payload);
+    return res.status(201).json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/loans POST error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to create loan.',
+    });
+  }
+});
+
+app.patch('/api/v1/loans/:id', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ id: req.params.id, fields: toLoansFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.patch(`/${AIRTABLE_LOANS_TABLE_ID}`, payload);
+    return res.json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/loans PATCH error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to update loan.',
+    });
+  }
+});
+
+app.delete('/api/v1/loans/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.delete(
+      `/${AIRTABLE_LOANS_TABLE_ID}?records[]=${req.params.id}`
+    );
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/loans DELETE error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to delete loan.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/payments', requireAuth, async (req, res) => {
+  try {
+    const { fpoId, fpoName } = req.query;
+
+    if (!fpoId && !fpoName) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId or fpoName is required.' });
+    }
+
+    const filter = buildPaymentsFilter(fpoId, fpoName);
+    const { data } = await airtableApi.post(`/${AIRTABLE_PAYMENTS_TABLE_ID}/listRecords`, {
+      filterByFormula: filter,
+      maxRecords: 100,
+    });
+
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/payments error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch payments.',
+    });
+  }
+});
+
+app.get('/api/v1/payments/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.get(`/${AIRTABLE_PAYMENTS_TABLE_ID}/${req.params.id}`);
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/payments/:id error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch payment.',
+    });
+  }
+});
+
+app.post('/api/v1/payments', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ fields: toPaymentsFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_PAYMENTS_TABLE_ID}`, payload);
+    return res.status(201).json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/payments POST error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to create payment.',
+    });
+  }
+});
+
+app.patch('/api/v1/payments/:id', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ id: req.params.id, fields: toPaymentsFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.patch(`/${AIRTABLE_PAYMENTS_TABLE_ID}`, payload);
+    return res.json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/payments PATCH error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to update payment.',
+    });
+  }
+});
+
+app.delete('/api/v1/payments/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.delete(
+      `/${AIRTABLE_PAYMENTS_TABLE_ID}?records[]=${req.params.id}`
+    );
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/payments DELETE error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to delete payment.',
     });
   }
 });

@@ -20,6 +20,7 @@ const FarmersPage = lazy(() => import('src/pages/dashboard/farmers'));
 const LandsPage = lazy(() => import('src/pages/dashboard/lands'));
 const InputOrdersPage = lazy(() => import('src/pages/dashboard/input-orders'));
 const LoansPage = lazy(() => import('src/pages/dashboard/loans'));
+const PaymentsPage = lazy(() => import('src/pages/dashboard/payments'));
 // ----------------------------------------------------------------------
 
 function SuspenseOutlet() {
@@ -47,6 +48,7 @@ export const dashboardRoutes: RouteObject[] = [
       { path: 'lands', element: <LandsPage /> },
       { path: 'input-orders', element: <InputOrdersPage /> },
       { path: 'loans', element: <LoansPage /> },
+      { path: 'payments', element: <PaymentsPage /> },
       {
         path: 'subpaths',
         children: [

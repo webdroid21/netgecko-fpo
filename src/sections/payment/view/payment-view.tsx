@@ -1,0 +1,373 @@
+import type { Payment } from '../types';
+import type { Loan } from 'src/sections/loan/types';
+
+import { useMemo, useState, useEffect, useCallback } from 'react';
+
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Grid from '@mui/material/Grid';
+import List from '@mui/material/List';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import CardContent from '@mui/material/CardContent';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemButton from '@mui/material/ListItemButton';
+
+import { fNumber } from 'src/utils/format-number';
+
+import axios from 'src/lib/axios';
+import { DashboardContent } from 'src/layouts/dashboard';
+
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+
+import { useAuthContext } from 'src/auth/hooks';
+
+import { PaymentFormDialog } from '../components/payment-form-dialog';
+
+// ----------------------------------------------------------------------
+
+function SummaryCard({
+  title,
+  total,
+  subtext,
+  color,
+  icon,
+}: {
+  title: string;
+  total: number;
+  subtext: string;
+  color: 'primary' | 'success' | 'info' | 'warning' | 'error';
+  icon: string;
+}) {
+  return (
+    <Card sx={{ p: 2.5 }}>
+      <Stack direction="row" alignItems="center" spacing={2}>
+        <Box sx={{ color: `${color}.main` }}>
+          <Iconify icon={icon as any} width={28} />
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+            {title}
+          </Typography>
+          <Typography variant="h4" sx={{ my: 0.5 }}>
+            {fNumber(total)}
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+            {subtext}
+          </Typography>
+        </Box>
+      </Stack>
+    </Card>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+function DetailRow({ label, value }: { label: string; value?: any }) {
+  return (
+    <Box sx={{ p: 1 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {label}
+      </Typography>
+      <Typography variant="body1">{value ?? '—'}</Typography>
+    </Box>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+export function PaymentView() {
+  const { activeFbo } = useAuthContext();
+
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+
+  const fetchPayments = useCallback(async () => {
+    if (!activeFbo) return;
+    setLoading(true);
+    try {
+      const query = new URLSearchParams({
+        fpoId: activeFbo.id,
+        fpoName: activeFbo.name,
+      }).toString();
+      const { data } = await axios.get(`/api/v1/payments?${query}`);
+      setPayments(data.records || []);
+    } catch (error: any) {
+      console.error('Fetch payments error:', error?.message);
+      setPayments([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeFbo]);
+
+  const fetchLoans = useCallback(async () => {
+    if (!activeFbo) return;
+    try {
+      const query = new URLSearchParams({
+        fpoId: activeFbo.id,
+        fpoName: activeFbo.name,
+      }).toString();
+      const { data } = await axios.get(`/api/v1/loans?${query}`);
+      setLoans(data.records || []);
+    } catch (error: any) {
+      console.error('Fetch loans error:', error?.message);
+      setLoans([]);
+    }
+  }, [activeFbo]);
+
+  useEffect(() => {
+    fetchPayments();
+    fetchLoans();
+  }, [fetchPayments, fetchLoans]);
+
+  useEffect(() => {
+    if (selectedId || !payments.length) return;
+    setSelectedId(payments[0]?.id);
+  }, [payments, selectedId]);
+
+  const filteredPayments = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return payments;
+
+    return payments.filter((p) => {
+      const text = `${p.fields['Payment ID'] ?? ''} ${(p.fields['FPO (from Loans)'] || []).join(' ')} ${p.fields.Source ?? ''} ${p.fields['Payment reference'] ?? ''}`.toLowerCase();
+      return text.includes(term);
+    });
+  }, [payments, search]);
+
+  const selectedPayment = useMemo(
+    () => payments.find((p) => p.id === selectedId) || filteredPayments[0] || null,
+    [payments, filteredPayments, selectedId]
+  );
+
+  const stats = useMemo(() => {
+    const total = filteredPayments.reduce(
+      (sum, p) => sum + (Number(p.fields['Payment Amount (UGX)']) || 0),
+      0
+    );
+    return { total, count: filteredPayments.length };
+  }, [filteredPayments]);
+
+  const handleAdd = () => {
+    setEditingPayment(null);
+    setFormOpen(true);
+  };
+
+  const handleEdit = (payment: Payment) => {
+    setEditingPayment(payment);
+    setFormOpen(true);
+  };
+
+  const handleDelete = async (payment: Payment) => {
+    if (!confirm(`Delete payment #${payment.fields['Payment ID'] ?? 'this'}?`)) return;
+    try {
+      await axios.delete(`/api/v1/payments/${payment.id}`);
+      fetchPayments();
+    } catch (error: any) {
+      console.error('Delete payment error:', error?.message);
+    }
+  };
+
+  const loanLabel = (id?: string) => {
+    const loan = loans.find((l) => l.id === id);
+    return loan ? loan.fields['Loan ID'] || 'Unnamed' : '—';
+  };
+
+  const renderList = () => (
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}` }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Search payments..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{
+            startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
+          }}
+        />
+      </Box>
+
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        {loading ? (
+          <Box sx={{ p: 3, textAlign: 'center' }}>Loading…</Box>
+        ) : (
+          <List disablePadding>
+            {filteredPayments.map((payment) => {
+              const isSelected = payment.id === selectedPayment?.id;
+
+              return (
+                <ListItemButton
+                  key={payment.id}
+                  selected={isSelected}
+                  onClick={() => setSelectedId(payment.id)}
+                  sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
+                    <ListItemText
+                      primary={`Payment #${payment.fields['Payment ID'] ?? '-'}`}
+                      primaryTypographyProps={{ variant: 'subtitle2' }}
+                    />
+                    <Label color={payment.fields.Check === 'OK' ? 'success' : 'warning'}>
+                      {payment.fields.Check || '—'}
+                    </Label>
+                  </Stack>
+
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {loanLabel(payment.fields.Loans?.[0])} · {payment.fields.Source}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {fNumber(payment.fields['Payment Amount (UGX)'])} UGX · {payment.fields['Payment Date']}
+                  </Typography>
+                </ListItemButton>
+              );
+            })}
+          </List>
+        )}
+      </Box>
+    </Card>
+  );
+
+  const renderDetail = () => {
+    if (!selectedPayment) {
+      return (
+        <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Select a payment to view details
+          </Typography>
+        </Card>
+      );
+    }
+
+    const f = selectedPayment.fields;
+
+    return (
+      <Card sx={{ height: '100%', overflow: 'auto' }}>
+        <CardContent>
+          <Stack
+            direction="row"
+            alignItems="flex-start"
+            justifyContent="space-between"
+            spacing={2}
+            sx={{ mb: 3 }}
+          >
+            <Box>
+              <Typography variant="h5">Payment #{f['Payment ID'] ?? '-'}</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {f['Payment Date']} · {f.Source}
+              </Typography>
+            </Box>
+
+            <Stack direction="row" spacing={1}>
+              <Button variant="outlined" size="small" onClick={() => handleEdit(selectedPayment)}>
+                Edit
+              </Button>
+              <IconButton color="error" onClick={() => handleDelete(selectedPayment)}>
+                <Iconify icon={'solar:trash-bin-trash-bold' as any} />
+              </IconButton>
+            </Stack>
+          </Stack>
+
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="Check" value={f.Check} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="Loan" value={loanLabel(f.Loans?.[0])} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="Source" value={f.Source} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="Payment Amount (UGX)" value={f['Payment Amount (UGX)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="Payment Date" value={f['Payment Date']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="Payment reference" value={f['Payment reference']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="Mobile Money Number Used" value={f['Mobile Money Number Used']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="FPO" value={(f['FPO (from Loans)'] || []).join(', ')} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label="Season" value={(f['Season (from Loans)'] || []).join(', ')} />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <DashboardContent maxWidth="xl">
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h4">Payments</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Track loan repayments and cash advances
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
+          onClick={handleAdd}
+        >
+          New Payment
+        </Button>
+      </Stack>
+
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <SummaryCard
+            title="Total payments"
+            total={stats.count}
+            subtext="Transactions"
+            color="primary"
+            icon="solar:wallet-money-bold-duotone"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <SummaryCard
+            title="Total received"
+            total={stats.total}
+            subtext="UGX"
+            color="success"
+            icon="solar:tag-price-bold-duotone"
+          />
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={2} sx={{ height: { md: 'calc(100vh - 320px)' } }}>
+        <Grid size={{ xs: 12, md: 4 }} sx={{ height: 1 }}>
+          {renderList()}
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
+          {renderDetail()}
+        </Grid>
+      </Grid>
+
+      <PaymentFormDialog
+        open={formOpen}
+        payment={editingPayment}
+        loans={loans}
+        onClose={() => setFormOpen(false)}
+        onSaved={fetchPayments}
+      />
+    </DashboardContent>
+  );
+}

@@ -1,17 +1,17 @@
 import { CONFIG } from 'src/global-config';
 
-import { LoanView } from 'src/sections/loan/view';
+import { PaymentView } from 'src/sections/payment/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Loans - ${CONFIG.appName}` };
+const metadata = { title: `Payments - ${CONFIG.appName}` };
 
-export default function LoansPage() {
+export default function PaymentsPage() {
   return (
     <>
       <title>{metadata.title}</title>
 
-      <LoanView />
+      <PaymentView />
     </>
   );
 }
