@@ -94,8 +94,8 @@ export function AuthCenteredLayout({
       {...slotProps?.main}
       sx={[
         (theme) => ({
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: 'grid',
+          placeItems: 'center',
           p: theme.spacing(3, 2, 10, 2),
           [theme.breakpoints.up(layoutQuery)]: {
             p: theme.spacing(10, 0, 10, 0),
