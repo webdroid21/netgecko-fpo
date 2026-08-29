@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
+import { alpha, useTheme } from '@mui/material/styles';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { RouterLink } from 'src/routes/components/router-link';
@@ -72,44 +73,66 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
-function DetailRow({
-  label,
-  value,
-  href,
-}: {
-  label: string;
-  value?: any;
-  href?: string;
-}) {
-  const content = (
-    <Box>
+function DetailRow({ label, value }: { label: string; value?: any }) {
+  return (
+    <Box sx={{ p: 1 }}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
       </Typography>
       <Typography variant="body1">{value ?? '—'}</Typography>
     </Box>
   );
+}
 
-  if (href) {
-    return (
-      <MuiLink
-        component={RouterLink}
-        href={href}
-        underline="none"
-        color="text.primary"
+// ----------------------------------------------------------------------
+
+type RelatedLinkProps = {
+  label: string;
+  value?: any;
+  href: string;
+  color?: 'primary' | 'success' | 'info' | 'warning' | 'error';
+};
+
+function RelatedLink({ label, value, href, color = 'primary' }: RelatedLinkProps) {
+  const theme = useTheme();
+  const mainColor = theme.palette[color].main;
+
+  return (
+    <MuiLink
+      component={RouterLink}
+      href={href}
+      underline="none"
+      sx={{ display: 'block', borderRadius: 1 }}
+    >
+      <Box
         sx={{
-          p: 1,
-          display: 'block',
+          p: 1.5,
           borderRadius: 1,
-          '&:hover': { bgcolor: 'action.hover' },
+          border: (t) => `1px solid ${t.vars.palette.divider}`,
+          color: mainColor,
+          transition: (t) => t.transitions.create(['background-color', 'box-shadow', 'border-color']),
+          '&:hover': {
+            bgcolor: alpha(mainColor, 0.08),
+            borderColor: mainColor,
+            boxShadow: (t) => t.shadows[2],
+          },
         }}
       >
-        {content}
-      </MuiLink>
-    );
-  }
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              {label}
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'inherit', fontWeight: 600 }}>
+              {value ?? '—'}
+            </Typography>
+          </Box>
 
-  return <Box sx={{ p: 1 }}>{content}</Box>;
+          <Iconify icon={'solar:arrow-right-up-bold' as any} width={20} sx={{ color: 'inherit' }} />
+        </Stack>
+      </Box>
+    </MuiLink>
+  );
 }
 
 // ----------------------------------------------------------------------
@@ -557,33 +580,51 @@ export function FarmerView() {
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow href={makeLink('lands')} label="# Lands" value={f['# Lands']} />
+              <RelatedLink
+                href={makeLink('lands')}
+                label="# Lands"
+                value={f['# Lands']}
+                color="success"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
+              <RelatedLink
                 href={makeLink('lands')}
                 label="Lands"
                 value={f['Lands']?.join(', ')}
+                color="success"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow href={makeLink('input-orders')} label="# Input Orders" value={f['# Input Orders']} />
+              <RelatedLink
+                href={makeLink('input-orders')}
+                label="# Input Orders"
+                value={f['# Input Orders']}
+                color="info"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
+              <RelatedLink
                 href={makeLink('input-orders')}
                 label="Input Orders"
                 value={f['Input Orders']?.join(', ')}
+                color="info"
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow href={makeLink('loans')} label="# Loans" value={f['# Loans']} />
+              <RelatedLink
+                href={makeLink('loans')}
+                label="# Loans"
+                value={f['# Loans']}
+                color="warning"
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
+              <RelatedLink
                 href={makeLink('loans')}
                 label="Loans"
                 value={f['Loans']?.join(', ')}
+                color="warning"
               />
             </Grid>
           </Grid>
