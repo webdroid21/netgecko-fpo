@@ -107,7 +107,9 @@ export function AuthCenteredLayout({
           flex: 1,
           width: 1,
           display: 'grid',
-          placeItems: 'center',
+          minHeight: '100%',
+          alignItems: 'center',
+          justifyItems: 'center',
         }}
       >
         <AuthCenteredContent {...slotProps?.content}>{children}</AuthCenteredContent>
