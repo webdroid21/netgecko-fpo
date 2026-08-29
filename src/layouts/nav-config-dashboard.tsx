@@ -2,6 +2,7 @@ import type { NavSectionProps } from 'src/components/nav-section';
 
 import { paths } from 'src/routes/paths';
 
+import { useTranslate } from 'src/locales';
 import { CONFIG } from 'src/global-config';
 
 import { SvgColor } from 'src/components/svg-color';
@@ -22,17 +23,21 @@ const ICONS = {
 
 // ----------------------------------------------------------------------
 
-export const navData: NavSectionProps['data'] = [
-  {
-    subheader: 'FPO modules',
-    items: [
-      { title: 'Home', path: paths.dashboard.root, icon: ICONS.dashboard },
-      { title: 'Farmers', path: paths.dashboard.fpo.farmers, icon: ICONS.user },
-      { title: 'Lands', path: paths.dashboard.fpo.lands, icon: ICONS.folder },
-      { title: 'Input orders', path: paths.dashboard.fpo.inputOrders, icon: ICONS.order },
-      { title: 'Loans', path: paths.dashboard.fpo.loans, icon: ICONS.banking },
-      { title: 'Payments', path: paths.dashboard.fpo.payments, icon: ICONS.banking },
-      { title: 'Sales', path: paths.dashboard.fpo.sales, icon: ICONS.order },
-    ],
-  },
-];
+export function useDashboardNavData(): NavSectionProps['data'] {
+  const { t } = useTranslate('navbar');
+
+  return [
+    {
+      subheader: t('subheader'),
+      items: [
+        { title: t('home'), path: paths.dashboard.root, icon: ICONS.dashboard },
+        { title: t('farmers'), path: paths.dashboard.fpo.farmers, icon: ICONS.user },
+        { title: t('lands'), path: paths.dashboard.fpo.lands, icon: ICONS.folder },
+        { title: t('inputOrders'), path: paths.dashboard.fpo.inputOrders, icon: ICONS.order },
+        { title: t('loans'), path: paths.dashboard.fpo.loans, icon: ICONS.banking },
+        { title: t('payments'), path: paths.dashboard.fpo.payments, icon: ICONS.banking },
+        { title: t('sales'), path: paths.dashboard.fpo.sales, icon: ICONS.order },
+      ],
+    },
+  ];
+}

@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 import { paths } from 'src/routes/paths';
 
 import { AUTH } from 'src/lib/firebase';
+import { useTranslate } from 'src/locales';
 
 import { Form, Field } from 'src/components/hook-form';
 
@@ -30,11 +31,6 @@ import {
 
 // ----------------------------------------------------------------------
 
-const TABS = [
-  { value: 'email', label: 'Email' },
-  { value: 'phone', label: 'Phone' },
-];
-
 type FormValues = {
   email: string;
   phone: string;
@@ -42,6 +38,7 @@ type FormValues = {
 };
 
 export function SignInView() {
+  const { t } = useTranslate('auth');
   const { error } = useAuthContext();
 
   const tabs = useTabs('email');
@@ -60,13 +57,18 @@ export function SignInView() {
   const phone = watch('phone');
   const otp = watch('otp');
 
+  const tabOptions = [
+    { value: 'email', label: t('emailTab') },
+    { value: 'phone', label: t('phoneTab') },
+  ];
+
   useEffect(() => {
     if (isSignInWithEmailLink(AUTH, window.location.href)) {
       const storedEmail = window.localStorage.getItem('emailForSignIn');
       if (storedEmail) {
         handleEmailLinkSignIn(storedEmail);
       } else {
-        setLocalError('Magic link detected but email is missing. Please enter the same email to continue.');
+        setLocalError(t('magicLinkMissingEmail'));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,7 +81,7 @@ export function SignInView() {
       await completeMagicLinkSignIn(linkEmail, window.location.href);
       // AuthProvider/GuestGuard will handle the redirect once the session is verified.
     } catch (err: any) {
-      setLocalError(err?.message || 'Failed to sign in with email link.');
+      setLocalError(err?.message || t('failedEmailLink'));
     } finally {
       isSubmitting.onFalse();
     }
@@ -89,16 +91,16 @@ export function SignInView() {
     setLocalError(null);
     setInfo(null);
     if (!email) {
-      setLocalError('Please enter your email address.');
+      setLocalError(t('enterEmail'));
       return;
     }
     isSubmitting.onTrue();
     try {
       const continueUrl = `${window.location.origin}${paths.auth.firebase.signIn}`;
       await sendMagicLink(email, continueUrl);
-      setInfo('A login link has been sent to your email. Open it in this browser to sign in.');
+      setInfo(t('magicLinkSent'));
     } catch (err: any) {
-      setLocalError(err?.message || 'Failed to send magic link.');
+      setLocalError(err?.message || t('failedMagicLink'));
     } finally {
       isSubmitting.onFalse();
     }
@@ -108,16 +110,16 @@ export function SignInView() {
     setLocalError(null);
     setInfo(null);
     if (!phone) {
-      setLocalError('Please enter your phone number.');
+      setLocalError(t('enterPhone'));
       return;
     }
     isSubmitting.onTrue();
     try {
       const result = await sendPhoneOtp(phone, 'recaptcha-signin');
       setConfirmation(result);
-      setInfo('OTP sent. Please enter the code.');
+      setInfo(t('otpSent'));
     } catch (err: any) {
-      setLocalError(err?.message || 'Failed to send OTP.');
+      setLocalError(err?.message || t('failedOtp'));
     } finally {
       isSubmitting.onFalse();
     }
@@ -126,11 +128,11 @@ export function SignInView() {
   const handleVerifyOtp = async () => {
     setLocalError(null);
     if (!confirmation) {
-      setLocalError('Request OTP first.');
+      setLocalError(t('requestOtpFirst'));
       return;
     }
     if (otp.length < 6) {
-      setLocalError('Enter the 6-digit OTP.');
+      setLocalError(t('enterOtp'));
       return;
     }
     isSubmitting.onTrue();
@@ -138,7 +140,7 @@ export function SignInView() {
       await verifyPhoneOtp({ confirmationResult: confirmation, otp });
       // AuthProvider/GuestGuard will handle the redirect once the session is verified.
     } catch (err: any) {
-      setLocalError(err?.message || 'Invalid OTP.');
+      setLocalError(err?.message || t('invalidOtp'));
     } finally {
       isSubmitting.onFalse();
     }
@@ -151,7 +153,7 @@ export function SignInView() {
       await signInWithGoogle();
       // AuthProvider/GuestGuard will handle the redirect once the session is verified.
     } catch (err: any) {
-      setLocalError(err?.message || 'Google sign in failed.');
+      setLocalError(err?.message || t('failedGoogle'));
     } finally {
       isSubmitting.onFalse();
     }
@@ -164,8 +166,8 @@ export function SignInView() {
           <Field.Text
             name="email"
             type="email"
-            label="Email address"
-            placeholder="you@example.com"
+            label={t('emailLabel')}
+            placeholder={t('emailPlaceholder')}
             slotProps={{ inputLabel: { shrink: true } }}
           />
           <Button
@@ -176,7 +178,7 @@ export function SignInView() {
             loading={isSubmitting.value}
             onClick={handleSendMagicLink}
           >
-            Send login link
+            {t('sendLoginLink')}
           </Button>
         </Box>
       );
@@ -195,12 +197,12 @@ export function SignInView() {
               loading={isSubmitting.value}
               onClick={handleVerifyOtp}
             >
-              Verify code
+              {t('verifyCode')}
             </Button>
           </>
         ) : (
           <>
-            <Field.Phone name="phone" label="Phone number" defaultCountry="UG" />
+            <Field.Phone name="phone" label={t('phoneLabel')} defaultCountry="UG" />
             <div id="recaptcha-signin" />
             <Button
               fullWidth
@@ -210,7 +212,7 @@ export function SignInView() {
               loading={isSubmitting.value}
               onClick={handleSendPhoneOtp}
             >
-              Send OTP
+              {t('sendOtp')}
             </Button>
           </>
         )}
@@ -221,8 +223,8 @@ export function SignInView() {
   return (
     <>
       <FormHead
-        title="Sign in"
-        description="Access your FPO dashboard"
+        title={t('title')}
+        description={t('description')}
         sx={{ textAlign: 'center', mb: 3 }}
       />
 
@@ -245,7 +247,7 @@ export function SignInView() {
         indicatorColor="custom"
         sx={{ borderRadius: 1, mb: 3 }}
       >
-        {TABS.map((tab) => (
+        {tabOptions.map((tab) => (
           <Tab key={tab.value} value={tab.value} label={tab.label} />
         ))}
       </Tabs>
@@ -262,7 +264,7 @@ export function SignInView() {
       >
         <Divider sx={{ flex: 1 }} />
         <Typography variant="body2" color="text.secondary">
-          or
+          {t('or')}
         </Typography>
         <Divider sx={{ flex: 1 }} />
       </Stack>
@@ -275,11 +277,11 @@ export function SignInView() {
         loading={isSubmitting.value}
         onClick={handleGoogle}
       >
-        Sign in with Google
+        {t('signInWithGoogle')}
       </Button>
 
       <Typography variant="body2" sx={{ mt: 3, color: 'text.secondary', textAlign: 'center' }}>
-        Don&apos;t have access? Contact the system admin.
+        {t('noAccess')}
       </Typography>
     </>
   );

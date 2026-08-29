@@ -26,6 +26,7 @@ import { RouterLink } from 'src/routes/components/router-link';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
@@ -307,6 +308,8 @@ function RecentListCard({
 type MemberStatusChartProps = { data: DashboardStats['memberStatus']; loading?: boolean };
 
 function MemberStatusChart({ data, loading }: MemberStatusChartProps) {
+  const { t } = useTranslate('dashboard');
+
   const chartOptions = useChart({
     chart: { stacked: true },
     stroke: { width: 0 },
@@ -319,7 +322,7 @@ function MemberStatusChart({ data, loading }: MemberStatusChartProps) {
 
   return (
     <Card sx={{ height: '100%' }}>
-      <CardHeader title="Member Status" subheader="Distribution of farmers across states" />
+      <CardHeader title={t('memberStatus')} subheader={t('memberStatusSubheader')} />
       {loading ? (
         <Box sx={{ p: 3 }}>
           <Skeleton variant="rounded" height={300} />
@@ -339,7 +342,7 @@ function MemberStatusChart({ data, loading }: MemberStatusChartProps) {
       ) : (
         <CardContent>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            No member data yet.
+            {t('noMemberData')}
           </Typography>
         </CardContent>
       )}
@@ -350,6 +353,7 @@ function MemberStatusChart({ data, loading }: MemberStatusChartProps) {
 // ----------------------------------------------------------------------
 
 export function OverviewAppView() {
+  const { t } = useTranslate('dashboard');
   const { user, activeFbo } = useAuthContext();
   const [stats, setStats] = useState<DashboardStats>(initialStats);
   const [loading, setLoading] = useState(true);
@@ -460,12 +464,10 @@ export function OverviewAppView() {
             spacing={2}
           >
             <Box>
-              <Typography variant="h4">
-                {activeFbo?.name} Cooperative Overview
-              </Typography>
+              <Typography variant="h4">{t('title')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-                Welcome back{firstName ? `, ${firstName}` : ''} 👋 Real-time health and
-                operational metrics for the farming network.
+                {t('welcome')}
+                {firstName ? `, ${firstName}` : ''} 👋 {t('subtitle')}
               </Typography>
             </Box>
 
@@ -476,7 +478,7 @@ export function OverviewAppView() {
               href={paths.dashboard.fpo.farmers}
               startIcon={<Iconify icon={'solar:user-plus-bold' as any} />}
             >
-              Add Farmer
+              {t('addFarmer')}
             </Button>
           </Stack>
         </Grid>
@@ -484,9 +486,9 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
-            title="Active Farmers"
+            title={t('activeFarmers')}
             value={stats.farmers}
-            subtext={`${stats.activeFarmers} verified members`}
+            subtext={t('verifiedMembers', { count: stats.activeFarmers })}
             icon="solar:users-group-rounded-bold"
             color="primary"
           />
@@ -495,9 +497,9 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
-            title="Number of Lands"
+            title={t('numberOfLands')}
             value={stats.lands}
-            subtext="Registered parcels"
+            subtext={t('registeredParcels')}
             icon="solar:box-minimalistic-bold"
             color="success"
           />
@@ -506,9 +508,9 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
-            title="Total Land Area"
+            title={t('totalLandArea')}
             value={stats.totalAcres}
-            subtext="Sum of parcel sizes (acres)"
+            subtext={t('parcelSizes')}
             icon="solar:flag-bold"
             color="info"
           />
@@ -517,9 +519,9 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
-            title="Input Orders"
+            title={t('inputOrders')}
             value={stats.inputOrders}
-            subtext={`${fNumber(stats.inputOrderValue)} UGX total value`}
+            subtext={t('inputOrdersValue', { value: fNumber(stats.inputOrderValue) })}
             icon="solar:cart-3-bold"
             color="warning"
           />
@@ -528,9 +530,9 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
-            title="Loan Balances"
+            title={t('loanBalances')}
             value={stats.loansPending}
-            subtext={`Outstanding across ${stats.loans} loans (UGX)`}
+            subtext={t('outstandingLoans', { count: stats.loans })}
             icon="solar:bill-list-bold"
             color="error"
           />
@@ -539,9 +541,9 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
-            title="Payments Received"
+            title={t('paymentsReceived')}
             value={stats.paymentsTotal}
-            subtext={`${stats.payments} transactions (UGX)`}
+            subtext={t('paymentsTransactions', { count: stats.payments })}
             icon="solar:wad-of-money-bold"
             color="success"
           />
@@ -550,9 +552,9 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
-            title="Sales Orders"
+            title={t('salesOrders')}
             value={stats.sales}
-            subtext="Crop and produce sales"
+            subtext={t('cropAndProduce')}
             icon="solar:export-bold"
             color="info"
           />
@@ -561,9 +563,9 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StatCard
             loading={loading}
-            title="Sales Revenue"
+            title={t('salesRevenue')}
             value={stats.salesRevenue}
-            subtext="Total revenue (UGX)"
+            subtext={t('totalRevenue')}
             icon="solar:cup-star-bold"
             color="primary"
           />
@@ -576,15 +578,15 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, md: 6 }}>
           {loading ? (
             <Card sx={{ height: '100%' }}>
-              <CardHeader title="Input Order Queue" subheader="Current state of all seed and tool requests" />
+              <CardHeader title={t('inputOrderQueue')} subheader={t('inputOrderQueueSubheader')} />
               <Box sx={{ p: 3 }}>
                 <Skeleton variant="circular" width={240} height={240} sx={{ mx: 'auto' }} />
               </Box>
             </Card>
           ) : hasOrderData ? (
             <AppCurrentDownload
-              title="Input Order Queue"
-              subheader="Current state of all seed and tool requests"
+              title={t('inputOrderQueue')}
+              subheader={t('inputOrderQueueSubheader')}
               chart={{
                 series: [
                   { label: 'Open', value: stats.orderStatus.open },
@@ -596,10 +598,10 @@ export function OverviewAppView() {
             />
           ) : (
             <Card sx={{ height: '100%' }}>
-              <CardHeader title="Input Order Queue" />
+              <CardHeader title={t('inputOrderQueue')} />
               <CardContent>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  No input orders yet.
+                  {t('noInputOrders')}
                 </Typography>
               </CardContent>
             </Card>
@@ -609,7 +611,7 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <QuickAccessCard
             loading={loading}
-            title="Farmers"
+            title={t('quickAccessFarmers')}
             total={stats.farmers}
             icon="solar:users-group-rounded-bold"
             color="primary"
@@ -620,7 +622,7 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <QuickAccessCard
             loading={loading}
-            title="Input Orders"
+            title={t('quickAccessInputOrders')}
             total={stats.inputOrders}
             icon="solar:cart-3-bold"
             color="info"
@@ -631,7 +633,7 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <QuickAccessCard
             loading={loading}
-            title="Loans"
+            title={t('quickAccessLoans')}
             total={stats.loans}
             icon="solar:bill-list-bold"
             color="warning"
@@ -642,7 +644,7 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <QuickAccessCard
             loading={loading}
-            title="Payments"
+            title={t('quickAccessPayments')}
             total={stats.payments}
             icon="solar:wad-of-money-bold"
             color="success"
@@ -653,7 +655,7 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
           <QuickAccessCard
             loading={loading}
-            title="Sales"
+            title={t('quickAccessSales')}
             total={stats.sales}
             icon="solar:export-bold"
             color="error"
@@ -664,11 +666,11 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, md: 6 }}>
           <RecentListCard
             loading={loading}
-            title="Recent Input Orders"
+            title={t('recentInputOrders')}
             viewAllHref={paths.dashboard.fpo.inputOrders}
             icon="solar:cart-3-bold"
             color="info"
-            emptyText="No recent input orders"
+            emptyText={t('noRecentInputOrders')}
             items={stats.recentInputOrders.map((order) => ({
               id: order.id,
               primary: order.fields['Order number'] || 'Unnamed',
@@ -682,11 +684,11 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12, md: 6 }}>
           <RecentListCard
             loading={loading}
-            title="Recent Payments"
+            title={t('recentPayments')}
             viewAllHref={paths.dashboard.fpo.payments}
             icon="solar:wad-of-money-bold"
             color="success"
-            emptyText="No recent payments"
+            emptyText={t('noRecentPayments')}
             items={stats.recentPayments.map((payment) => ({
               id: payment.id,
               primary: `Payment #${payment.fields['Payment ID'] ?? '-'}`,

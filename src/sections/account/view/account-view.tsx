@@ -16,6 +16,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import CardContent from '@mui/material/CardContent';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -39,15 +40,17 @@ type ProfileValues = z.infer<typeof profileSchema>;
 
 function SignInMethodRow({
   icon,
-  title,
+  titleKey,
   description,
   connected,
 }: {
   icon: string;
-  title: string;
+  titleKey: string;
   description: string;
   connected: boolean;
 }) {
+  const { t } = useTranslate('account');
+
   return (
     <Stack direction="row" alignItems="center" spacing={2} sx={{ py: 1.5 }}>
       <Box
@@ -68,14 +71,14 @@ function SignInMethodRow({
       </Box>
 
       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-        <Typography variant="subtitle2">{title}</Typography>
+        <Typography variant="subtitle2">{t(titleKey)}</Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           {description}
         </Typography>
       </Box>
 
       <Label color={connected ? 'success' : 'default'}>
-        {connected ? 'Connected' : 'Not connected'}
+        {connected ? t('connected') : t('notConnected')}
       </Label>
     </Stack>
   );
@@ -84,6 +87,7 @@ function SignInMethodRow({
 // ----------------------------------------------------------------------
 
 export function AccountView() {
+  const { t } = useTranslate('account');
   const { user, activeFbo, checkUserSession } = useAuthContext();
 
   const methods = getSignInMethods();
@@ -100,20 +104,25 @@ export function AccountView() {
         phone: data.phone ?? '',
       });
       await checkUserSession?.();
-      toast.success('Profile updated!');
+      toast.success(t('updateSuccess'));
     } catch (error: any) {
       console.error(error);
-      toast.error(error?.response?.data?.message || 'Unable to update profile.');
+      toast.error(error?.response?.data?.message || t('updateError'));
     }
   });
+
+  const googleEmail = user?.email ? ` (${user.email})` : '';
+  const phoneText = user?.phone
+    ? t('phoneOtpDescription', { phone: user.phone })
+    : t('phoneOtpPlaceholder');
 
   return (
     <DashboardContent maxWidth="lg">
       <Typography variant="h4" sx={{ mb: 0.5 }}>
-        Account Settings
+        {t('title')}
       </Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
-        Manage your profile details and sign-in methods
+        {t('subtitle')}
       </Typography>
 
       <Grid container spacing={3}>
@@ -152,7 +161,7 @@ export function AccountView() {
             <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
             <Typography variant="overline" sx={{ color: 'text.secondary' }}>
-              FPO memberships
+              {t('fpoMemberships')}
             </Typography>
 
             <Stack
@@ -179,23 +188,27 @@ export function AccountView() {
           <Stack spacing={3}>
             <Card>
               <CardHeader
-                title="Profile"
-                subheader="These details are stored in your FPO user record"
+                title={t('profile')}
+                subheader={t('profileSubheader')}
                 avatar={<Iconify icon={'solar:user-rounded-bold' as any} width={24} />}
               />
               <CardContent>
                 <Form methods={profileMethods} onSubmit={onSaveProfile}>
                   <Stack spacing={3}>
-                    <Field.Text name="name" label="Full name" />
+                    <Field.Text name="name" label={t('fullName')} />
 
-                    <Field.Text name="phone" label="Phone number" placeholder="+256..." />
+                    <Field.Text
+                      name="phone"
+                      label={t('phoneNumber')}
+                      placeholder="+256..."
+                    />
 
                     <TextField
-                      label="Email address"
+                      label={t('email')}
                       value={user?.email ?? ''}
                       disabled
                       fullWidth
-                      helperText="Your email identifies your account and cannot be changed here. Contact your system admin to change it."
+                      helperText={t('emailHelper')}
                     />
 
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -204,7 +217,7 @@ export function AccountView() {
                         variant="contained"
                         loading={profileMethods.formState.isSubmitting}
                       >
-                        Save changes
+                        {t('save')}
                       </LoadingButton>
                     </Box>
                   </Stack>
@@ -214,32 +227,28 @@ export function AccountView() {
 
             <Card>
               <CardHeader
-                title="Sign-in methods"
-                subheader="Your account has no password — you sign in with any of these methods"
+                title={t('signInMethods')}
+                subheader={t('signInMethodsSubheader')}
                 avatar={<Iconify icon={'solar:shield-check-bold' as any} width={24} />}
               />
               <CardContent>
                 <Stack divider={<Divider sx={{ borderStyle: 'dashed' }} />}>
                   <SignInMethodRow
                     icon="solar:check-circle-bold"
-                    title="Google"
-                    description={`Sign in with your Google account${user?.email ? ` (${user.email})` : ''}`}
+                    titleKey="google"
+                    description={t('googleDescription', { email: googleEmail })}
                     connected={methods.google}
                   />
                   <SignInMethodRow
                     icon="solar:letter-bold"
-                    title="Email magic link"
-                    description="Receive a one-time sign-in link by email"
+                    titleKey="emailLink"
+                    description={t('emailLinkDescription')}
                     connected={methods.emailLink || Boolean(user?.email)}
                   />
                   <SignInMethodRow
                     icon="solar:phone-bold"
-                    title="Phone OTP"
-                    description={
-                      user?.phone
-                        ? `One-time code sent to ${user.phone}`
-                        : 'Add a phone number above to enable OTP sign-in'
-                    }
+                    titleKey="phoneOtp"
+                    description={phoneText}
                     connected={methods.phone}
                   />
                 </Stack>

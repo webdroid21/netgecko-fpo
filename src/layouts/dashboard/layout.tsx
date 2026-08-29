@@ -22,16 +22,12 @@ import { NavMobile } from './nav-mobile';
 import { VerticalDivider } from './content';
 import { NavVertical } from './nav-vertical';
 import { NavHorizontal } from './nav-horizontal';
-import { _account } from '../nav-config-account';
 import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
-import { AccountDrawer } from '../components/account-drawer';
+import { useDashboardNavData } from '../nav-config-dashboard';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
-import { ContactsPopover } from '../components/contacts-popover';
-import { navData as dashboardNavData } from '../nav-config-dashboard';
 import { dashboardLayoutVars, dashboardNavColorVars } from './css-vars';
-import { NotificationsDrawer } from '../components/notifications-drawer';
 import { MainSection, layoutClasses, HeaderSection, LayoutSection } from '../core';
 import { type Workspace, WorkspacesPopover } from '../components/workspaces-popover';
 
@@ -66,6 +62,8 @@ export function DashboardLayout({
   const navVars = dashboardNavColorVars(theme, settings.state.navColor, settings.state.navLayout);
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
+
+  const dashboardNavData = useDashboardNavData();
 
   const navData = slotProps?.nav?.data ?? dashboardNavData;
 
@@ -169,17 +167,8 @@ export function DashboardLayout({
           {/** @slot Language popover */}
           <LanguagePopover data={allLangs} />
 
-          {/** @slot Notifications popover */}
-          <NotificationsDrawer data={[]} />
-
-          {/** @slot Contacts popover */}
-          <ContactsPopover data={[]} />
-
           {/** @slot Settings button */}
           <SettingsButton />
-
-          {/** @slot Account drawer */}
-          <AccountDrawer data={_account} />
         </Box>
       ),
     };
