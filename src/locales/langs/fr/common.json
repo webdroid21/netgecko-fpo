@@ -1,6 +1,21 @@
 {
   "demo": {
-    "lang": "France",
-    "description": "Le point de départ pour votre prochain projet est basé sur MUI. La personnalisation facile vous aide à construire des applications plus rapidement et mieux."
-  }
+    "lang": "Français",
+    "description": "Le point de départ de votre prochain projet est basé sur MUI. Une personnalisation simple vous aide à créer des applications plus rapidement et plus efficacement."
+  },
+  "viewAll": "Tout voir",
+  "save": "Enregistrer les modifications",
+  "cancel": "Annuler",
+  "search": "Rechercher",
+  "loading": "Chargement…",
+  "noData": "Aucune donnée pour l’instant",
+  "active": "Actif",
+  "pending": "En attente",
+  "inactive": "Inactif",
+  "open": "Ouvert",
+  "closed": "Fermé",
+  "cancelled": "Annulé",
+  "status": "Statut",
+  "error": "Une erreur s’est produite",
+  "close": "Fermer"
 }

@@ -1,12 +1,11 @@
 {
   "app": "Application",
-  "job": "Emploi",
-  "user": "Utilisateur",
-  "travel": "Voyage",
-  "invoice": "Facture",
-  "blog": {
-    "title": "Blog",
-    "caption": "Raccourcis clavier personnalisés."
-  },
-  "subheader": "Sous-titre"
+  "subheader": "Modules FPO",
+  "home": "Accueil",
+  "farmers": "Agriculteurs",
+  "lands": "Parcelles",
+  "inputOrders": "Commandes d’intrants",
+  "loans": "Prêts",
+  "payments": "Paiements",
+  "sales": "Ventes"
 }
