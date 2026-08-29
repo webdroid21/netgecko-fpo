@@ -95,6 +95,7 @@ export const paths = {
       inputOrders: `${ROOTS.DASHBOARD}/input-orders`,
       loans: `${ROOTS.DASHBOARD}/loans`,
       payments: `${ROOTS.DASHBOARD}/payments`,
+      sales: `${ROOTS.DASHBOARD}/sales`,
     },
   },
 };

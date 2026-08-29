@@ -32,6 +32,7 @@ export const navData: NavSectionProps['data'] = [
       { title: 'Input orders', path: paths.dashboard.fpo.inputOrders, icon: ICONS.order },
       { title: 'Loans', path: paths.dashboard.fpo.loans, icon: ICONS.banking },
       { title: 'Payments', path: paths.dashboard.fpo.payments, icon: ICONS.banking },
+      { title: 'Sales', path: paths.dashboard.fpo.sales, icon: ICONS.order },
     ],
   },
 ];

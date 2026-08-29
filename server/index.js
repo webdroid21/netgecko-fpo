@@ -27,6 +27,12 @@ const AIRTABLE_PAYMENTS_TABLE_ID =
   process.env.AIRTABLE_PAYMENTS_TABLE_ID || 'tblRXGH4krnEOtddP';
 const AIRTABLE_LOAN_TYPES_TABLE_ID =
   process.env.AIRTABLE_LOAN_TYPES_TABLE_ID || 'Loan Types';
+const AIRTABLE_SALES_ORDERS_TABLE_ID =
+  process.env.AIRTABLE_SALES_ORDERS_TABLE_ID || 'tblxGEmQmGu9ctM5O';
+const AIRTABLE_BUYERS_TABLE_ID =
+  process.env.AIRTABLE_BUYERS_TABLE_ID || 'tblCKzHEbQs1fZzic';
+const AIRTABLE_INVENTORY_TABLE_ID =
+  process.env.AIRTABLE_INVENTORY_TABLE_ID || 'Inventory';
 
 // ----------------------------------------------------------------------
 
@@ -356,6 +362,30 @@ function toPaymentsFields(input) {
   const fields = { ...input };
 
   ['Loans'].forEach((key) => {
+    if (fields[key] && typeof fields[key] === 'string') {
+      fields[key] = [fields[key]];
+    }
+  });
+
+  return fields;
+}
+
+function toSalesOrderFields(input) {
+  const fields = { ...input };
+
+  ['Buyer', 'Product'].forEach((key) => {
+    if (fields[key] && typeof fields[key] === 'string') {
+      fields[key] = [fields[key]];
+    }
+  });
+
+  return fields;
+}
+
+function toBuyerFields(input) {
+  const fields = { ...input };
+
+  ['Product'].forEach((key) => {
     if (fields[key] && typeof fields[key] === 'string') {
       fields[key] = [fields[key]];
     }
@@ -965,6 +995,166 @@ app.delete('/api/v1/payments/:id', requireAuth, async (req, res) => {
     return res.status(status).json({
       error: 'AIRTABLE_ERROR',
       message: error?.response?.data?.error?.message || 'Unable to delete payment.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/buyers', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.post(`/${AIRTABLE_BUYERS_TABLE_ID}/listRecords`, {
+      maxRecords: 100,
+    });
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/buyers error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch buyers.',
+    });
+  }
+});
+
+app.post('/api/v1/buyers', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ fields: toBuyerFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_BUYERS_TABLE_ID}`, payload);
+    return res.status(201).json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/buyers POST error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to create buyer.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/inventory', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.post(`/${AIRTABLE_INVENTORY_TABLE_ID}/listRecords`, {
+      maxRecords: 1000,
+    });
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/inventory error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch inventory.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
+app.get('/api/v1/sales-orders', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.post(`/${AIRTABLE_SALES_ORDERS_TABLE_ID}/listRecords`, {
+      maxRecords: 100,
+    });
+
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/sales-orders error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch sales orders.',
+    });
+  }
+});
+
+app.get('/api/v1/sales-orders/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.get(`/${AIRTABLE_SALES_ORDERS_TABLE_ID}/${req.params.id}`);
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/sales-orders/:id error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch sales order.',
+    });
+  }
+});
+
+app.post('/api/v1/sales-orders', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ fields: toSalesOrderFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.post(`/${AIRTABLE_SALES_ORDERS_TABLE_ID}`, payload);
+    return res.status(201).json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/sales-orders POST error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to create sales order.',
+    });
+  }
+});
+
+app.patch('/api/v1/sales-orders/:id', requireAuth, async (req, res) => {
+  try {
+    const { fields } = req.body;
+
+    if (!fields) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fields are required.' });
+    }
+
+    const payload = {
+      records: [{ id: req.params.id, fields: toSalesOrderFields(fields) }],
+      typecast: true,
+    };
+
+    const { data } = await airtableApi.patch(`/${AIRTABLE_SALES_ORDERS_TABLE_ID}`, payload);
+    return res.json({ record: data.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/sales-orders PATCH error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to update sales order.',
+    });
+  }
+});
+
+app.delete('/api/v1/sales-orders/:id', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.delete(
+      `/${AIRTABLE_SALES_ORDERS_TABLE_ID}?records[]=${req.params.id}`
+    );
+    return res.json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/sales-orders DELETE error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to delete sales order.',
     });
   }
 });
