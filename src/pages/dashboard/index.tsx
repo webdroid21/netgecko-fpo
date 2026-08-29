@@ -1,7 +1,7 @@
 import { CONFIG } from 'src/global-config';
+import { useTranslate } from 'src/locales/use-locales';
 
 import { OverviewAppView } from 'src/sections/overview/app/view';
-import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 

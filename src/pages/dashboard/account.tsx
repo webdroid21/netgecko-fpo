@@ -1,7 +1,7 @@
 import { CONFIG } from 'src/global-config';
+import { useTranslate } from 'src/locales/use-locales';
 
 import { AccountView } from 'src/sections/account/view';
-import { useTranslate } from 'src/locales/use-locales';
 
 // ----------------------------------------------------------------------
 
