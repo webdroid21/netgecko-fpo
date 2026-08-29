@@ -33,6 +33,7 @@ export function AuthProvider({ children }: Props) {
 
   const selectFbo = useCallback(
     (fbo: FboType) => {
+      window.localStorage.setItem('activeFboId', fbo.id);
       setState({ activeFbo: fbo });
     },
     [setState]
@@ -59,7 +60,12 @@ export function AuthProvider({ children }: Props) {
           photoURL: user.photoURL || '',
         };
 
-        const activeFbo = enrichedUser.fbos.length === 1 ? enrichedUser.fbos[0] : null;
+        const storedFboId = window.localStorage.getItem('activeFboId');
+
+        const activeFbo =
+          enrichedUser.fbos.length === 1
+            ? enrichedUser.fbos[0]
+            : enrichedUser.fbos.find((fbo) => fbo.id === storedFboId) || null;
 
         setState({ user: enrichedUser, activeFbo, loading: false, error: null });
       } catch (error) {
@@ -80,6 +86,7 @@ export function AuthProvider({ children }: Props) {
         await verifyUser(firebaseUser);
       } else {
         localStorage.removeItem('firebaseIdToken');
+        localStorage.removeItem('activeFboId');
         delete axios.defaults.headers.common.Authorization;
         setState({ user: null, activeFbo: null, loading: false, error: null });
       }

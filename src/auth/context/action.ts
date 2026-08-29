@@ -81,4 +81,6 @@ export const verifyPhoneOtp = async ({ confirmationResult, otp }: VerifyOtpParam
 
 export const signOut = async () => {
   await _signOut(AUTH);
+  window.localStorage.removeItem('firebaseIdToken');
+  window.localStorage.removeItem('activeFboId');
 };
