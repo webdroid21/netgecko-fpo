@@ -199,6 +199,62 @@ app.post('/api/v1/auth/verify', async (req, res) => {
 
 // ----------------------------------------------------------------------
 
+app.patch('/api/v1/auth/profile', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+    if (!token) {
+      return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Missing Firebase ID token.' });
+    }
+
+    const decoded = await admin.auth().verifyIdToken(token);
+    const email = decoded.email || null;
+    const phone = decoded.phone_number ? toE164(decoded.phone_number) : null;
+
+    if (!email && !phone) {
+      return res.status(403).json({ error: 'ACCESS_DENIED', message: 'Account not recognised.' });
+    }
+
+    // Locate the caller's own Users record; never trust a client-supplied id.
+    const formula = buildFilterFormula(email, phone);
+    const { data } = await airtableApi.post(`/${AIRTABLE_USERS_TABLE_ID}/listRecords`, {
+      filterByFormula: formula,
+      maxRecords: 1,
+    });
+
+    const record = data.records?.[0];
+
+    if (!record || !record.fields?.Active) {
+      return res.status(403).json({ error: 'ACCESS_DENIED', message: 'Account not recognised.' });
+    }
+
+    const { name, phone: newPhone } = req.body;
+    const fields = {};
+    if (typeof name === 'string' && name.trim()) fields.Name = name.trim();
+    if (typeof newPhone === 'string') fields.Phone = newPhone.trim();
+
+    if (!Object.keys(fields).length) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Nothing to update.' });
+    }
+
+    const { data: updated } = await airtableApi.patch(`/${AIRTABLE_USERS_TABLE_ID}`, {
+      records: [{ id: record.id, fields }],
+    });
+
+    return res.json({ record: updated.records?.[0] });
+  } catch (error) {
+    console.error('/api/v1/auth/profile error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to update profile.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
 async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;

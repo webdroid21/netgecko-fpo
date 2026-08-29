@@ -1,7 +1,6 @@
 import {
   signInWithPopup,
   RecaptchaVerifier,
-  EmailAuthProvider,
   GoogleAuthProvider,
   GithubAuthProvider,
   TwitterAuthProvider,
@@ -9,9 +8,6 @@ import {
   signOut as _signOut,
   sendSignInLinkToEmail,
   signInWithPhoneNumber,
-  reauthenticateWithCredential,
-  updateProfile as _updateProfile,
-  updatePassword as _updatePassword,
   sendEmailVerification as _sendEmailVerification,
   sendPasswordResetEmail as _sendPasswordResetEmail,
   createUserWithEmailAndPassword as _createUserWithEmailAndPassword,
@@ -89,22 +85,11 @@ export const signOut = async () => {
   window.localStorage.removeItem('activeFboId');
 };
 
-export const updateUserProfile = async ({ displayName }: { displayName: string }) => {
-  if (!AUTH.currentUser) throw new Error('Not signed in.');
-  await _updateProfile(AUTH.currentUser, { displayName });
-};
-
-export const changePassword = async ({
-  currentPassword,
-  newPassword,
-}: {
-  currentPassword: string;
-  newPassword: string;
-}) => {
-  const currentUser = AUTH.currentUser;
-  if (!currentUser?.email) throw new Error('Not signed in.');
-
-  const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
-  await reauthenticateWithCredential(currentUser, credential);
-  await _updatePassword(currentUser, newPassword);
+export const getSignInMethods = () => {
+  const providerIds = AUTH.currentUser?.providerData.map((p) => p.providerId) ?? [];
+  return {
+    google: providerIds.includes('google.com'),
+    emailLink: providerIds.includes('password') || providerIds.includes('emailLink'),
+    phone: providerIds.includes('phone'),
+  };
 };

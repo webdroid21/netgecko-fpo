@@ -15,6 +15,7 @@ import CardHeader from '@mui/material/CardHeader';
 import LoadingButton from '@mui/lab/LoadingButton';
 import CardContent from '@mui/material/CardContent';
 
+import axios from 'src/lib/axios';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -23,69 +24,86 @@ import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
 import { useAuthContext } from 'src/auth/hooks';
-import { changePassword, updateUserProfile } from 'src/auth/context/action';
+import { getSignInMethods } from 'src/auth/context/action';
 
 // ----------------------------------------------------------------------
 
 const profileSchema = z.object({
-  displayName: z.string().min(1, { message: 'Name is required' }),
+  name: z.string().min(1, { message: 'Name is required' }),
+  phone: z.string().optional(),
 });
 
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(1, { message: 'Current password is required' }),
-    newPassword: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-    confirmPassword: z.string().min(1, { message: 'Please confirm your new password' }),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
-
 type ProfileValues = z.infer<typeof profileSchema>;
-type PasswordValues = z.infer<typeof passwordSchema>;
+
+// ----------------------------------------------------------------------
+
+function SignInMethodRow({
+  icon,
+  title,
+  description,
+  connected,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  connected: boolean;
+}) {
+  return (
+    <Stack direction="row" alignItems="center" spacing={2} sx={{ py: 1.5 }}>
+      <Box
+        sx={{
+          width: 44,
+          height: 44,
+          flexShrink: 0,
+          display: 'flex',
+          borderRadius: 1.5,
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: connected ? 'success.dark' : 'text.disabled',
+          bgcolor: (theme) =>
+            connected ? theme.vars.palette.success.lighter : theme.vars.palette.action.hover,
+        }}
+      >
+        <Iconify icon={icon as any} width={24} />
+      </Box>
+
+      <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+        <Typography variant="subtitle2">{title}</Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          {description}
+        </Typography>
+      </Box>
+
+      <Label color={connected ? 'success' : 'default'}>
+        {connected ? 'Connected' : 'Not connected'}
+      </Label>
+    </Stack>
+  );
+}
 
 // ----------------------------------------------------------------------
 
 export function AccountView() {
   const { user, activeFbo, checkUserSession } = useAuthContext();
 
+  const methods = getSignInMethods();
+
   const profileMethods = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
-    values: { displayName: user?.displayName ?? '' },
-  });
-
-  const passwordMethods = useForm<PasswordValues>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+    values: { name: user?.name ?? '', phone: user?.phone ?? '' },
   });
 
   const onSaveProfile = profileMethods.handleSubmit(async (data) => {
     try {
-      await updateUserProfile({ displayName: data.displayName });
+      await axios.patch('/api/v1/auth/profile', {
+        name: data.name,
+        phone: data.phone ?? '',
+      });
       await checkUserSession?.();
       toast.success('Profile updated!');
     } catch (error: any) {
       console.error(error);
-      toast.error(error?.message || 'Unable to update profile.');
-    }
-  });
-
-  const onChangePassword = passwordMethods.handleSubmit(async (data) => {
-    try {
-      await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
-      });
-      passwordMethods.reset();
-      toast.success('Password changed!');
-    } catch (error: any) {
-      console.error(error);
-      if (error?.code === 'auth/invalid-credential' || error?.code === 'auth/wrong-password') {
-        toast.error('Current password is incorrect.');
-      } else {
-        toast.error(error?.message || 'Unable to change password.');
-      }
+      toast.error(error?.response?.data?.message || 'Unable to update profile.');
     }
   });
 
@@ -95,7 +113,7 @@ export function AccountView() {
         Account Settings
       </Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
-        Manage your profile details and login credentials
+        Manage your profile details and sign-in methods
       </Typography>
 
       <Grid container spacing={3}>
@@ -162,20 +180,22 @@ export function AccountView() {
             <Card>
               <CardHeader
                 title="Profile"
-                subheader="Your display name is shown across the app"
+                subheader="These details are stored in your FPO user record"
                 avatar={<Iconify icon={'solar:user-rounded-bold' as any} width={24} />}
               />
               <CardContent>
                 <Form methods={profileMethods} onSubmit={onSaveProfile}>
                   <Stack spacing={3}>
-                    <Field.Text name="displayName" label="Display name" />
+                    <Field.Text name="name" label="Full name" />
+
+                    <Field.Text name="phone" label="Phone number" placeholder="+256..." />
 
                     <TextField
                       label="Email address"
                       value={user?.email ?? ''}
                       disabled
                       fullWidth
-                      helperText="Your email is used to sign in and cannot be changed here."
+                      helperText="Your email identifies your account and cannot be changed here. Contact your system admin to change it."
                     />
 
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -194,36 +214,35 @@ export function AccountView() {
 
             <Card>
               <CardHeader
-                title="Change password"
-                subheader="Choose a strong password of at least 6 characters"
+                title="Sign-in methods"
+                subheader="Your account has no password — you sign in with any of these methods"
                 avatar={<Iconify icon={'solar:shield-check-bold' as any} width={24} />}
               />
               <CardContent>
-                <Form methods={passwordMethods} onSubmit={onChangePassword}>
-                  <Stack spacing={3}>
-                    <Field.Text
-                      name="currentPassword"
-                      label="Current password"
-                      type="password"
-                    />
-                    <Field.Text name="newPassword" label="New password" type="password" />
-                    <Field.Text
-                      name="confirmPassword"
-                      label="Confirm new password"
-                      type="password"
-                    />
-
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <LoadingButton
-                        type="submit"
-                        variant="contained"
-                        loading={passwordMethods.formState.isSubmitting}
-                      >
-                        Update password
-                      </LoadingButton>
-                    </Box>
-                  </Stack>
-                </Form>
+                <Stack divider={<Divider sx={{ borderStyle: 'dashed' }} />}>
+                  <SignInMethodRow
+                    icon="solar:check-circle-bold"
+                    title="Google"
+                    description={`Sign in with your Google account${user?.email ? ` (${user.email})` : ''}`}
+                    connected={methods.google}
+                  />
+                  <SignInMethodRow
+                    icon="solar:letter-bold"
+                    title="Email magic link"
+                    description="Receive a one-time sign-in link by email"
+                    connected={methods.emailLink || Boolean(user?.email)}
+                  />
+                  <SignInMethodRow
+                    icon="solar:phone-bold"
+                    title="Phone OTP"
+                    description={
+                      user?.phone
+                        ? `One-time code sent to ${user.phone}`
+                        : 'Add a phone number above to enable OTP sign-in'
+                    }
+                    connected={methods.phone}
+                  />
+                </Stack>
               </CardContent>
             </Card>
           </Stack>
