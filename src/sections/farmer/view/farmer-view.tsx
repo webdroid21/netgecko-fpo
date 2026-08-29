@@ -258,7 +258,7 @@ export function FarmerView() {
   const renderDetail = () => {
     if (!selectedFarmer) {
       return (
-        <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             Select a farmer to view details
           </Typography>
@@ -269,7 +269,7 @@ export function FarmerView() {
     const f = selectedFarmer.fields;
 
     return (
-      <Card sx={{ height: '100%' }}>
+      <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
           <Stack
             direction="row"
