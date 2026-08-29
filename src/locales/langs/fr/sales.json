@@ -1,0 +1,62 @@
+{
+  "page": {
+    "title": "Ventes",
+    "subtitle": "Suivre les ventes de cultures et de produits",
+    "newOrder": "Nouvelle commande"
+  },
+  "summary": {
+    "totalOrders": {
+      "title": "Nombre total de commandes",
+      "subtext": "Commandes de vente"
+    },
+    "totalRevenue": {
+      "title": "Revenu total",
+      "subtext": "UGX"
+    },
+    "totalQuantity": {
+      "title": "Quantité totale",
+      "subtext": "kg"
+    }
+  },
+  "searchPlaceholder": "Rechercher des commandes de vente...",
+  "emptyDetail": "Sélectionnez une commande pour voir les détails",
+  "confirmDeleteOrder": "Supprimer la commande du {{date}} ?",
+  "actions": {
+    "edit": "Modifier"
+  },
+  "fields": {
+    "orderNumber": "Commande n°",
+    "orderDate": "Date de commande",
+    "buyer": "Acheteur",
+    "product": "Produit",
+    "quantityKg": "Quantité (kg)",
+    "pricePerKg": "Prix par kg (UGX)",
+    "revenue": "Revenu",
+    "year": "Année"
+  },
+  "form": {
+    "title": {
+      "new": "Enregistrer une nouvelle commande de vente",
+      "edit": "Modifier la commande de vente"
+    },
+    "buyer": "Acheteur",
+    "product": "Produit",
+    "orderDate": "Date de commande",
+    "quantityKg": "Quantité (kg)",
+    "pricePerKg": "Prix par kg (UGX)",
+    "addNewBuyer": "Ajouter un nouveau",
+    "selectPlaceholder": "Sélectionner..."
+  },
+  "buyerForm": {
+    "title": "Ajouter un nouvel acheteur",
+    "fields": {
+      "name": "Nom",
+      "tinNumber": "Numéro d’identification fiscale (TIN)",
+      "contactName": "Nom du contact",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "address": "Adresse",
+      "bankAccountNumber": "Numéro de compte bancaire"
+    }
+  }
+}

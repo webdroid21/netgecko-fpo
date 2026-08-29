@@ -19,6 +19,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
@@ -83,6 +84,8 @@ function DetailRow({ label, value }: { label: string; value?: any }) {
 
 export function PaymentView() {
   const { activeFbo } = useAuthContext();
+  const { t } = useTranslate('payments');
+  const { t: tCommon } = useTranslate('common');
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -169,7 +172,8 @@ export function PaymentView() {
   };
 
   const handleDelete = async (payment: Payment) => {
-    if (!confirm(`Delete payment #${payment.fields['Payment ID'] ?? 'this'}?`)) return;
+    const id = payment.fields['Payment ID'] ?? '-';
+    if (!confirm(t('confirmDeletePayment', { id }))) return;
     try {
       await axios.delete(`/api/v1/payments/${payment.id}`);
       fetchPayments();
@@ -180,7 +184,7 @@ export function PaymentView() {
 
   const loanLabel = (id?: string) => {
     const loan = loans.find((l) => l.id === id);
-    return loan ? loan.fields['Loan ID'] || 'Unnamed' : '—';
+    return loan ? loan.fields['Loan ID'] || t('unnamedLoan') : '—';
   };
 
   const renderList = () => (
@@ -189,7 +193,7 @@ export function PaymentView() {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search payments..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -200,7 +204,7 @@ export function PaymentView() {
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {loading ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>Loading…</Box>
+          <Box sx={{ p: 3, textAlign: 'center' }}>{tCommon('loading')}</Box>
         ) : (
           <List disablePadding>
             {filteredPayments.map((payment) => {
@@ -215,7 +219,7 @@ export function PaymentView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={`Payment #${payment.fields['Payment ID'] ?? '-'}`}
+                      primary={`${t('unnamedPayment')} #${payment.fields['Payment ID'] ?? '-'}`}
                       primaryTypographyProps={{ variant: 'subtitle2' }}
                     />
                     <Label color={payment.fields.Check === 'OK' ? 'success' : 'warning'}>
@@ -243,7 +247,7 @@ export function PaymentView() {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Select a payment to view details
+            {t('emptyDetail')}
           </Typography>
         </Card>
       );
@@ -262,7 +266,7 @@ export function PaymentView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">Payment #{f['Payment ID'] ?? '-'}</Typography>
+              <Typography variant="h5">{`${t('unnamedPayment')} #${f['Payment ID'] ?? '-'}`}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {f['Payment Date']} · {f.Source}
               </Typography>
@@ -270,7 +274,7 @@ export function PaymentView() {
 
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" onClick={() => handleEdit(selectedPayment)}>
-                Edit
+                {t('actions.edit')}
               </Button>
               <IconButton color="error" onClick={() => handleDelete(selectedPayment)}>
                 <Iconify icon={'solar:trash-bin-trash-bold' as any} />
@@ -280,31 +284,31 @@ export function PaymentView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Check" value={f.Check} />
+              <DetailRow label={t('fields.check')} value={f.Check} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Loan" value={loanLabel(f.Loans?.[0])} />
+              <DetailRow label={t('fields.loan')} value={loanLabel(f.Loans?.[0])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Source" value={f.Source} />
+              <DetailRow label={t('fields.source')} value={f.Source} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Payment Amount (UGX)" value={f['Payment Amount (UGX)']} />
+              <DetailRow label={t('fields.paymentAmount')} value={f['Payment Amount (UGX)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Payment Date" value={f['Payment Date']} />
+              <DetailRow label={t('fields.paymentDate')} value={f['Payment Date']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Payment reference" value={f['Payment reference']} />
+              <DetailRow label={t('fields.paymentReference')} value={f['Payment reference']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Mobile Money Number Used" value={f['Mobile Money Number Used']} />
+              <DetailRow label={t('fields.mobileMoneyNumberUsed')} value={f['Mobile Money Number Used']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="FPO" value={(f['FPO (from Loans)'] || []).join(', ')} />
+              <DetailRow label={t('fields.fpo')} value={(f['FPO (from Loans)'] || []).join(', ')} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Season" value={(f['Season (from Loans)'] || []).join(', ')} />
+              <DetailRow label={t('fields.season')} value={(f['Season (from Loans)'] || []).join(', ')} />
             </Grid>
           </Grid>
         </CardContent>
@@ -316,9 +320,9 @@ export function PaymentView() {
     <DashboardContent maxWidth="xl">
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h4">Payments</Typography>
+          <Typography variant="h4">{t('page.title')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Track loan repayments and cash advances
+            {t('page.subtitle')}
           </Typography>
         </Box>
         <Button
@@ -326,25 +330,25 @@ export function PaymentView() {
           startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
           onClick={handleAdd}
         >
-          New Payment
+          {t('page.newPayment')}
         </Button>
       </Stack>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <SummaryCard
-            title="Total payments"
+            title={t('summary.totalPayments.title')}
             total={stats.count}
-            subtext="Transactions"
+            subtext={t('summary.totalPayments.subtext')}
             color="primary"
             icon="solar:wallet-money-bold-duotone"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <SummaryCard
-            title="Total received"
+            title={t('summary.totalReceived.title')}
             total={stats.total}
-            subtext="UGX"
+            subtext={t('summary.totalReceived.subtext')}
             color="success"
             icon="solar:tag-price-bold-duotone"
           />

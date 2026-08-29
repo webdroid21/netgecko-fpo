@@ -1,0 +1,62 @@
+{
+  "page": {
+    "title": "Okutunda",
+    "subtitle": "Londoola okutunda ebirime n’ebikuta",
+    "newOrder": "Kiragiro ekipya"
+  },
+  "summary": {
+    "totalOrders": {
+      "title": "Ebiragiro byonna",
+      "subtext": "Ebiragiro by’okutunda"
+    },
+    "totalRevenue": {
+      "title": "Ssente z’emu okutunda zonna",
+      "subtext": "UGX"
+    },
+    "totalQuantity": {
+      "title": "Obungi bwonna",
+      "subtext": "kg"
+    }
+  },
+  "searchPlaceholder": "Noonya biragiro by’okutunda...",
+  "emptyDetail": "Londako kiragiro okulaba ebirimu",
+  "confirmDeleteOrder": "Osangula kiragiro kya {{date}}?",
+  "actions": {
+    "edit": "Kyusa"
+  },
+  "fields": {
+    "orderNumber": "Order #",
+    "orderDate": "Olunaku lw’ekiragiro",
+    "buyer": "Aguza",
+    "product": "Ekintu ekitundibwa",
+    "quantityKg": "Obungi (kg)",
+    "pricePerKg": "Omuwendo ku kg (UGX)",
+    "revenue": "Ssente ezifuniddwa",
+    "year": "Omwaka"
+  },
+  "form": {
+    "title": {
+      "new": "Yingiza kiragiro ky’okutunda ekipya",
+      "edit": "Kyusa kiragiro ky’okutunda"
+    },
+    "buyer": "Aguza",
+    "product": "Ekintu ekitundibwa",
+    "orderDate": "Olunaku lw’ekiragiro",
+    "quantityKg": "Obungi (kg)",
+    "pricePerKg": "Omuwendo ku kg (UGX)",
+    "addNewBuyer": "Yongerako aguza omupya",
+    "selectPlaceholder": "Londako..."
+  },
+  "buyerForm": {
+    "title": "Yongerako aguza omupya",
+    "fields": {
+      "name": "Erinnya",
+      "tinNumber": "ENNAMBA ya TIN",
+      "contactName": "Erinnya ly’akuyitibwa",
+      "email": "Email",
+      "phone": "Essimu",
+      "address": "Endagiriro",
+      "bankAccountNumber": "Ennamba ya akawunti y’ebbanki"
+    }
+  }
+}

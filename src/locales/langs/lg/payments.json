@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Ensasula",
+    "subtitle": "Londoola okusasula kwa loans n’ensimbi z’empewo",
+    "newPayment": "Ensasula empya"
+  },
+  "summary": {
+    "totalPayments": {
+      "title": "Ensasula zonna",
+      "subtext": "Transakisoni"
+    },
+    "totalReceived": {
+      "title": "Ssente zonna ezifuniddwa",
+      "subtext": "UGX"
+    }
+  },
+  "searchPlaceholder": "Noonya ensasula...",
+  "emptyDetail": "Londako ensasula okulaba ebirimu",
+  "unnamedPayment": "Ensasula",
+  "unnamedLoan": "Loan etali na linnya",
+  "confirmDeletePayment": "Osangula payment #{{id}}?",
+  "actions": {
+    "edit": "Kyusa"
+  },
+  "fields": {
+    "check": "Check",
+    "loan": "Loan",
+    "source": "Ensulo",
+    "paymentAmount": "Omuwendo gw’ensasula (UGX)",
+    "paymentDate": "Olunaku lw’ensasula",
+    "paymentReference": "Ennamba y’okulondoola ensasula",
+    "mobileMoneyNumberUsed": "Ennamba ya Mobile Money eyakozeseddwa",
+    "fpo": "FPO",
+    "season": "Sizoni"
+  },
+  "form": {
+    "title": {
+      "new": "Yingiza ensasula empya",
+      "edit": "Kyusa ensasula"
+    },
+    "loan": "Loan",
+    "source": "Ensulo",
+    "paymentAmount": "Omuwendo gw’ensasula (UGX)",
+    "paymentDate": "Olunaku lw’ensasula",
+    "paymentReference": "Ennamba y’okulondoola ensasula",
+    "mobileMoneyNumberUsed": "Ennamba ya Mobile Money eyakozeseddwa",
+    "selectPlaceholder": "Londako..."
+  }
+}

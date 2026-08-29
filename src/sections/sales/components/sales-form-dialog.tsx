@@ -18,6 +18,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 
 import { Form, Field } from 'src/components/hook-form';
 
@@ -74,6 +75,9 @@ export function SalesFormDialog({
   const isEdit = Boolean(order);
   const [buyerFormOpen, setBuyerFormOpen] = useState(false);
 
+  const { t } = useTranslate('sales');
+  const { t: tCommon } = useTranslate('common');
+
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(order),
     resolver: zodResolver(schema),
@@ -118,7 +122,7 @@ export function SalesFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? 'Edit sales order' : 'Enter a new sales order'}</DialogTitle>
+      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
 
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent dividers>
@@ -126,9 +130,9 @@ export function SalesFormDialog({
             <Grid size={{ xs: 12 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box sx={{ flexGrow: 1 }}>
-                  <Field.Select name="Buyer" label="Buyer" required>
+                  <Field.Select name="Buyer" label={t('form.buyer')} required>
                     <MenuItem value="">
-                      <em>Select...</em>
+                      <em>{t('form.selectPlaceholder')}</em>
                     </MenuItem>
                     {buyers.map((b) => (
                       <MenuItem key={b.id} value={b.id}>
@@ -147,15 +151,15 @@ export function SalesFormDialog({
                     </Box>
                   }
                 >
-                  Add New
+                  {t('form.addNewBuyer')}
                 </Button>
               </Stack>
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Select name="Product" label="Product" required>
+              <Field.Select name="Product" label={t('form.product')} required>
                 <MenuItem value="">
-                  <em>Select...</em>
+                  <em>{t('form.selectPlaceholder')}</em>
                 </MenuItem>
                 {inventory.map((item) => (
                   <MenuItem key={item.id} value={item.id}>
@@ -166,14 +170,14 @@ export function SalesFormDialog({
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.DatePicker name="Order Date" label="Order Date" />
+              <Field.DatePicker name="Order Date" label={t('form.orderDate')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
                 name="Quantity (kg)"
-                label="Quantity (kg)"
+                label={t('form.quantityKg')}
                 required
               />
             </Grid>
@@ -182,7 +186,7 @@ export function SalesFormDialog({
               <Field.Text
                 type="number"
                 name="Price per KG (UGX)"
-                label="Price per KG (UGX)"
+                label={t('form.pricePerKg')}
                 required
               />
             </Grid>
@@ -191,10 +195,10 @@ export function SalesFormDialog({
 
         <DialogActions>
           <Button onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Save
+            {tCommon('save')}
           </LoadingButton>
         </DialogActions>
       </Form>

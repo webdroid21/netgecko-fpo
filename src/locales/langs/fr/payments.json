@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Paiements",
+    "subtitle": "Suivre les remboursements de prêts et les avances de trésorerie",
+    "newPayment": "Nouveau paiement"
+  },
+  "summary": {
+    "totalPayments": {
+      "title": "Nombre total de paiements",
+      "subtext": "Transactions"
+    },
+    "totalReceived": {
+      "title": "Total reçu",
+      "subtext": "UGX"
+    }
+  },
+  "searchPlaceholder": "Rechercher des paiements...",
+  "emptyDetail": "Sélectionnez un paiement pour voir les détails",
+  "unnamedPayment": "Paiement",
+  "unnamedLoan": "Prêt sans nom",
+  "confirmDeletePayment": "Supprimer le paiement n°{{id}} ?",
+  "actions": {
+    "edit": "Modifier"
+  },
+  "fields": {
+    "check": "Vérification",
+    "loan": "Prêt",
+    "source": "Source",
+    "paymentAmount": "Montant du paiement (UGX)",
+    "paymentDate": "Date de paiement",
+    "paymentReference": "Référence de paiement",
+    "mobileMoneyNumberUsed": "Numéro Mobile Money utilisé",
+    "fpo": "FPO",
+    "season": "Saison"
+  },
+  "form": {
+    "title": {
+      "new": "Enregistrer un nouveau paiement",
+      "edit": "Modifier le paiement"
+    },
+    "loan": "Prêt",
+    "source": "Source",
+    "paymentAmount": "Montant du paiement (UGX)",
+    "paymentDate": "Date de paiement",
+    "paymentReference": "Référence de paiement",
+    "mobileMoneyNumberUsed": "Numéro Mobile Money utilisé",
+    "selectPlaceholder": "Sélectionner..."
+  }
+}

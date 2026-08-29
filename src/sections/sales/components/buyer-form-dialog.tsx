@@ -14,6 +14,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 
 import { Form, Field } from 'src/components/hook-form';
 
@@ -52,6 +53,8 @@ function getDefaultValues(): FormValues {
 }
 
 export function BuyerFormDialog({ open, onClose, onSaved }: BuyerFormDialogProps) {
+  const { t } = useTranslate('sales');
+  const { t: tCommon } = useTranslate('common');
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(),
     resolver: zodResolver(schema),
@@ -79,41 +82,44 @@ export function BuyerFormDialog({ open, onClose, onSaved }: BuyerFormDialogProps
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add a new buyer</DialogTitle>
+      <DialogTitle>{t('buyerForm.title')}</DialogTitle>
 
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent dividers>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12 }}>
-              <Field.Text name="Name" label="Name" required />
+              <Field.Text name="Name" label={t('buyerForm.fields.name')} required />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="TIN Number" label="TIN Number" />
+              <Field.Text name="TIN Number" label={t('buyerForm.fields.tinNumber')} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Contact Name" label="Contact Name" />
+              <Field.Text name="Contact Name" label={t('buyerForm.fields.contactName')} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Email" label="Email" />
+              <Field.Text name="Email" label={t('buyerForm.fields.email')} />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Phone" label="Phone" />
+              <Field.Text name="Phone" label={t('buyerForm.fields.phone')} />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Field.Text name="Address" label="Address" />
+              <Field.Text name="Address" label={t('buyerForm.fields.address')} />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <Field.Text name="Bank Account Number" label="Bank Account Number" />
+              <Field.Text
+                name="Bank Account Number"
+                label={t('buyerForm.fields.bankAccountNumber')}
+              />
             </Grid>
           </Grid>
         </DialogContent>
 
         <DialogActions>
           <Button onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Save
+            {tCommon('save')}
           </LoadingButton>
         </DialogActions>
       </Form>

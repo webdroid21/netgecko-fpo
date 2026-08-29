@@ -1,0 +1,49 @@
+{
+  "page": {
+    "title": "Payments",
+    "subtitle": "Track loan repayments and cash advances",
+    "newPayment": "New payment"
+  },
+  "summary": {
+    "totalPayments": {
+      "title": "Total payments",
+      "subtext": "Transactions"
+    },
+    "totalReceived": {
+      "title": "Total received",
+      "subtext": "UGX"
+    }
+  },
+  "searchPlaceholder": "Search payments...",
+  "emptyDetail": "Select a payment to view details",
+  "unnamedPayment": "Payment",
+  "unnamedLoan": "Unnamed loan",
+  "confirmDeletePayment": "Delete payment #{{id}}?",
+  "actions": {
+    "edit": "Edit"
+  },
+  "fields": {
+    "check": "Check",
+    "loan": "Loan",
+    "source": "Source",
+    "paymentAmount": "Payment amount (UGX)",
+    "paymentDate": "Payment date",
+    "paymentReference": "Payment reference",
+    "mobileMoneyNumberUsed": "Mobile money number used",
+    "fpo": "FPO",
+    "season": "Season"
+  },
+  "form": {
+    "title": {
+      "new": "Enter a new payment",
+      "edit": "Edit payment"
+    },
+    "loan": "Loan",
+    "source": "Source",
+    "paymentAmount": "Payment amount (UGX)",
+    "paymentDate": "Payment date",
+    "paymentReference": "Payment reference",
+    "mobileMoneyNumberUsed": "Mobile money number used",
+    "selectPlaceholder": "Select..."
+  }
+}

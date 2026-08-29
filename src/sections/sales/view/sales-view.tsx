@@ -18,6 +18,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
@@ -78,6 +79,8 @@ function DetailRow({ label, value }: { label: string; value?: any }) {
 // ----------------------------------------------------------------------
 
 export function SalesView() {
+  const { t } = useTranslate('sales');
+  const { t: tCommon } = useTranslate('common');
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -169,7 +172,8 @@ export function SalesView() {
   };
 
   const handleDelete = async (order: SalesOrder) => {
-    if (!confirm(`Delete ${order.fields.Date ?? 'this order'}?`)) return;
+    const date = order.fields.Date ?? order.fields['Order Date'] ?? '';
+    if (!confirm(t('confirmDeleteOrder', { date }))) return;
     try {
       await axios.delete(`/api/v1/sales-orders/${order.id}`);
       fetchOrders();
@@ -189,27 +193,27 @@ export function SalesView() {
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <SummaryCard
-          title="Total orders"
+          title={t('summary.totalOrders.title')}
           total={stats.count}
-          subtext="Sales orders"
+          subtext={t('summary.totalOrders.subtext')}
           color="primary"
           icon="solar:cart-4-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <SummaryCard
-          title="Total revenue"
+          title={t('summary.totalRevenue.title')}
           total={stats.total}
-          subtext="UGX"
+          subtext={t('summary.totalRevenue.subtext')}
           color="success"
           icon="solar:tag-price-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <SummaryCard
-          title="Total quantity"
+          title={t('summary.totalQuantity.title')}
           total={stats.quantity}
-          subtext="kg"
+          subtext={t('summary.totalQuantity.subtext')}
           color="info"
           icon="solar:scale-bold-duotone"
         />
@@ -223,7 +227,7 @@ export function SalesView() {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search sales orders..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           InputProps={{
@@ -234,7 +238,7 @@ export function SalesView() {
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {loading ? (
-          <Box sx={{ p: 3, textAlign: 'center' }}>Loading…</Box>
+          <Box sx={{ p: 3, textAlign: 'center' }}>{tCommon('loading')}</Box>
         ) : (
           <List disablePadding>
             {filteredOrders.map((order) => {
@@ -248,7 +252,7 @@ export function SalesView() {
                   sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
                 >
                   <ListItemText
-                    primary={order.fields.Date || `Order #${order.fields['Order #']}`}
+                    primary={order.fields.Date || `${t('fields.orderNumber')} ${order.fields['Order #']}`}
                     primaryTypographyProps={{ variant: 'subtitle2' }}
                   />
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -271,7 +275,7 @@ export function SalesView() {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Select an order to view details
+            {t('emptyDetail')}
           </Typography>
         </Card>
       );
@@ -290,7 +294,7 @@ export function SalesView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{f.Date || `Order #${f['Order #']}`}</Typography>
+              <Typography variant="h5">{f.Date || `${t('fields.orderNumber')} ${f['Order #']}`}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {f['Order Date']} · {buyerName(f.Buyer?.[0])}
               </Typography>
@@ -298,7 +302,7 @@ export function SalesView() {
 
             <Stack direction="row" spacing={1}>
               <Button variant="outlined" size="small" onClick={() => handleEdit(selectedOrder)}>
-                Edit
+                {t('actions.edit')}
               </Button>
               <IconButton color="error" onClick={() => handleDelete(selectedOrder)}>
                 <Iconify icon={'solar:trash-bin-trash-bold' as any} />
@@ -308,28 +312,28 @@ export function SalesView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Order #" value={f['Order #']} />
+              <DetailRow label={t('fields.orderNumber')} value={f['Order #']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Order Date" value={f['Order Date']} />
+              <DetailRow label={t('fields.orderDate')} value={f['Order Date']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Buyer" value={buyerName(f.Buyer?.[0])} />
+              <DetailRow label={t('fields.buyer')} value={buyerName(f.Buyer?.[0])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Product" value={productName(f.Product?.[0])} />
+              <DetailRow label={t('fields.product')} value={productName(f.Product?.[0])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Quantity (kg)" value={f['Quantity (kg)']} />
+              <DetailRow label={t('fields.quantityKg')} value={f['Quantity (kg)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Price per KG (UGX)" value={f['Price per KG (UGX)']} />
+              <DetailRow label={t('fields.pricePerKg')} value={f['Price per KG (UGX)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Revenue" value={f.Revenue} />
+              <DetailRow label={t('fields.revenue')} value={f.Revenue} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label="Year" value={f.Year} />
+              <DetailRow label={t('fields.year')} value={f.Year} />
             </Grid>
           </Grid>
         </CardContent>
@@ -341,9 +345,9 @@ export function SalesView() {
     <DashboardContent maxWidth="xl">
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h4">Sales</Typography>
+          <Typography variant="h4">{t('page.title')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Track crop and produce sales
+            {t('page.subtitle')}
           </Typography>
         </Box>
         <Button
@@ -351,7 +355,7 @@ export function SalesView() {
           startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
           onClick={handleAdd}
         >
-          New Order
+          {t('page.newOrder')}
         </Button>
       </Stack>
 

@@ -17,6 +17,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 
 import { Form, Field } from 'src/components/hook-form';
 
@@ -65,6 +66,9 @@ function getDefaultValues(payment?: Payment | null): FormValues {
 export function PaymentFormDialog({ open, payment, loans, onClose, onSaved }: PaymentFormDialogProps) {
   const isEdit = Boolean(payment);
 
+  const { t } = useTranslate('payments');
+  const { t: tCommon } = useTranslate('common');
+
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(payment),
     resolver: zodResolver(schema),
@@ -101,15 +105,15 @@ export function PaymentFormDialog({ open, payment, loans, onClose, onSaved }: Pa
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? 'Edit payment' : 'Enter a new payment'}</DialogTitle>
+      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
 
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent dividers>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12 }}>
-              <Field.Select name="Loans" label="Loan" required>
+              <Field.Select name="Loans" label={t('form.loan')} required>
                 <MenuItem value="">
-                  <em>Select...</em>
+                  <em>{t('form.selectPlaceholder')}</em>
                 </MenuItem>
                 {loans.map((loan) => (
                   <MenuItem key={loan.id} value={loan.id}>
@@ -121,9 +125,9 @@ export function PaymentFormDialog({ open, payment, loans, onClose, onSaved }: Pa
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Select name="Source" label="Source" required>
+              <Field.Select name="Source" label={t('form.source')} required>
                 <MenuItem value="">
-                  <em>Select...</em>
+                  <em>{t('form.selectPlaceholder')}</em>
                 </MenuItem>
                 {SOURCE_OPTIONS.map((o) => (
                   <MenuItem key={o} value={o}>
@@ -137,31 +141,34 @@ export function PaymentFormDialog({ open, payment, loans, onClose, onSaved }: Pa
               <Field.Text
                 type="number"
                 name="Payment Amount (UGX)"
-                label="Payment Amount (UGX)"
+                label={t('form.paymentAmount')}
                 required
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.DatePicker name="Payment Date" label="Payment Date" />
+              <Field.DatePicker name="Payment Date" label={t('form.paymentDate')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Payment reference" label="Payment reference" />
+              <Field.Text name="Payment reference" label={t('form.paymentReference')} />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Field.Text name="Mobile Money Number Used" label="Mobile Money Number Used" />
+              <Field.Text
+                name="Mobile Money Number Used"
+                label={t('form.mobileMoneyNumberUsed')}
+              />
             </Grid>
           </Grid>
         </DialogContent>
 
         <DialogActions>
           <Button onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Save
+            {tCommon('save')}
           </LoadingButton>
         </DialogActions>
       </Form>
