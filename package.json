@@ -21,7 +21,10 @@
     "re:build-npm": "npm run clean && npm install && npm run build",
     "tsc:dev": "yarn dev & yarn tsc:watch",
     "tsc:watch": "tsc --noEmit --watch",
-    "tsc:print": "npx tsc --showConfig"
+    "tsc:print": "npx tsc --showConfig",
+    "build:mobile": "pnpm run build && npx cap sync",
+    "android:open": "npx cap open android",
+    "android:run": "npx cap run android"
   },
   "engines": {
     "node": ">=20"
@@ -107,7 +110,8 @@
     "swr": "^2.3.6",
     "turndown": "^7.2.1",
     "yet-another-react-lightbox": "^3.25.0",
-    "zod": "^4.1.11"
+    "zod": "^4.1.11",
+    "@capacitor/core": "^8.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
@@ -132,6 +136,8 @@
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
     "vite": "^7.1.7",
-    "vite-plugin-checker": "^0.11.0"
+    "vite-plugin-checker": "^0.11.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/android": "^8.5.0"
   }
 }
