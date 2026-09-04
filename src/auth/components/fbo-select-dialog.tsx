@@ -41,7 +41,7 @@ export function FboSelectDialog({ open }: FboSelectDialogProps) {
           Your profile has access to multiple NetGecko Partners. Please choose one to continue.
         </Typography>
 
-        <List>
+        <List sx={{ py: 4 }}>
           {user.fbos.map((fbo) => (
             <ListItemButton
               key={fbo.id}
