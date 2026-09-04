@@ -258,14 +258,20 @@ export function FarmerView() {
     }
   }, [farmers, filteredFarmers, farmerId, selectedId]);
 
+  const fetchFullFarmer = useCallback(async (id: string) => {
+    try {
+      const { data } = await axios.get(`/api/v1/farmers/${id}`);
+      setFullFarmer(data.record);
+    } catch (error: any) {
+      console.error('Fetch farmer error:', error?.message);
+    }
+  }, []);
+
   useEffect(() => {
     if (!selectedId) return;
     setFullFarmer(null);
-    axios
-      .get(`/api/v1/farmers/${selectedId}`)
-      .then(({ data }) => setFullFarmer(data.record))
-      .catch((error: any) => console.error('Fetch farmer error:', error?.message));
-  }, [selectedId]);
+    fetchFullFarmer(selectedId);
+  }, [selectedId, fetchFullFarmer]);
 
   const isWoman = (f: Farmer) => f.fields.Gender === 'Female';
   const roundPercent = (count: number, total: number) =>
@@ -312,6 +318,11 @@ export function FarmerView() {
   const handleEdit = (farmer: Farmer) => {
     setEditingFarmer(farmer);
     setFormOpen(true);
+  };
+
+  const handleFieldSaved = () => {
+    fetchFarmers();
+    if (selectedId) fetchFullFarmer(selectedId);
   };
 
   const renderSummary = () => (
@@ -465,7 +476,7 @@ export function FarmerView() {
                 name="Given Name"
                 label={t('fields.givenName')}
                 value={f['Given Name']}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -474,7 +485,7 @@ export function FarmerView() {
                 name="Surname"
                 label={t('fields.surname')}
                 value={f.Surname}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -484,7 +495,7 @@ export function FarmerView() {
                 label={t('fields.birthDate')}
                 value={f['Birth date']}
                 type="date"
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -498,7 +509,7 @@ export function FarmerView() {
                 value={f.Gender}
                 type="select"
                 options={['Male', 'Female']}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -507,7 +518,7 @@ export function FarmerView() {
                 name="Farmer Code"
                 label={t('fields.farmerCode')}
                 value={f['Farmer Code']}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -524,7 +535,7 @@ export function FarmerView() {
                 name="Phone Number"
                 label={t('fields.phoneNumber')}
                 value={f['Phone Number']}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -533,7 +544,7 @@ export function FarmerView() {
                 name="Mobile Money Number"
                 label={t('fields.mobileMoneyNumber')}
                 value={f['Mobile Money Number']}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -551,7 +562,7 @@ export function FarmerView() {
                 name="Email"
                 label={t('fields.email')}
                 value={f.Email}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
 
@@ -565,7 +576,7 @@ export function FarmerView() {
                 name="Village"
                 label={t('fields.village')}
                 value={f.Village}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -574,7 +585,7 @@ export function FarmerView() {
                 name="Parish"
                 label={t('fields.parish')}
                 value={f.Parish}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -583,7 +594,7 @@ export function FarmerView() {
                 name="Sub-county"
                 label={t('fields.subCounty')}
                 value={f['Sub-county']}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -592,7 +603,7 @@ export function FarmerView() {
                 name="District (form)"
                 label={t('fields.district')}
                 value={f['District (form)']}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -605,7 +616,7 @@ export function FarmerView() {
                 label={t('fields.memberSince')}
                 value={f['Member since (date)']}
                 type="date"
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -622,7 +633,7 @@ export function FarmerView() {
                 name="Main crop sold to Cooperative"
                 label={t('fields.mainCropSold')}
                 value={cropValue}
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -632,7 +643,7 @@ export function FarmerView() {
                 label={t('fields.volumeSeasonA')}
                 value={f['Volume sold last season A to Cooperative (kg)']}
                 type="number"
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -642,7 +653,7 @@ export function FarmerView() {
                 label={t('fields.volumeSeasonB')}
                 value={f['Volume sold last season B to Cooperative (kg) copy']}
                 type="number"
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -652,7 +663,7 @@ export function FarmerView() {
                 label={t('fields.seasonalWorkers')}
                 value={f['# seasonal/temporary workers hired & paid by farmer']}
                 type="number"
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -662,7 +673,7 @@ export function FarmerView() {
                 label={t('fields.permanentWorkers')}
                 value={f['# permanent workers hired & paid by farmer']}
                 type="number"
-                onSaved={fetchFarmers}
+                onSaved={handleFieldSaved}
               />
             </Grid>
 
@@ -755,7 +766,7 @@ export function FarmerView() {
         farmer={editingFarmer}
         fpoId={activeFbo?.id}
         onClose={() => setFormOpen(false)}
-        onSaved={fetchFarmers}
+        onSaved={handleFieldSaved}
       />
     </DashboardContent>
   );
