@@ -1,8 +1,6 @@
 {
-  "title": "Cooperative Overview",
+  "title": "Partner Overview",
   "welcome": "Welcome back",
-  "subtitle": "Real-time health and operational metrics for the farming network.",
-  "addFarmer": "Add Farmer",
   "activeFarmers": "Active Farmers",
   "verifiedMembers": "{count} verified members",
   "numberOfLands": "Number of Lands",

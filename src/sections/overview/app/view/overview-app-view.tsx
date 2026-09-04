@@ -457,6 +457,22 @@ export function OverviewAppView() {
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>
+          <Box
+            sx={{
+              p: 2.5,
+              borderRadius: 2,
+              color: 'common.white',
+              bgcolor: 'primary.main',
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight={600}>
+              Welcome to NetGecko App - Boost farm productivity, grow your business and increase
+              farmers&rsquo; incomes by using NetGecko service and digitizing your operations
+            </Typography>
+          </Box>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
             alignItems={{ xs: 'flex-start', sm: 'center' }}
@@ -467,19 +483,9 @@ export function OverviewAppView() {
               <Typography variant="h4">{t('title')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
                 {t('welcome')}
-                {firstName ? `, ${firstName}` : ''} 👋 {t('subtitle')}
+                {firstName ? `, ${firstName}` : ''}
               </Typography>
             </Box>
-
-            <Button
-              variant="contained"
-              color="primary"
-              component={RouterLink}
-              href={paths.dashboard.fpo.farmers}
-              startIcon={<Iconify icon={'solar:user-plus-bold' as any} />}
-            >
-              {t('addFarmer')}
-            </Button>
           </Stack>
         </Grid>
 

@@ -1,8 +1,6 @@
 {
-  "title": "Vue d’ensemble de la coopérative",
+  "title": "Aperçu du partenaire",
   "welcome": "Bon retour",
-  "subtitle": "Indicateurs en temps réel sur la santé et le fonctionnement du réseau d’agriculteurs.",
-  "addFarmer": "Ajouter un agriculteur",
   "activeFarmers": "Agriculteurs actifs",
   "verifiedMembers": "{count} membres vérifiés",
   "numberOfLands": "Nombre de parcelles",
