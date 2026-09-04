@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { safeReturnUrl } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
+import Link from '@mui/material/Link';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 
 import { useSearchParams } from 'src/routes/hooks';
 
 import { CONFIG } from 'src/global-config';
 
+import { Logo } from 'src/components/logo';
 import { SplashScreen } from 'src/components/loading-screen';
 
 import { useAuthContext } from '../hooks';
@@ -62,14 +66,34 @@ export function GuestGuard({ children }: GuestGuardProps) {
     );
   }
 
-  // User exists but has no FBO assigned
+  // User exists but has no FBO (Partner) assigned
   if (user && user.fbos.length === 0) {
     return (
-      <Box sx={{ p: 4 }}>
-        <Alert severity="error">
-          No FBO is assigned to your profile. Please contact the system admin to gain access.
-        </Alert>
-      </Box>
+      <Stack
+        spacing={3}
+        alignItems="center"
+        justifyContent="center"
+        sx={{ p: 4, textAlign: 'center' }}
+      >
+        <Logo width={160} height={64} />
+
+        <Typography variant="h5">No access</Typography>
+
+        <Typography variant="body2" color="text.secondary">
+          There is no Partner assigned to your profile. Please contact{' '}
+          <Link href="mailto:support@netgecko.net">support@netgecko.net</Link> to gain access.
+        </Typography>
+
+        <Button
+          fullWidth
+          size="large"
+          color="primary"
+          variant="contained"
+          href="mailto:support@netgecko.net"
+        >
+          Contact support
+        </Button>
+      </Stack>
     );
   }
 
