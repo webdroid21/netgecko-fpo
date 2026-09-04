@@ -26,10 +26,12 @@ import { RouterLink } from 'src/routes/components/router-link';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
+import { CONFIG } from 'src/global-config';
 import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
+import { SvgColor } from 'src/components/svg-color';
 import { Chart, useChart } from 'src/components/chart';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -80,7 +82,13 @@ const initialStats: DashboardStats = {
 
 // ----------------------------------------------------------------------
 
-function IconBadge({ icon, color }: { icon: string; color: PaletteColor }) {
+const svgIcon = (name: string) => (
+  <SvgColor src={`${CONFIG.assetsDir}/assets/icons/navbar/${name}.svg`} />
+);
+
+// ----------------------------------------------------------------------
+
+function IconBadge({ icon, color }: { icon: React.ReactNode; color: PaletteColor }) {
   return (
     <Box
       sx={{
@@ -95,7 +103,7 @@ function IconBadge({ icon, color }: { icon: string; color: PaletteColor }) {
         bgcolor: (theme) => `${theme.vars.palette[color].lighter}`,
       }}
     >
-      <Iconify icon={icon as any} width={24} />
+      {typeof icon === 'string' ? <Iconify icon={icon as any} width={24} /> : icon}
     </Box>
   );
 }
@@ -150,22 +158,22 @@ function StatCard({ title, value, subtext, icon, color, loading }: StatCardProps
 
 type QuickAccessCardProps = {
   title: string;
-  total: number;
-  icon: string;
+  description: string;
+  icon: React.ReactNode;
   color: PaletteColor;
   href: string;
   loading?: boolean;
 };
 
-function QuickAccessCard({ title, total, icon, color, href, loading }: QuickAccessCardProps) {
+function QuickAccessCard({ title, description, icon, color, href, loading }: QuickAccessCardProps) {
   if (loading) {
     return (
       <Card sx={{ p: 2.5 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Skeleton variant="rounded" width={44} height={44} />
           <Box sx={{ flexGrow: 1 }}>
-            <Skeleton width="50%" height={26} />
-            <Skeleton width="70%" height={18} />
+            <Skeleton width="50%" height={20} />
+            <Skeleton width="80%" height={18} sx={{ mt: 0.5 }} />
           </Box>
         </Stack>
       </Card>
@@ -189,18 +197,22 @@ function QuickAccessCard({ title, total, icon, color, href, loading }: QuickAcce
           <IconBadge icon={icon} color={color} />
 
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            <Typography variant="h5" sx={{ lineHeight: 1.2 }}>
-              {fNumber(total)}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
+            <Typography
+              variant="h6"
+              noWrap
+              sx={{ lineHeight: 1.2, color: `${color}.main`, fontSize: '1rem', fontWeight: 600 }}
+            >
               {title}
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {description}
             </Typography>
           </Box>
 
           <Iconify
             icon={'solar:double-alt-arrow-right-bold-duotone' as any}
             width={20}
-            sx={{ color: 'text.disabled' }}
+            sx={{ color: `${color}.main` }}
           />
         </Stack>
       </Card>
@@ -489,57 +501,68 @@ export function OverviewAppView() {
           </Stack>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <QuickAccessCard
             loading={loading}
             title={t('quickAccessFarmers')}
-            total={stats.farmers}
-            icon="solar:users-group-rounded-bold"
+            description={t('quickAccessFarmersDescription')}
+            icon={svgIcon('ic-user')}
             color="primary"
             href={paths.dashboard.fpo.farmers}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <QuickAccessCard
+            loading={loading}
+            title={t('quickAccessLands')}
+            description={t('quickAccessLandsDescription')}
+            icon={svgIcon('ic-land')}
+            color="primary"
+            href={paths.dashboard.fpo.lands}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <QuickAccessCard
             loading={loading}
             title={t('quickAccessInputOrders')}
-            total={stats.inputOrders}
-            icon="solar:cart-3-bold"
-            color="info"
+            description={t('quickAccessInputOrdersDescription')}
+            icon={svgIcon('ic-order')}
+            color="primary"
             href={paths.dashboard.fpo.inputOrders}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <QuickAccessCard
             loading={loading}
             title={t('quickAccessLoans')}
-            total={stats.loans}
-            icon="solar:bill-list-bold"
-            color="warning"
+            description={t('quickAccessLoansDescription')}
+            icon={svgIcon('ic-banking')}
+            color="primary"
             href={paths.dashboard.fpo.loans}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <QuickAccessCard
             loading={loading}
             title={t('quickAccessPayments')}
-            total={stats.payments}
-            icon="solar:wad-of-money-bold"
-            color="success"
+            description={t('quickAccessPaymentsDescription')}
+            icon={svgIcon('ic-dollar')}
+            color="primary"
             href={paths.dashboard.fpo.payments}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <QuickAccessCard
             loading={loading}
             title={t('quickAccessSales')}
-            total={stats.sales}
-            icon="solar:export-bold"
-            color="error"
+            description={t('quickAccessSalesDescription')}
+            icon={svgIcon('ic-order')}
+            color="primary"
             href={paths.dashboard.fpo.sales}
           />
         </Grid>
