@@ -57,7 +57,7 @@ type DashboardStats = {
   salesRevenue: number;
   recentInputOrders: InputOrder[];
   recentPayments: Payment[];
-  memberStatus: { active: number; pending: number; inactive: number };
+  memberStatus: { total: number; active: number; pending: number; inactive: number };
   orderStatus: { open: number; active: number; closed: number; cancelled: number };
 };
 
@@ -76,7 +76,7 @@ const initialStats: DashboardStats = {
   salesRevenue: 0,
   recentInputOrders: [],
   recentPayments: [],
-  memberStatus: { active: 0, pending: 0, inactive: 0 },
+  memberStatus: { total: 0, active: 0, pending: 0, inactive: 0 },
   orderStatus: { open: 0, active: 0, closed: 0, cancelled: 0 },
 };
 
@@ -325,7 +325,14 @@ function MemberStatusChart({ data, loading }: MemberStatusChartProps) {
   const chartOptions = useChart({
     chart: { stacked: true },
     stroke: { width: 0 },
-    xaxis: { categories: ['Active', 'Pending', 'Inactive'] },
+    xaxis: {
+      categories: [
+        t('memberStatusTotal'),
+        t('memberStatusActive'),
+        t('memberStatusPending'),
+        t('memberStatusInactive'),
+      ],
+    },
     tooltip: { y: { formatter: (value: number) => fNumber(value) } },
     plotOptions: { bar: { columnWidth: '40%' } },
   });
@@ -342,7 +349,12 @@ function MemberStatusChart({ data, loading }: MemberStatusChartProps) {
       ) : hasData ? (
         <Chart
           type="bar"
-          series={[{ name: 'Farmers', data: [data.active, data.pending, data.inactive] }]}
+          series={[
+            {
+              name: t('memberStatusTotal'),
+              data: [data.total, data.active, data.pending, data.inactive],
+            },
+          ]}
           options={chartOptions}
           sx={{
             pl: 1,
@@ -433,7 +445,12 @@ export function OverviewAppView() {
         salesRevenue: sales.reduce((sum, s) => sum + (Number(s.fields.Revenue) || 0), 0),
         recentInputOrders: orders.slice(0, 5),
         recentPayments: payments.slice(0, 5),
-        memberStatus: { active, pending: 0, inactive: farmers.length - active },
+        memberStatus: {
+          total: farmers.length,
+          active,
+          pending: 0,
+          inactive: farmers.length - active,
+        },
         orderStatus: orders.reduce(
           (acc, o) => {
             const status = o.fields['Order Status'];
