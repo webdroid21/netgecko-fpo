@@ -135,7 +135,6 @@ function QuickAccessCard({
           <Skeleton variant="rounded" width={44} height={44} />
           <Box sx={{ flexGrow: 1 }}>
             <Skeleton width="40%" height={28} />
-            <Skeleton width="50%" height={20} sx={{ mt: 0.5 }} />
             <Skeleton width="80%" height={18} sx={{ mt: 0.5 }} />
           </Box>
         </Stack>
@@ -163,18 +162,18 @@ function QuickAccessCard({
             <Typography
               variant="h4"
               noWrap
-              sx={{ lineHeight: 1.1, color: `${color}.main`, fontSize: '1.5rem', fontWeight: 700 }}
+              sx={{ lineHeight: 1.1, color: 'text.primary', fontSize: '1.5rem', fontWeight: 600 }}
             >
-              {fNumber(total)}
-            </Typography>
-            <Typography
-              variant="h6"
-              noWrap
-              sx={{ lineHeight: 1.2, color: 'text.primary', fontSize: '1rem', fontWeight: 600 }}
-            >
+              <Box component="span" sx={{ color: `${color}.main`, fontWeight: 700 }}>
+                {fNumber(total)}
+              </Box>{' '}
               {title}
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            <Typography
+              variant="body2"
+              noWrap
+              sx={{ color: 'text.secondary', textOverflow: 'ellipsis', overflow: 'hidden', mt: 0.25 }}
+            >
               {description}
             </Typography>
           </Box>
