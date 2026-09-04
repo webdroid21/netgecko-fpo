@@ -35,10 +35,10 @@ export function FboSelectDialog({ open }: FboSelectDialogProps) {
         // prevent closing without selection
       }}
     >
-      <DialogTitle>Select FBO to manage</DialogTitle>
+      <DialogTitle>Select NetGecko Partner to manage</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-          Your account has access to multiple FBOs. Please choose one to continue.
+          Your profile has access to multiple NetGecko Partners. Please choose one to continue.
         </Typography>
 
         <List>
@@ -48,7 +48,7 @@ export function FboSelectDialog({ open }: FboSelectDialogProps) {
               onClick={() => handleSelect(fbo)}
               sx={{ justifyContent: 'space-between' }}
             >
-              <ListItemText primary={fbo.name} secondary={fbo.id} />
+              <ListItemText primary={fbo.name} />
               <Typography variant="body2" color="primary" sx={{ fontWeight: 'fontWeightMedium' }}>
                 Select
               </Typography>
