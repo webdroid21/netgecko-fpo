@@ -51,6 +51,7 @@
     "memberSince": "Member since",
     "memberSinceYear": "Member since (year)",
     "mainCropSold": "Main crop sold to Cooperative",
+    "mainCropSoldHelper": "Mandatory for PayLater (loan)",
     "volumeSeasonA": "Volume sold last season A (kg)",
     "volumeSeasonB": "Volume sold last season B (kg)",
     "seasonalWorkers": "# seasonal/temporary workers",

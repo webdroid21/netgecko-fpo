@@ -51,6 +51,7 @@
     "memberSince": "Bazzaayo obumemba okuva",
     "memberSinceYear": "Omwaka gw’atandika obumemba",
     "mainCropSold": "Ekikulu ky’alimira ky’atunda mu kibiina",
+    "mainCropSoldHelper": "Mandatory for PayLater (loan)",
     "volumeSeasonA": "Obungi obwatundiddwa mu kiseera A (kg)",
     "volumeSeasonB": "Obungi obwatundiddwa mu kiseera B (kg)",
     "seasonalWorkers": "# bakozi ba kiseera/ab’ekiseera",

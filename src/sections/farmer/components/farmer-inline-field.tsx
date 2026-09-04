@@ -22,6 +22,7 @@ type InlineEditFieldProps = {
   value?: any;
   type?: 'text' | 'date' | 'number' | 'select';
   options?: string[];
+  arrayValue?: boolean;
   readOnly?: boolean;
   onSaved: () => void;
 };
@@ -33,6 +34,7 @@ export function InlineEditField({
   value,
   type = 'text',
   options,
+  arrayValue,
   readOnly,
   onSaved,
 }: InlineEditFieldProps) {
@@ -80,6 +82,10 @@ export function InlineEditField({
 
       if (type === 'number' && (nextValue === '' || nextValue === null || nextValue === undefined)) {
         fields[name] = null;
+      }
+
+      if (arrayValue) {
+        fields[name] = nextValue ? [nextValue] : [];
       }
 
       await axios.patch(`/api/v1/farmers/${farmerId}`, { fields });

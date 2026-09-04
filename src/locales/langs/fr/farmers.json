@@ -51,6 +51,7 @@
     "memberSince": "Membre depuis",
     "memberSinceYear": "Membre depuis (année)",
     "mainCropSold": "Culture principale vendue à la coopérative",
+    "mainCropSoldHelper": "Obligatoire pour PayLater (prêt)",
     "volumeSeasonA": "Volume vendu la saison A (kg)",
     "volumeSeasonB": "Volume vendu la saison B (kg)",
     "seasonalWorkers": "Nombre d’ouvriers saisonniers/tempora ires",

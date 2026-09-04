@@ -1,5 +1,10 @@
 import type { Farmer } from '../types';
 
+type Crop = {
+  id: string;
+  fields: Record<string, any>;
+};
+
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -153,6 +158,7 @@ export function FarmerView() {
   const [editingFarmer, setEditingFarmer] = useState<Farmer | null>(null);
   const [fullFarmer, setFullFarmer] = useState<Farmer | null>(null);
   const [activeFarmerIds, setActiveFarmerIds] = useState<Set<string>>(new Set());
+  const [crops, setCrops] = useState<Crop[]>([]);
 
   const fetchFarmers = useCallback(async () => {
     if (!activeFbo) return;
@@ -175,6 +181,22 @@ export function FarmerView() {
   useEffect(() => {
     fetchFarmers();
   }, [fetchFarmers]);
+
+  const fetchCrops = useCallback(async () => {
+    try {
+      const { data } = await axios.get('/api/v1/crops');
+      setCrops(data.records || []);
+    } catch (error: any) {
+      console.error('Fetch crops error:', error?.message);
+      setCrops([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCrops();
+  }, [fetchCrops]);
+
+  const cropOptions = useMemo(() => crops.map((c) => String(c.fields['Crop Name'] ?? c.id)), [crops]);
 
   const fetchTransactions = useCallback(async () => {
     if (!activeFbo) return;
@@ -438,9 +460,11 @@ export function FarmerView() {
     if (!detailFarmer) return null;
 
     const f = detailFarmer.fields;
-    const cropValue = Array.isArray(f['Main crop sold to Cooperative'])
+    const cropIdOrName = Array.isArray(f['Main crop sold to Cooperative'])
       ? f['Main crop sold to Cooperative'][0]
       : f['Main crop sold to Cooperative'];
+    const cropRecord = crops.find((c) => c.id === cropIdOrName);
+    const cropValue = cropRecord ? cropRecord.fields['Crop Name'] ?? cropIdOrName : cropIdOrName;
 
     const makeLink = (module: string) =>
       `/dashboard/${module}?farmerId=${detailFarmer.id}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`;
@@ -625,29 +649,17 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
-                name="Member since (date)"
-                label={t('fields.memberSince')}
-                value={f['Member since (date)']}
-                type="date"
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.memberSinceYear')} value={f['Member since (year)']} />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Divider sx={{ my: 1 }} />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
                 name="Main crop sold to Cooperative"
                 label={t('fields.mainCropSold')}
                 value={cropValue}
+                type="select"
+                options={cropOptions}
+                arrayValue
                 onSaved={handleFieldSaved}
               />
+              <Typography variant="caption" sx={{ color: 'text.disabled', px: 1 }}>
+                {t('fields.mainCropSoldHelper')}
+              </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
@@ -669,6 +681,24 @@ export function FarmerView() {
                 onSaved={handleFieldSaved}
               />
             </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Member since (date)"
+                label={t('fields.memberSince')}
+                value={f['Member since (date)']}
+                type="date"
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.memberSinceYear')} value={f['Member since (year)']} />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
