@@ -25,7 +25,6 @@
   "searchPlaceholder": "Rechercher des agriculteurs...",
   "emptyDetail": "Sélectionnez un agriculteur pour voir les détails",
   "unnamed": "Sans nom",
-  "confirmDeleteFarmer": "Supprimer {{name}} ?",
   "actions": {
     "edit": "Modifier"
   },
@@ -36,8 +35,11 @@
     "birthDate": "Date de naissance",
     "age": "Âge",
     "farmerCode": "Code agriculteur",
+    "farmerIdFrontBack": "Farmer ID (front back)",
     "phoneNumber": "Numéro de téléphone",
     "mobileMoneyNumber": "Numéro Mobile Money",
+    "verifiedMobileMoneyNumber": "Numéro Mobile Money vérifié",
+    "verifiedMobileMoneyNote": "Numéro vérifié et utilisé par NetGecko. Contactez-nous pour le modifier."
     "email": "E-mail",
     "village": "Village",
     "parish": "Paroisse",

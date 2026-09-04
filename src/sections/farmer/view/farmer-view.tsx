@@ -12,7 +12,6 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -315,17 +314,6 @@ export function FarmerView() {
     setFormOpen(true);
   };
 
-  const handleDelete = async (farmer: Farmer) => {
-    const name = farmer.fields.Name ?? t('unnamed');
-    if (!confirm(t('confirmDeleteFarmer', { name }))) return;
-    try {
-      await axios.delete(`/api/v1/farmers/${farmer.id}`);
-      fetchFarmers();
-    } catch (error: any) {
-      console.error('Delete farmer error:', error?.message);
-    }
-  };
-
   const renderSummary = () => (
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -458,19 +446,16 @@ export function FarmerView() {
           >
             <Box>
               <Typography variant="h5">{f.Name || t('unnamed')}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {f['NIN (National Identification Number)']}
-              </Typography>
             </Box>
 
-            <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" onClick={() => handleEdit(detailFarmer)}>
-                {t('actions.edit')}
-              </Button>
-              <IconButton color="error" onClick={() => handleDelete(detailFarmer)}>
-                <Iconify icon={'solar:trash-bin-trash-bold' as any} />
-              </IconButton>
-            </Stack>
+            <Button
+              color="primary"
+              variant="contained"
+              size="small"
+              onClick={() => handleEdit(detailFarmer)}
+            >
+              {t('actions.edit')}
+            </Button>
           </Stack>
 
           <Grid container spacing={3}>
@@ -495,17 +480,6 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
-                name="Gender"
-                label={t('fields.gender')}
-                value={f.Gender}
-                type="select"
-                options={['Male', 'Female']}
-                onSaved={fetchFarmers}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
                 name="Birth date"
                 label={t('fields.birthDate')}
                 value={f['Birth date']}
@@ -519,11 +493,25 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
+                name="Gender"
+                label={t('fields.gender')}
+                value={f.Gender}
+                type="select"
+                options={['Male', 'Female']}
+                onSaved={fetchFarmers}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
                 name="Farmer Code"
                 label={t('fields.farmerCode')}
                 value={f['Farmer Code']}
                 onSaved={fetchFarmers}
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.farmerIdFrontBack')} value={f['Farmer ID (front back)']} />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
@@ -547,6 +535,15 @@ export function FarmerView() {
                 value={f['Mobile Money Number']}
                 onSaved={fetchFarmers}
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.verifiedMobileMoneyNumber')}
+                value={f['Verified mobile money number']}
+              />
+              <Typography variant="caption" sx={{ color: 'text.disabled', px: 1 }}>
+                {t('fields.verifiedMobileMoneyNote')}
+              </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField

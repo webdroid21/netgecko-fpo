@@ -25,7 +25,6 @@
   "searchPlaceholder": "Noonya abalimi...",
   "emptyDetail": "Londako mulimi okulaba ebimukwatako",
   "unnamed": "Talinnya",
-  "confirmDeleteFarmer": "Sangula {{name}}?",
   "actions": {
     "edit": "Kyusa"
   },
@@ -36,8 +35,11 @@
     "birthDate": "Olunaku lw’okuzalibwa",
     "age": "Emyaaka",
     "farmerCode": "Akabonero ka mulimi",
+    "farmerIdFrontBack": "Farmer ID (front back)",
     "phoneNumber": "Ennamba y’essimu",
     "mobileMoneyNumber": "Ennamba ya Mobile Money",
+    "verifiedMobileMoneyNumber": "Ennamba ya Mobile Money ekakasiddwa",
+    "verifiedMobileMoneyNote": "Number verified & used by NetGecko. Contact us to change it."
     "email": "Email",
     "village": "Kyalo",
     "parish": "Parish",
