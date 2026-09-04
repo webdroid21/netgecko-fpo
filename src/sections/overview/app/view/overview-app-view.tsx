@@ -425,7 +425,7 @@ export function OverviewAppView() {
             spacing={2}
           >
             <Box>
-              <Typography variant="h4">{t('title')}</Typography>
+              <Typography variant="h4" color="primary">{t('title')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
                 {t('welcome')}
                 {firstName ? `, ${firstName}` : ''}

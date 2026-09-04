@@ -646,12 +646,12 @@ export function FarmerView() {
     <DashboardContent maxWidth="xl">
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h4">{t('page.title')}</Typography>
+          <Typography variant="h4" color="primary">{t('page.title')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('page.subtitle')}
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<Iconify icon={'solar:add-circle-bold' as any} />} onClick={handleAdd}>
+        <Button color="primary" variant="contained" startIcon={<Iconify icon={'solar:add-circle-bold' as any} />} onClick={handleAdd}>
           {t('page.addFarmer')}
         </Button>
       </Stack>
