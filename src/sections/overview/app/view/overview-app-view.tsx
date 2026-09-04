@@ -386,7 +386,17 @@ export function OverviewAppView() {
           >
             <Typography variant="subtitle1" fontWeight={600}>
               Welcome to NetGecko App - Boost farm productivity, grow your business and increase
-              farmers&rsquo; incomes by using NetGecko service and digitizing your operations
+              farmers&rsquo; incomes by using{' '}
+              <MuiLink
+                href="https://netgecko.net"
+                target="_blank"
+                rel="noopener"
+                color="inherit"
+                underline="always"
+              >
+                NetGecko service
+              </MuiLink>{' '}
+              and digitizing your operations
             </Typography>
           </Box>
         </Grid>
