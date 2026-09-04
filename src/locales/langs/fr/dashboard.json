@@ -39,8 +39,10 @@
   "quickAccessPaymentsDescription": "Suivre les paiements de vos agriculteurs",
   "quickAccessSales": "Ventes",
   "quickAccessSalesDescription": "Enregistrer les ventes des agriculteurs",
-  "recentInputOrders": "Commandes d’intrants récentes",
-  "recentPayments": "Paiements récents",
-  "noRecentInputOrders": "Aucune commande d’intrants récente",
-  "noRecentPayments": "Aucun paiement récent"
+  "recentOrders": "Commandes récentes",
+  "noRecentOrders": "Aucune commande récente",
+  "recentLoans": "Prêts récents",
+  "noRecentLoans": "Aucun prêt récent",
+  "recentPayment": "Paiement récent",
+  "noRecentPayment": "Aucun paiement récent"
 }

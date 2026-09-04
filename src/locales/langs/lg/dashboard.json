@@ -39,8 +39,10 @@
   "quickAccessPaymentsDescription": "Track payment of your farmers",
   "quickAccessSales": "Okutunda",
   "quickAccessSalesDescription": "Record sales from farmers",
-  "recentInputOrders": "Bisabibwa by'inputs ebyasembayo",
-  "recentPayments": "Ensasula ezisembayo",
-  "noRecentInputOrders": "Tewali bisabibwa by'inputs ebyasembayo",
-  "noRecentPayments": "Tewali nsasula ezisembayo"
+  "recentOrders": "Bisabibwa by'inputs ebyasembayo",
+  "noRecentOrders": "Tewali bisabibwa by'inputs ebyasembayo",
+  "recentLoans": "Loans ezeesembayo",
+  "noRecentLoans": "Tewali loans ezeesembayo",
+  "recentPayment": "Ensasula esembayo",
+  "noRecentPayment": "Tewali nsasula esembayo"
 }

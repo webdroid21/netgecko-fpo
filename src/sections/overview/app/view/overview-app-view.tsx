@@ -32,11 +32,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
-import { Chart, useChart } from 'src/components/chart';
 
 import { useAuthContext } from 'src/auth/hooks';
-
-import { AppCurrentDownload } from '../app-current-download';
 
 // ----------------------------------------------------------------------
 
@@ -56,6 +53,7 @@ type DashboardStats = {
   sales: number;
   salesRevenue: number;
   recentInputOrders: InputOrder[];
+  recentLoans: Loan[];
   recentPayments: Payment[];
   memberStatus: { total: number; active: number; pending: number; inactive: number };
   orderStatus: { open: number; active: number; closed: number; cancelled: number };
@@ -75,6 +73,7 @@ const initialStats: DashboardStats = {
   sales: 0,
   salesRevenue: 0,
   recentInputOrders: [],
+  recentLoans: [],
   recentPayments: [],
   memberStatus: { total: 0, active: 0, pending: 0, inactive: 0 },
   orderStatus: { open: 0, active: 0, closed: 0, cancelled: 0 },
@@ -105,52 +104,6 @@ function IconBadge({ icon, color }: { icon: React.ReactNode; color: PaletteColor
     >
       {typeof icon === 'string' ? <Iconify icon={icon as any} width={24} /> : icon}
     </Box>
-  );
-}
-
-// ----------------------------------------------------------------------
-
-type StatCardProps = {
-  title: string;
-  value: number;
-  subtext: string;
-  icon: string;
-  color: PaletteColor;
-  loading?: boolean;
-};
-
-function StatCard({ title, value, subtext, icon, color, loading }: StatCardProps) {
-  if (loading) {
-    return (
-      <Card sx={{ p: 3, height: '100%' }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
-          <Skeleton width="60%" height={20} />
-          <Skeleton variant="rounded" width={44} height={44} />
-        </Stack>
-        <Skeleton width="40%" height={44} sx={{ mt: 1 }} />
-        <Skeleton width="70%" height={18} sx={{ mt: 0.5 }} />
-      </Card>
-    );
-  }
-
-  return (
-    <Card sx={{ p: 3, height: '100%' }}>
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
-        <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 1 }}>
-          {title}
-        </Typography>
-
-        <IconBadge icon={icon} color={color} />
-      </Stack>
-
-      <Typography variant="h3" sx={{ mt: 1 }}>
-        {fNumber(value)}
-      </Typography>
-
-      <Typography variant="body2" sx={{ mt: 0.5, color: 'text.secondary' }}>
-        {subtext}
-      </Typography>
-    </Card>
   );
 }
 
@@ -225,7 +178,7 @@ function QuickAccessCard({ title, description, icon, color, href, loading }: Qui
 type RecentListCardProps = {
   title: string;
   viewAllHref: string;
-  icon: string;
+  icon: React.ReactNode;
   color: PaletteColor;
   loading?: boolean;
   emptyText: string;
@@ -254,6 +207,7 @@ function RecentListCard({
         action={
           <Button
             size="small"
+            color={color}
             component={RouterLink}
             href={viewAllHref}
             endIcon={<Iconify icon={'solar:double-alt-arrow-right-bold-duotone' as any} width={16} />}
@@ -311,65 +265,6 @@ function RecentListCard({
           </Typography>
         )}
       </CardContent>
-    </Card>
-  );
-}
-
-// ----------------------------------------------------------------------
-
-type MemberStatusChartProps = { data: DashboardStats['memberStatus']; loading?: boolean };
-
-function MemberStatusChart({ data, loading }: MemberStatusChartProps) {
-  const { t } = useTranslate('dashboard');
-
-  const chartOptions = useChart({
-    chart: { stacked: true },
-    stroke: { width: 0 },
-    xaxis: {
-      categories: [
-        t('memberStatusTotal'),
-        t('memberStatusActive'),
-        t('memberStatusPending'),
-        t('memberStatusInactive'),
-      ],
-    },
-    tooltip: { y: { formatter: (value: number) => fNumber(value) } },
-    plotOptions: { bar: { columnWidth: '40%' } },
-  });
-
-  const hasData = data.active + data.pending + data.inactive > 0;
-
-  return (
-    <Card sx={{ height: '100%' }}>
-      <CardHeader title={t('memberStatus')} subheader={t('memberStatusSubheader')} />
-      {loading ? (
-        <Box sx={{ p: 3 }}>
-          <Skeleton variant="rounded" height={300} />
-        </Box>
-      ) : hasData ? (
-        <Chart
-          type="bar"
-          series={[
-            {
-              name: t('memberStatusTotal'),
-              data: [data.total, data.active, data.pending, data.inactive],
-            },
-          ]}
-          options={chartOptions}
-          sx={{
-            pl: 1,
-            py: 2.5,
-            pr: 2.5,
-            height: 320,
-          }}
-        />
-      ) : (
-        <CardContent>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {t('noMemberData')}
-          </Typography>
-        </CardContent>
-      )}
     </Card>
   );
 }
@@ -444,6 +339,7 @@ export function OverviewAppView() {
         sales: sales.length,
         salesRevenue: sales.reduce((sum, s) => sum + (Number(s.fields.Revenue) || 0), 0),
         recentInputOrders: orders.slice(0, 5),
+        recentLoans: loans.slice(0, 5),
         recentPayments: payments.slice(0, 5),
         memberStatus: {
           total: farmers.length,
@@ -473,12 +369,6 @@ export function OverviewAppView() {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
-
-  const hasOrderData =
-    stats.orderStatus.open +
-    stats.orderStatus.active +
-    stats.orderStatus.closed +
-    stats.orderStatus.cancelled;
 
   const firstName = user?.displayName?.split(' ')[0] ?? '';
 
@@ -584,139 +474,14 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <MemberStatusChart data={stats.memberStatus} loading={loading} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          {loading ? (
-            <Card sx={{ height: '100%' }}>
-              <CardHeader title={t('inputOrderQueue')} subheader={t('inputOrderQueueSubheader')} />
-              <Box sx={{ p: 3 }}>
-                <Skeleton variant="circular" width={240} height={240} sx={{ mx: 'auto' }} />
-              </Box>
-            </Card>
-          ) : hasOrderData ? (
-            <AppCurrentDownload
-              title={t('inputOrderQueue')}
-              subheader={t('inputOrderQueueSubheader')}
-              chart={{
-                series: [
-                  { label: 'Open', value: stats.orderStatus.open },
-                  { label: 'Active', value: stats.orderStatus.active },
-                  { label: 'Closed', value: stats.orderStatus.closed },
-                  { label: 'Cancelled', value: stats.orderStatus.cancelled },
-                ],
-              }}
-            />
-          ) : (
-            <Card sx={{ height: '100%' }}>
-              <CardHeader title={t('inputOrderQueue')} />
-              <CardContent>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {t('noInputOrders')}
-                </Typography>
-              </CardContent>
-            </Card>
-          )}
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <StatCard
-            loading={loading}
-            title={t('activeFarmers')}
-            value={stats.farmers}
-            subtext={t('verifiedMembers', { count: stats.activeFarmers })}
-            icon="solar:users-group-rounded-bold"
-            color="primary"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <StatCard
-            loading={loading}
-            title={t('numberOfLands')}
-            value={stats.lands}
-            subtext={t('registeredParcels')}
-            icon="solar:box-minimalistic-bold"
-            color="success"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <StatCard
-            loading={loading}
-            title={t('totalLandArea')}
-            value={stats.totalAcres}
-            subtext={t('parcelSizes')}
-            icon="solar:flag-bold"
-            color="info"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <StatCard
-            loading={loading}
-            title={t('inputOrders')}
-            value={stats.inputOrders}
-            subtext={t('inputOrdersValue', { value: fNumber(stats.inputOrderValue) })}
-            icon="solar:cart-3-bold"
-            color="warning"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <StatCard
-            loading={loading}
-            title={t('loanBalances')}
-            value={stats.loansPending}
-            subtext={t('outstandingLoans', { count: stats.loans })}
-            icon="solar:bill-list-bold"
-            color="error"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <StatCard
-            loading={loading}
-            title={t('paymentsReceived')}
-            value={stats.paymentsTotal}
-            subtext={t('paymentsTransactions', { count: stats.payments })}
-            icon="solar:wad-of-money-bold"
-            color="success"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <StatCard
-            loading={loading}
-            title={t('salesOrders')}
-            value={stats.sales}
-            subtext={t('cropAndProduce')}
-            icon="solar:export-bold"
-            color="info"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-          <StatCard
-            loading={loading}
-            title={t('salesRevenue')}
-            value={stats.salesRevenue}
-            subtext={t('totalRevenue')}
-            icon="solar:cup-star-bold"
-            color="primary"
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <RecentListCard
             loading={loading}
-            title={t('recentInputOrders')}
+            title={t('recentOrders')}
             viewAllHref={paths.dashboard.fpo.inputOrders}
-            icon="solar:cart-3-bold"
-            color="info"
-            emptyText={t('noRecentInputOrders')}
+            icon={svgIcon('ic-order')}
+            color="primary"
+            emptyText={t('noRecentOrders')}
             items={stats.recentInputOrders.map((order) => ({
               id: order.id,
               primary: order.fields['Order number'] || 'Unnamed',
@@ -727,14 +492,32 @@ export function OverviewAppView() {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <RecentListCard
             loading={loading}
-            title={t('recentPayments')}
+            title={t('recentLoans')}
+            viewAllHref={paths.dashboard.fpo.loans}
+            icon={svgIcon('ic-banking')}
+            color="primary"
+            emptyText={t('noRecentLoans')}
+            items={stats.recentLoans.map((loan) => ({
+              id: loan.id,
+              primary: `Loan #${loan.fields['Loan ID'] ?? '-'}`,
+              secondary: (loan.fields['Name (from Farmer)'] || []).join(', '),
+              amount: `${fNumber(loan.fields['Total amount'])} UGX`,
+              href: `${paths.dashboard.fpo.loans}?farmerId=${loan.fields.Farmer?.[0] ?? ''}`,
+            }))}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <RecentListCard
+            loading={loading}
+            title={t('recentPayment')}
             viewAllHref={paths.dashboard.fpo.payments}
-            icon="solar:wad-of-money-bold"
-            color="success"
-            emptyText={t('noRecentPayments')}
+            icon={svgIcon('ic-dollar')}
+            color="primary"
+            emptyText={t('noRecentPayment')}
             items={stats.recentPayments.map((payment) => ({
               id: payment.id,
               primary: `Payment #${payment.fields['Payment ID'] ?? '-'}`,

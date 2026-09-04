@@ -39,8 +39,10 @@
   "quickAccessPaymentsDescription": "Track payment of your farmers",
   "quickAccessSales": "Sales",
   "quickAccessSalesDescription": "Record sales from farmers",
-  "recentInputOrders": "Recent Input Orders",
-  "recentPayments": "Recent Payments",
-  "noRecentInputOrders": "No recent input orders",
-  "noRecentPayments": "No recent payments"
+  "recentOrders": "Recent orders",
+  "noRecentOrders": "No recent orders",
+  "recentLoans": "Recent loans",
+  "noRecentLoans": "No recent loans",
+  "recentPayment": "Recent payment",
+  "noRecentPayment": "No recent payments"
 }
