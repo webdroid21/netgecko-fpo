@@ -1,10 +1,10 @@
 {
   "title": "Paramètres du compte",
   "subtitle": "Gérez les informations de votre profil et vos modes de connexion",
-  "fpoMemberships": "Adhésions FPO",
+  "fpoMemberships": "Partenaires NetGecko",
   "profile": "Profil",
-  "profileSubheader": "Ces informations sont enregistrées dans votre fiche utilisateur FPO",
-  "fullName": "Nom complet",
+  "profileSubheader": "Ces informations sont enregistrées dans votre fiche utilisateur Partenaire",
+  "fullName": "Nom d'utilisateur",
   "phoneNumber": "Numéro de téléphone",
   "email": "Adresse e-mail",
   "emailHelper": "Votre e-mail identifie votre compte et ne peut pas être modifié ici. Contactez votre administrateur système pour le changer.",

@@ -1,10 +1,10 @@
 {
   "title": "Account Settings",
   "subtitle": "Manage your profile details and sign-in methods",
-  "fpoMemberships": "FPO memberships",
+  "fpoMemberships": "NetGecko Partners",
   "profile": "Profile",
-  "profileSubheader": "These details are stored in your FPO user record",
-  "fullName": "Full name",
+  "profileSubheader": "These details are stored in your Partner user record",
+  "fullName": "User name",
   "phoneNumber": "Phone number",
   "email": "Email address",
   "emailHelper": "Your email identifies your account and cannot be changed here. Contact your system admin to change it.",

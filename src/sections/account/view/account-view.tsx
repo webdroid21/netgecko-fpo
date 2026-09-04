@@ -62,9 +62,9 @@ function SignInMethodRow({
           borderRadius: 1.5,
           alignItems: 'center',
           justifyContent: 'center',
-          color: connected ? 'success.dark' : 'text.disabled',
+          color: connected ? 'primary.dark' : 'text.disabled',
           bgcolor: (theme) =>
-            connected ? theme.vars.palette.success.lighter : theme.vars.palette.action.hover,
+            connected ? theme.vars.palette.primary.lighter : theme.vars.palette.action.hover,
         }}
       >
         <Iconify icon={icon as any} width={24} />
@@ -77,7 +77,7 @@ function SignInMethodRow({
         </Typography>
       </Box>
 
-      <Label color={connected ? 'success' : 'default'}>
+      <Label color={connected ? 'primary' : 'default'}>
         {connected ? t('connected') : t('notConnected')}
       </Label>
     </Stack>
@@ -118,7 +118,7 @@ export function AccountView() {
 
   return (
     <DashboardContent maxWidth="lg">
-      <Typography variant="h4" sx={{ mb: 0.5 }}>
+      <Typography variant="h4" color="primary" sx={{ mb: 0.5 }}>
         {t('title')}
       </Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
@@ -137,8 +137,8 @@ export function AccountView() {
                 height: 96,
                 fontSize: 40,
                 fontWeight: 600,
-                color: 'success.darker',
-                bgcolor: 'success.lighter',
+                color: 'primary.darker',
+                bgcolor: 'primary.lighter',
               }}
             >
               {user?.displayName?.charAt(0).toUpperCase()}
@@ -153,7 +153,7 @@ export function AccountView() {
             </Typography>
 
             {user?.role && (
-              <Label color="info" sx={{ mt: 1.5 }}>
+              <Label color="primary" sx={{ mt: 1.5 }}>
                 {user.role}
               </Label>
             )}
@@ -189,8 +189,15 @@ export function AccountView() {
             <Card>
               <CardHeader
                 title={t('profile')}
+                titleTypographyProps={{ color: 'primary' }}
                 subheader={t('profileSubheader')}
-                avatar={<Iconify icon={'solar:user-rounded-bold' as any} width={24} />}
+                avatar={
+                  <Iconify
+                    icon={'solar:user-rounded-bold' as any}
+                    width={24}
+                    sx={{ color: 'primary.main' }}
+                  />
+                }
               />
               <CardContent>
                 <Form methods={profileMethods} onSubmit={onSaveProfile}>
@@ -228,8 +235,15 @@ export function AccountView() {
             <Card>
               <CardHeader
                 title={t('signInMethods')}
+                titleTypographyProps={{ color: 'primary' }}
                 subheader={t('signInMethodsSubheader')}
-                avatar={<Iconify icon={'solar:shield-check-bold' as any} width={24} />}
+                avatar={
+                  <Iconify
+                    icon={'solar:shield-check-bold' as any}
+                    width={24}
+                    sx={{ color: 'primary.main' }}
+                  />
+                }
               />
               <CardContent>
                 <Stack divider={<Divider sx={{ borderStyle: 'dashed' }} />}>
