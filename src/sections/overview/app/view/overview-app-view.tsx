@@ -112,20 +112,30 @@ function IconBadge({ icon, color }: { icon: React.ReactNode; color: PaletteColor
 type QuickAccessCardProps = {
   title: string;
   description: string;
+  total: number;
   icon: React.ReactNode;
   color: PaletteColor;
   href: string;
   loading?: boolean;
 };
 
-function QuickAccessCard({ title, description, icon, color, href, loading }: QuickAccessCardProps) {
+function QuickAccessCard({
+  title,
+  description,
+  total,
+  icon,
+  color,
+  href,
+  loading,
+}: QuickAccessCardProps) {
   if (loading) {
     return (
       <Card sx={{ p: 2.5 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Skeleton variant="rounded" width={44} height={44} />
           <Box sx={{ flexGrow: 1 }}>
-            <Skeleton width="50%" height={20} />
+            <Skeleton width="40%" height={28} />
+            <Skeleton width="50%" height={20} sx={{ mt: 0.5 }} />
             <Skeleton width="80%" height={18} sx={{ mt: 0.5 }} />
           </Box>
         </Stack>
@@ -151,9 +161,16 @@ function QuickAccessCard({ title, description, icon, color, href, loading }: Qui
 
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography
+              variant="h4"
+              noWrap
+              sx={{ lineHeight: 1.1, color: `${color}.main`, fontSize: '1.5rem', fontWeight: 700 }}
+            >
+              {fNumber(total)}
+            </Typography>
+            <Typography
               variant="h6"
               noWrap
-              sx={{ lineHeight: 1.2, color: `${color}.main`, fontSize: '1rem', fontWeight: 600 }}
+              sx={{ lineHeight: 1.2, color: 'text.primary', fontSize: '1rem', fontWeight: 600 }}
             >
               {title}
             </Typography>
@@ -423,6 +440,7 @@ export function OverviewAppView() {
             loading={loading}
             title={t('quickAccessFarmers')}
             description={t('quickAccessFarmersDescription')}
+            total={stats.farmers}
             icon={svgIcon('ic-user')}
             color="primary"
             href={paths.dashboard.fpo.farmers}
@@ -434,6 +452,7 @@ export function OverviewAppView() {
             loading={loading}
             title={t('quickAccessLands')}
             description={t('quickAccessLandsDescription')}
+            total={stats.lands}
             icon={svgIcon('ic-land')}
             color="primary"
             href={paths.dashboard.fpo.lands}
@@ -445,6 +464,7 @@ export function OverviewAppView() {
             loading={loading}
             title={t('quickAccessInputOrders')}
             description={t('quickAccessInputOrdersDescription')}
+            total={stats.inputOrders}
             icon={svgIcon('ic-order')}
             color="primary"
             href={paths.dashboard.fpo.inputOrders}
@@ -456,6 +476,7 @@ export function OverviewAppView() {
             loading={loading}
             title={t('quickAccessLoans')}
             description={t('quickAccessLoansDescription')}
+            total={stats.loans}
             icon={svgIcon('ic-banking')}
             color="primary"
             href={paths.dashboard.fpo.loans}
@@ -467,6 +488,7 @@ export function OverviewAppView() {
             loading={loading}
             title={t('quickAccessPayments')}
             description={t('quickAccessPaymentsDescription')}
+            total={stats.payments}
             icon={svgIcon('ic-dollar')}
             color="primary"
             href={paths.dashboard.fpo.payments}
@@ -478,6 +500,7 @@ export function OverviewAppView() {
             loading={loading}
             title={t('quickAccessSales')}
             description={t('quickAccessSalesDescription')}
+            total={stats.sales}
             icon={svgIcon('ic-order')}
             color="primary"
             href={paths.dashboard.fpo.sales}
