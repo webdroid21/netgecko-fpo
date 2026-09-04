@@ -410,9 +410,6 @@ export function FarmerView() {
                     )}
                   </Stack>
 
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {farmer.fields['NIN (National Identification Number)']}
-                  </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {farmer.fields['Phone Number']}
                   </Typography>
