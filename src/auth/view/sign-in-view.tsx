@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import { varAlpha } from 'minimal-shared/utils';
 import { isSignInWithEmailLink } from 'firebase/auth';
 import { useTabs, useBoolean } from 'minimal-shared/hooks';
 
@@ -80,9 +81,9 @@ export function SignInView() {
     try {
       await completeMagicLinkSignIn(linkEmail, window.location.href);
       // AuthProvider/GuestGuard will handle the redirect once the session is verified.
+      // Keep the button loading until the redirect happens.
     } catch (err: any) {
       setLocalError(err?.message || t('failedEmailLink'));
-    } finally {
       isSubmitting.onFalse();
     }
   };
@@ -139,9 +140,9 @@ export function SignInView() {
     try {
       await verifyPhoneOtp({ confirmationResult: confirmation, otp });
       // AuthProvider/GuestGuard will handle the redirect once the session is verified.
+      // Keep the button loading until the redirect happens.
     } catch (err: any) {
       setLocalError(err?.message || t('invalidOtp'));
-    } finally {
       isSubmitting.onFalse();
     }
   };
@@ -152,9 +153,9 @@ export function SignInView() {
     try {
       await signInWithGoogle();
       // AuthProvider/GuestGuard will handle the redirect once the session is verified.
+      // Keep the button loading until the redirect happens.
     } catch (err: any) {
       setLocalError(err?.message || t('failedGoogle'));
-    } finally {
       isSubmitting.onFalse();
     }
   };
@@ -174,7 +175,7 @@ export function SignInView() {
             fullWidth
             size="large"
             variant="contained"
-            color="inherit"
+            color="primary"
             loading={isSubmitting.value}
             onClick={handleSendMagicLink}
           >
@@ -225,6 +226,8 @@ export function SignInView() {
       <FormHead
         title={t('title')}
         description={t('description')}
+        logoWidth={160}
+        logoHeight={64}
         sx={{ textAlign: 'center', mb: 3 }}
       />
 
@@ -235,7 +238,16 @@ export function SignInView() {
       )}
 
       {!!info && (
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert
+          severity="info"
+          sx={(theme) => ({
+            mb: 3,
+            color: 'primary.darker',
+            bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.5),
+            '& .MuiAlert-icon': { color: 'primary.darker' },
+            '& .MuiAlert-message': { color: 'primary.darker' },
+          })}
+        >
           {info}
         </Alert>
       )}

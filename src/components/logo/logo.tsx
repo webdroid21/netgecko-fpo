@@ -15,6 +15,8 @@ import { logoClasses } from './classes';
 export type LogoProps = LinkProps & {
   isSingle?: boolean;
   disabled?: boolean;
+  width?: number;
+  height?: number;
 };
 
 export function Logo({
@@ -23,6 +25,8 @@ export function Logo({
   className,
   href = '/',
   isSingle = true,
+  width = 48 * 2.5,
+  height = 48,
   ...other
 }: LogoProps) {
   const theme = useTheme();
@@ -39,9 +43,9 @@ export function Logo({
       <img
         alt="Single logo"
         src="/logo.jpg"
-        width={48 * 2.5}
-        height={48}
-        style={{ maxWidth: 48 * 2.5 }}
+        width={width}
+        height={height}
+        style={{ maxWidth: width }}
       />
     );
 
@@ -49,9 +53,9 @@ export function Logo({
       <img
         alt="Full logo"
         src="/logo.jpg"
-        width={48 * 2.5}
-        height={48}
-        style={{ maxWidth: 48 * 2.5 }}
+        width={width}
+        height={height}
+        style={{ maxWidth: width }}
       />
     );
 
@@ -197,9 +201,9 @@ export function Logo({
       className={mergeClasses([logoClasses.root, className])}
       sx={[
         {
-          width: 48 * 2.5,
-          height: 48,
-          ...(!isSingle && { width: 48 * 2.5, height: 48 }),
+          width,
+          height,
+          ...(!isSingle && { width, height }),
           ...(disabled && { pointerEvents: 'none' }),
         },
         ...(Array.isArray(sx) ? sx : [sx]),

@@ -11,9 +11,19 @@ type FormHeadProps = BoxProps & {
   icon?: React.ReactNode;
   title: React.ReactNode;
   description?: React.ReactNode;
+  logoWidth?: number;
+  logoHeight?: number;
 };
 
-export function FormHead({ sx, icon, title, description, ...other }: FormHeadProps) {
+export function FormHead({
+  sx,
+  icon,
+  title,
+  description,
+  logoWidth,
+  logoHeight,
+  ...other
+}: FormHeadProps) {
   return (
     <>
       {icon && (
@@ -37,7 +47,7 @@ export function FormHead({ sx, icon, title, description, ...other }: FormHeadPro
         {...other}
       >
         <Box sx={{ display: 'flex', width: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Logo width={48 * 2.5} />
+          <Logo width={logoWidth} height={logoHeight} />
         </Box>
 
         <Typography variant="h5">{title}</Typography>

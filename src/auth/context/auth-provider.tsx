@@ -41,6 +41,7 @@ export function AuthProvider({ children }: Props) {
 
   const verifyUser = useCallback(
     async (firebaseUser: any) => {
+      setState({ loading: true, error: null });
       try {
         const idToken = await getIdToken(firebaseUser, true);
         localStorage.setItem('firebaseIdToken', idToken);
