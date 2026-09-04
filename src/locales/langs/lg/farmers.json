@@ -6,20 +6,20 @@
   },
   "summary": {
     "totalMembers": {
-      "title": "Bamemba bonna",
-      "subtext": "Abalimi abawandiikiddwa bonna"
+      "title": "Abalimi bonna",
+      "subtext": "{{percentage}}% women"
     },
     "activeFarmers": {
       "title": "Abalimi abakolamu",
-      "subtext": "60% bakolamu"
+      "subtext": "{{percentage}}% women"
     },
     "pendingApproval": {
       "title": "Balindiriddwa okukakasebwa",
-      "subtext": "Basuulirako omukono obakkirizibwe"
+      "subtext": "{{percentage}}% women"
     },
     "inactive": {
       "title": "Abatalina musomo",
-      "subtext": "Bamemba abatakyetaba mu nkola"
+      "subtext": "{{percentage}}% women"
     }
   },
   "searchPlaceholder": "Noonya abalimi...",

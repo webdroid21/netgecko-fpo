@@ -6,20 +6,20 @@
   },
   "summary": {
     "totalMembers": {
-      "title": "Nombre total de membres",
-      "subtext": "Nombre total d’agriculteurs enregistrés"
+      "title": "Agriculteurs au total",
+      "subtext": "{{percentage}}% de femmes"
     },
     "activeFarmers": {
       "title": "Agriculteurs actifs",
-      "subtext": "60 % actifs"
+      "subtext": "{{percentage}}% de femmes"
     },
     "pendingApproval": {
       "title": "En attente de validation",
-      "subtext": "Examiner et valider"
+      "subtext": "{{percentage}}% de femmes"
     },
     "inactive": {
       "title": "Inactifs",
-      "subtext": "Membres non participants"
+      "subtext": "{{percentage}}% de femmes"
     }
   },
   "searchPlaceholder": "Rechercher des agriculteurs...",

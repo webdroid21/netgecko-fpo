@@ -6,20 +6,20 @@
   },
   "summary": {
     "totalMembers": {
-      "title": "Total members",
-      "subtext": "Total registered farmers"
+      "title": "Total farmers",
+      "subtext": "{{percentage}}% women"
     },
     "activeFarmers": {
       "title": "Active farmers",
-      "subtext": "60% active"
+      "subtext": "{{percentage}}% women"
     },
     "pendingApproval": {
       "title": "Pending approval",
-      "subtext": "Review and activate"
+      "subtext": "{{percentage}}% women"
     },
     "inactive": {
       "title": "Inactive",
-      "subtext": "Non-participating members"
+      "subtext": "{{percentage}}% women"
     }
   },
   "searchPlaceholder": "Search farmers...",

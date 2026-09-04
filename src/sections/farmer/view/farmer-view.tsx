@@ -153,6 +153,7 @@ export function FarmerView() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingFarmer, setEditingFarmer] = useState<Farmer | null>(null);
   const [fullFarmer, setFullFarmer] = useState<Farmer | null>(null);
+  const [activeFarmerIds, setActiveFarmerIds] = useState<Set<string>>(new Set());
 
   const fetchFarmers = useCallback(async () => {
     if (!activeFbo) return;
@@ -175,6 +176,63 @@ export function FarmerView() {
   useEffect(() => {
     fetchFarmers();
   }, [fetchFarmers]);
+
+  const fetchTransactions = useCallback(async () => {
+    if (!activeFbo) return;
+    const fpoQuery = new URLSearchParams({
+      fpoId: activeFbo.id,
+      fpoName: activeFbo.name,
+    }).toString();
+
+    try {
+      const [
+        { data: ordersData },
+        { data: loansData },
+        { data: paymentsData },
+        { data: salesData },
+      ] = await Promise.all([
+        axios.get(`/api/v1/input-orders?${fpoQuery}`),
+        axios.get(`/api/v1/loans?${fpoQuery}`),
+        axios.get(`/api/v1/payments?${fpoQuery}`),
+        axios.get('/api/v1/sales-orders'),
+      ]);
+
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const records = [
+        ...(ordersData.records || []),
+        ...(loansData.records || []),
+        ...(paymentsData.records || []),
+        ...(salesData.records || []),
+      ];
+
+      const ids = new Set<string>();
+      records.forEach((record: any) => {
+        const date =
+          record.fields['Order date'] ||
+          record.fields['Order Date'] ||
+          record.fields['Issue Date'] ||
+          record.fields['Payment Date'] ||
+          record.createdTime;
+        if (!date) return;
+        const d = new Date(date);
+        if (Number.isNaN(d.getTime()) || d < oneYearAgo) return;
+
+        const farmer = record.fields.Farmer;
+        const recordFarmerId = Array.isArray(farmer) ? farmer[0] : farmer;
+        if (recordFarmerId) ids.add(recordFarmerId);
+      });
+
+      setActiveFarmerIds(ids);
+    } catch (error: any) {
+      console.error('Fetch transactions error:', error?.message);
+    }
+  }, [activeFbo]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const filteredFarmers = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -210,12 +268,42 @@ export function FarmerView() {
       .catch((error: any) => console.error('Fetch farmer error:', error?.message));
   }, [selectedId]);
 
+  const isWoman = (f: Farmer) => f.fields.Gender === 'Female';
+  const roundPercent = (count: number, total: number) =>
+    total > 0 ? Math.round((count / total) * 100) : 0;
+
   const stats = useMemo(() => {
-    const total = farmers.length;
-    const active = farmers.filter((f) => f.fields.Checked === true).length;
-    const inactive = total - active;
-    return { total, active, inactive };
-  }, [farmers]);
+    const totalFarmers = farmers;
+    const total = totalFarmers.length;
+    const totalWomen = totalFarmers.filter(isWoman).length;
+
+    const pendingFarmers = totalFarmers.filter((f) => f.fields.Checked === true);
+    const pending = pendingFarmers.length;
+    const pendingWomen = pendingFarmers.filter(isWoman).length;
+
+    const activeFarmers = totalFarmers.filter(
+      (f) => !f.fields.Checked && activeFarmerIds.has(f.id)
+    );
+    const active = activeFarmers.length;
+    const activeWomen = activeFarmers.filter(isWoman).length;
+
+    const inactiveFarmers = totalFarmers.filter(
+      (f) => !f.fields.Checked && !activeFarmerIds.has(f.id)
+    );
+    const inactive = inactiveFarmers.length;
+    const inactiveWomen = inactiveFarmers.filter(isWoman).length;
+
+    return {
+      total,
+      totalWomenPercent: roundPercent(totalWomen, total),
+      active,
+      activeWomenPercent: roundPercent(activeWomen, active),
+      pending,
+      pendingWomenPercent: roundPercent(pendingWomen, pending),
+      inactive,
+      inactiveWomenPercent: roundPercent(inactiveWomen, inactive),
+    };
+  }, [farmers, activeFarmerIds]);
 
   const handleAdd = () => {
     setEditingFarmer(null);
@@ -244,7 +332,7 @@ export function FarmerView() {
         <SummaryCard
           title={t('summary.totalMembers.title')}
           total={stats.total}
-          subtext={t('summary.totalMembers.subtext')}
+          subtext={t('summary.totalMembers.subtext', { percentage: stats.totalWomenPercent })}
           color="primary"
           icon="solar:users-group-rounded-bold-duotone"
         />
@@ -253,7 +341,7 @@ export function FarmerView() {
         <SummaryCard
           title={t('summary.activeFarmers.title')}
           total={stats.active}
-          subtext={t('summary.activeFarmers.subtext')}
+          subtext={t('summary.activeFarmers.subtext', { percentage: stats.activeWomenPercent })}
           color="success"
           icon="solar:user-check-bold-duotone"
         />
@@ -261,8 +349,8 @@ export function FarmerView() {
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
           title={t('summary.pendingApproval.title')}
-          total={0}
-          subtext={t('summary.pendingApproval.subtext')}
+          total={stats.pending}
+          subtext={t('summary.pendingApproval.subtext', { percentage: stats.pendingWomenPercent })}
           color="warning"
           icon="solar:user-id-bold-duotone"
         />
@@ -271,7 +359,7 @@ export function FarmerView() {
         <SummaryCard
           title={t('summary.inactive.title')}
           total={stats.inactive}
-          subtext={t('summary.inactive.subtext')}
+          subtext={t('summary.inactive.subtext', { percentage: stats.inactiveWomenPercent })}
           color="error"
           icon="solar:user-cross-bold-duotone"
         />
