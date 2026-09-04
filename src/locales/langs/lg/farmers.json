@@ -41,6 +41,8 @@
     "verifiedMobileMoneyNumber": "Ennamba ya Mobile Money ekakasiddwa",
     "verifiedMobileMoneyNote": "Number verified & used by NetGecko. Contact us to change it."
     "email": "Email",
+    "address": "Address",
+    "addressNote": "Will appear once verified by NetGecko",
     "village": "Kyalo",
     "parish": "Parish",
     "subCounty": "Sub-county",

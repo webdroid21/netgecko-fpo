@@ -41,6 +41,8 @@
     "verifiedMobileMoneyNumber": "Verified mobile money number",
     "verifiedMobileMoneyNote": "Number verified & used by NetGecko. Contact us to change it.",
     "email": "Email",
+    "address": "Address",
+    "addressNote": "Will appear once verified by NetGecko",
     "village": "Village",
     "parish": "Parish",
     "subCounty": "Sub-county",

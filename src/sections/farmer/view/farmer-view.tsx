@@ -529,6 +529,58 @@ export function FarmerView() {
               <Divider sx={{ my: 1 }} />
             </Grid>
 
+            <Grid size={{ xs: 12 }}>
+              <DetailRow label={t('fields.address')} value={f.Address} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Village"
+                label={t('fields.village')}
+                value={f.Village}
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Parish"
+                label={t('fields.parish')}
+                value={f.Parish}
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Sub-county"
+                label={t('fields.subCounty')}
+                value={f['Sub-county']}
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="District (form)"
+                label={t('fields.district')}
+                value={f['District (form)']}
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.region')} value={f['Region Name']?.[0] ?? f.Region} />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="caption" sx={{ color: 'text.disabled', px: 1, display: 'block' }}>
+                {t('fields.addressNote')}
+              </Typography>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
@@ -570,45 +622,6 @@ export function FarmerView() {
               <Divider sx={{ my: 1 }} />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Village"
-                label={t('fields.village')}
-                value={f.Village}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Parish"
-                label={t('fields.parish')}
-                value={f.Parish}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Sub-county"
-                label={t('fields.subCounty')}
-                value={f['Sub-county']}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="District (form)"
-                label={t('fields.district')}
-                value={f['District (form)']}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.region')} value={f['Region Name']?.[0] ?? f.Region} />
-            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
