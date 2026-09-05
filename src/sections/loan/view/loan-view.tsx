@@ -129,6 +129,7 @@ export function LoanView() {
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
+  const loanId = searchParams.get('loanId');
 
   const [loans, setLoans] = useState<Loan[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
@@ -239,9 +240,13 @@ export function LoanView() {
   );
 
   useEffect(() => {
+    if (loanId && filteredLoans.some((l) => l.id === loanId)) {
+      setSelectedId(loanId);
+      return;
+    }
     if (selectedId || !filteredLoans.length) return;
     setSelectedId(filteredLoans[0]?.id);
-  }, [filteredLoans, selectedId]);
+  }, [filteredLoans, selectedId, loanId]);
 
   const stats = useMemo(() => {
     const total = filteredLoans.reduce(

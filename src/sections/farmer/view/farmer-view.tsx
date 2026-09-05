@@ -505,8 +505,12 @@ export function FarmerView() {
     const farmerInputOrders = inputOrders.filter(hasFarmer);
     const farmerLoans = loans.filter(hasFarmer);
 
-    const makeLink = (module: string) =>
-      `/dashboard/${module}?farmerId=${detailFarmer.id}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`;
+    const makeLink = (module: string, recordId?: string, recordIdKey?: string) => {
+      const params = new URLSearchParams({ farmerId: detailFarmer.id });
+      if (recordId && recordIdKey) params.set(recordIdKey, recordId);
+      if (activeFbo?.name) params.set('fpoName', activeFbo.name);
+      return `/dashboard/${module}?${params.toString()}`;
+    };
 
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
@@ -771,14 +775,16 @@ export function FarmerView() {
                 color="success"
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <RelatedLink
-                href={makeLink('lands')}
-                label={t('fields.lands')}
-                value={farmerLands.map((l) => l.fields.Land || t('unnamedLand')).join(', ')}
-                color="success"
-              />
-            </Grid>
+            {farmerLands.map((l) => (
+              <Grid key={l.id} size={{ xs: 12, sm: 6 }}>
+                <RelatedLink
+                  href={makeLink('lands', l.id, 'landId')}
+                  label={t('fields.land')}
+                  value={l.fields.Land || t('unnamedLand')}
+                  color="success"
+                />
+              </Grid>
+            ))}
             <Grid size={{ xs: 12, sm: 6 }}>
               <RelatedLink
                 href={makeLink('input-orders')}
@@ -787,14 +793,16 @@ export function FarmerView() {
                 color="info"
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <RelatedLink
-                href={makeLink('input-orders')}
-                label={t('fields.inputOrders')}
-                value={farmerInputOrders.map((o) => o.fields['Order number'] || o.id).join(', ')}
-                color="info"
-              />
-            </Grid>
+            {farmerInputOrders.map((o) => (
+              <Grid key={o.id} size={{ xs: 12, sm: 6 }}>
+                <RelatedLink
+                  href={makeLink('input-orders', o.id, 'inputOrderId')}
+                  label={t('fields.inputOrder')}
+                  value={o.fields['Order number'] || o.id}
+                  color="info"
+                />
+              </Grid>
+            ))}
             <Grid size={{ xs: 12, sm: 6 }}>
               <RelatedLink
                 href={makeLink('loans')}
@@ -803,14 +811,16 @@ export function FarmerView() {
                 color="warning"
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <RelatedLink
-                href={makeLink('loans')}
-                label={t('fields.loans')}
-                value={farmerLoans.map((l) => l.fields['Loan ID'] || l.id).join(', ')}
-                color="warning"
-              />
-            </Grid>
+            {farmerLoans.map((l) => (
+              <Grid key={l.id} size={{ xs: 12, sm: 6 }}>
+                <RelatedLink
+                  href={makeLink('loans', l.id, 'loanId')}
+                  label={t('fields.loan')}
+                  value={l.fields['Loan ID'] || l.id}
+                  color="warning"
+                />
+              </Grid>
+            ))}
           </Grid>
         </CardContent>
       </Card>

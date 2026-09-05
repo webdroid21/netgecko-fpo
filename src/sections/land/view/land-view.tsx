@@ -121,6 +121,7 @@ export function LandView() {
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
+  const landId = searchParams.get('landId');
 
   const [lands, setLands] = useState<Land[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
@@ -207,9 +208,13 @@ export function LandView() {
   );
 
   useEffect(() => {
+    if (landId && filteredLands.some((l) => l.id === landId)) {
+      setSelectedId(landId);
+      return;
+    }
     if (selectedId || !filteredLands.length) return;
     setSelectedId(filteredLands[0]?.id);
-  }, [filteredLands, selectedId]);
+  }, [filteredLands, selectedId, landId]);
 
   const stats = useMemo(() => {
     const total = filteredLands.length;

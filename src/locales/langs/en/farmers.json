@@ -58,9 +58,12 @@
     "permanentWorkers": "# permanent workers",
     "landsCount": "# Lands",
     "lands": "Lands",
+    "land": "Land",
     "inputOrdersCount": "# Input Orders",
     "inputOrders": "Input Orders",
+    "inputOrder": "Input Order",
     "loansCount": "# Loans",
-    "loans": "Loans"
+    "loans": "Loans",
+    "loan": "Loan"
   }
 }

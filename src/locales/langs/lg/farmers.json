@@ -58,9 +58,12 @@
     "permanentWorkers": "# bakozi abakkakkamu",
     "landsCount": "# ettaka",
     "lands": "Ettaka",
+    "land": "Ettaka",
     "inputOrdersCount": "# bisabibwa by’inputs",
     "inputOrders": "Bisabibwa by’inputs",
+    "inputOrder": "Okusaba input",
     "loansCount": "# loans",
-    "loans": "Loans"
+    "loans": "Loans",
+    "loan": "Loan"
   }
 }

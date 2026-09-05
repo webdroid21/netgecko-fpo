@@ -128,6 +128,7 @@ export function InputOrderView() {
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
+  const inputOrderId = searchParams.get('inputOrderId');
 
   const [orders, setOrders] = useState<InputOrder[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
@@ -221,9 +222,13 @@ export function InputOrderView() {
   );
 
   useEffect(() => {
+    if (inputOrderId && filteredOrders.some((o) => o.id === inputOrderId)) {
+      setSelectedId(inputOrderId);
+      return;
+    }
     if (selectedId || !filteredOrders.length) return;
     setSelectedId(filteredOrders[0]?.id);
-  }, [filteredOrders, selectedId]);
+  }, [filteredOrders, selectedId, inputOrderId]);
 
   const stats = useMemo(() => {
     const total = filteredOrders.length;

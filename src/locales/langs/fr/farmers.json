@@ -58,9 +58,12 @@
     "permanentWorkers": "Nombre d’ouvriers permanents",
     "landsCount": "Nombre de terres",
     "lands": "Terres",
+    "land": "Terre",
     "inputOrdersCount": "Nombre de commandes d’intrants",
     "inputOrders": "Commandes d’intrants",
+    "inputOrder": "Commande d’intrant",
     "loansCount": "Nombre de prêts",
-    "loans": "Prêts"
+    "loans": "Prêts",
+    "loan": "Prêt"
   }
 }
