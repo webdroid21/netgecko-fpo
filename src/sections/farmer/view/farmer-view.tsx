@@ -144,6 +144,65 @@ function RelatedLink({ label, value, href, color = 'primary' }: RelatedLinkProps
   );
 }
 
+type RecordListProps = {
+  label: string;
+  records: { id: string; label: string; href: string }[];
+  color?: 'primary' | 'success' | 'info' | 'warning' | 'error';
+};
+
+function RecordList({ label, records, color = 'primary' }: RecordListProps) {
+  const theme = useTheme();
+  const mainColor = theme.palette[color].main;
+
+  return (
+    <Box
+      sx={{
+        p: 1.5,
+        borderRadius: 1,
+        border: (t) => `1px solid ${t.vars.palette.divider}`,
+      }}
+    >
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {label}
+      </Typography>
+      {records.length === 0 ? (
+        <Typography variant="body1" sx={{ color: 'text.disabled' }}>
+          —
+        </Typography>
+      ) : (
+        <Stack spacing={0.5}>
+          {records.map((record) => (
+            <MuiLink
+              key={record.id}
+              component={RouterLink}
+              href={record.href}
+              underline="hover"
+              sx={{ color: mainColor, display: 'block' }}
+            >
+              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: 'inherit',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    flex: 1,
+                  }}
+                >
+                  {record.label}
+                </Typography>
+                <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ color: 'inherit', flexShrink: 0 }} />
+              </Stack>
+            </MuiLink>
+          ))}
+        </Stack>
+      )}
+    </Box>
+  );
+}
+
 // ----------------------------------------------------------------------
 
 export function FarmerView() {
@@ -767,60 +826,63 @@ export function FarmerView() {
               <Divider sx={{ my: 1 }} />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <RelatedLink
-                href={makeLink('lands')}
-                label={t('fields.landsCount')}
-                value={farmerLands.length}
-                color="success"
-              />
-            </Grid>
-            {farmerLands.map((l) => (
-              <Grid key={l.id} size={{ xs: 12, sm: 6 }}>
-                <RelatedLink
-                  href={makeLink('lands', l.id, 'landId')}
-                  label={t('fields.land')}
-                  value={l.fields.Land || t('unnamedLand')}
-                  color="success"
-                />
-              </Grid>
-            ))}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <RelatedLink
-                href={makeLink('input-orders')}
-                label={t('fields.inputOrdersCount')}
-                value={farmerInputOrders.length}
-                color="info"
-              />
-            </Grid>
-            {farmerInputOrders.map((o) => (
-              <Grid key={o.id} size={{ xs: 12, sm: 6 }}>
-                <RelatedLink
-                  href={makeLink('input-orders', o.id, 'inputOrderId')}
-                  label={t('fields.inputOrder')}
-                  value={o.fields['Order number'] || o.id}
-                  color="info"
-                />
-              </Grid>
-            ))}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <RelatedLink
-                href={makeLink('loans')}
-                label={t('fields.loansCount')}
-                value={farmerLoans.length}
-                color="warning"
-              />
-            </Grid>
-            {farmerLoans.map((l) => (
-              <Grid key={l.id} size={{ xs: 12, sm: 6 }}>
-                <RelatedLink
-                  href={makeLink('loans', l.id, 'loanId')}
-                  label={t('fields.loan')}
-                  value={l.fields['Loan ID'] || l.id}
-                  color="warning"
-                />
-              </Grid>
-            ))}
+            {(() => {
+              const landLinks = farmerLands.map((l) => ({
+                id: l.id,
+                label: l.fields.Land || t('unnamedLand'),
+                href: makeLink('lands', l.id, 'landId'),
+              }));
+              const orderLinks = farmerInputOrders.map((o) => ({
+                id: o.id,
+                label: o.fields['Order number'] || o.id,
+                href: makeLink('input-orders', o.id, 'inputOrderId'),
+              }));
+              const loanLinks = farmerLoans.map((l) => ({
+                id: l.id,
+                label: l.fields['Loan ID'] || l.id,
+                href: makeLink('loans', l.id, 'loanId'),
+              }));
+
+              return (
+                <>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RelatedLink
+                      href={makeLink('lands')}
+                      label={t('fields.landsCount')}
+                      value={farmerLands.length}
+                      color="success"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RecordList label={t('fields.lands')} records={landLinks} color="success" />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RelatedLink
+                      href={makeLink('input-orders')}
+                      label={t('fields.inputOrdersCount')}
+                      value={farmerInputOrders.length}
+                      color="info"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RecordList label={t('fields.inputOrders')} records={orderLinks} color="info" />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RelatedLink
+                      href={makeLink('loans')}
+                      label={t('fields.loansCount')}
+                      value={farmerLoans.length}
+                      color="warning"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RecordList label={t('fields.loans')} records={loanLinks} color="warning" />
+                  </Grid>
+                </>
+              );
+            })()}
           </Grid>
         </CardContent>
       </Card>
