@@ -1,4 +1,7 @@
 import type { Farmer } from '../types';
+import type { Land } from 'src/sections/land/types';
+import type { Loan } from 'src/sections/loan/types';
+import type { InputOrder } from 'src/sections/input-order/types';
 
 type Crop = {
   id: string;
@@ -159,6 +162,9 @@ export function FarmerView() {
   const [fullFarmer, setFullFarmer] = useState<Farmer | null>(null);
   const [activeFarmerIds, setActiveFarmerIds] = useState<Set<string>>(new Set());
   const [crops, setCrops] = useState<Crop[]>([]);
+  const [lands, setLands] = useState<Land[]>([]);
+  const [inputOrders, setInputOrders] = useState<InputOrder[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
 
   const fetchFarmers = useCallback(async () => {
     if (!activeFbo) return;
@@ -198,6 +204,25 @@ export function FarmerView() {
 
   const cropOptions = useMemo(() => crops.map((c) => String(c.fields['Crop Name'] ?? c.id)), [crops]);
 
+  const fetchLands = useCallback(async () => {
+    if (!activeFbo) return;
+    try {
+      const query = new URLSearchParams({
+        fpoId: activeFbo.id,
+        fpoName: activeFbo.name,
+      }).toString();
+      const { data } = await axios.get(`/api/v1/lands?${query}`);
+      setLands(data.records || []);
+    } catch (error: any) {
+      console.error('Fetch lands error:', error?.message);
+      setLands([]);
+    }
+  }, [activeFbo]);
+
+  useEffect(() => {
+    fetchLands();
+  }, [fetchLands]);
+
   const fetchTransactions = useCallback(async () => {
     if (!activeFbo) return;
     const fpoQuery = new URLSearchParams({
@@ -218,15 +243,18 @@ export function FarmerView() {
         axios.get('/api/v1/sales-orders'),
       ]);
 
+      const orderRecords = ordersData.records || [];
+      const loanRecords = loansData.records || [];
+      const paymentRecords = paymentsData.records || [];
+      const salesRecords = salesData.records || [];
+
+      setInputOrders(orderRecords);
+      setLoans(loanRecords);
+
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-      const records = [
-        ...(ordersData.records || []),
-        ...(loansData.records || []),
-        ...(paymentsData.records || []),
-        ...(salesData.records || []),
-      ];
+      const records = [...orderRecords, ...loanRecords, ...paymentRecords, ...salesRecords];
 
       const ids = new Set<string>();
       records.forEach((record: any) => {
@@ -465,6 +493,17 @@ export function FarmerView() {
       : f['Main crop sold to Cooperative'];
     const cropRecord = crops.find((c) => c.id === cropIdOrName);
     const cropValue = cropRecord ? cropRecord.fields['Crop Name'] ?? cropIdOrName : cropIdOrName;
+
+    const hasFarmer = (record?: { fields: Record<string, any> }) => {
+      if (!record) return false;
+      const farmer = record.fields.Farmer;
+      if (Array.isArray(farmer)) return farmer.includes(detailFarmer.id);
+      return farmer === detailFarmer.id;
+    };
+
+    const farmerLands = lands.filter(hasFarmer);
+    const farmerInputOrders = inputOrders.filter(hasFarmer);
+    const farmerLoans = loans.filter(hasFarmer);
 
     const makeLink = (module: string) =>
       `/dashboard/${module}?farmerId=${detailFarmer.id}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`;
@@ -728,7 +767,7 @@ export function FarmerView() {
               <RelatedLink
                 href={makeLink('lands')}
                 label={t('fields.landsCount')}
-                value={f['# Lands']}
+                value={farmerLands.length}
                 color="success"
               />
             </Grid>
@@ -736,7 +775,7 @@ export function FarmerView() {
               <RelatedLink
                 href={makeLink('lands')}
                 label={t('fields.lands')}
-                value={f['Lands']?.join(', ')}
+                value={farmerLands.map((l) => l.fields.Land || t('unnamedLand')).join(', ')}
                 color="success"
               />
             </Grid>
@@ -744,7 +783,7 @@ export function FarmerView() {
               <RelatedLink
                 href={makeLink('input-orders')}
                 label={t('fields.inputOrdersCount')}
-                value={f['# Input Orders']}
+                value={farmerInputOrders.length}
                 color="info"
               />
             </Grid>
@@ -752,7 +791,7 @@ export function FarmerView() {
               <RelatedLink
                 href={makeLink('input-orders')}
                 label={t('fields.inputOrders')}
-                value={f['Input Orders']?.join(', ')}
+                value={farmerInputOrders.map((o) => o.fields['Order number'] || o.id).join(', ')}
                 color="info"
               />
             </Grid>
@@ -760,7 +799,7 @@ export function FarmerView() {
               <RelatedLink
                 href={makeLink('loans')}
                 label={t('fields.loansCount')}
-                value={f['# Loans']}
+                value={farmerLoans.length}
                 color="warning"
               />
             </Grid>
@@ -768,7 +807,7 @@ export function FarmerView() {
               <RelatedLink
                 href={makeLink('loans')}
                 label={t('fields.loans')}
-                value={f['Loans']?.join(', ')}
+                value={farmerLoans.map((l) => l.fields['Loan ID'] || l.id).join(', ')}
                 color="warning"
               />
             </Grid>

@@ -199,28 +199,31 @@ export function InputOrderView() {
     fetchProducts();
   }, [fetchOrders, fetchFarmers, fetchSeasons, fetchProducts]);
 
-  useEffect(() => {
-    if (selectedId || !orders.length) return;
-    const match = farmerFilter
-      ? orders.find((o) => (o.fields.Farmer ?? []).includes(farmerFilter))
-      : null;
-    setSelectedId(match?.id || orders[0]?.id);
-  }, [orders, farmerFilter, selectedId]);
-
   const filteredOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return orders;
+    let list = orders;
 
-    return orders.filter((o) => {
+    if (farmerFilter) {
+      list = list.filter((o) => (o.fields.Farmer ?? []).includes(farmerFilter));
+    }
+
+    if (!term) return list;
+
+    return list.filter((o) => {
       const text = `${o.fields['Order number'] ?? ''} ${(o.fields['Name (from Farmers)'] || []).join(' ')} ${(o.fields['Name (from Season)'] || []).join(' ')}`.toLowerCase();
       return text.includes(term);
     });
-  }, [orders, search]);
+  }, [orders, search, farmerFilter]);
 
   const selectedOrder = useMemo(
-    () => orders.find((o) => o.id === selectedId) || filteredOrders[0] || null,
-    [orders, filteredOrders, selectedId]
+    () => filteredOrders.find((o) => o.id === selectedId) || filteredOrders[0] || null,
+    [filteredOrders, selectedId]
   );
+
+  useEffect(() => {
+    if (selectedId || !filteredOrders.length) return;
+    setSelectedId(filteredOrders[0]?.id);
+  }, [filteredOrders, selectedId]);
 
   const stats = useMemo(() => {
     const total = filteredOrders.length;

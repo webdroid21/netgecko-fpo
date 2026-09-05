@@ -180,30 +180,36 @@ export function LandView() {
     fetchCrops();
   }, [fetchLands, fetchFarmers, fetchCrops]);
 
-  useEffect(() => {
-    if (selectedId || !lands.length) return;
-    const match = farmerFilter
-      ? lands.find((l) => (l.fields.Farmer ?? []).includes(farmerFilter))
-      : null;
-    setSelectedId(match?.id || lands[0]?.id);
-  }, [lands, farmerFilter, selectedId]);
-
   const filteredLands = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return lands;
+    let list = lands;
 
-    return lands.filter((l) => {
+    if (farmerFilter) {
+      list = list.filter((l) => {
+        const farmer = l.fields.Farmer;
+        return Array.isArray(farmer) ? farmer.includes(farmerFilter) : farmer === farmerFilter;
+      });
+    }
+
+    if (!term) return list;
+
+    return list.filter((l) => {
       const landName = String(l.fields.Land || '').toLowerCase();
       const cropName = String((l.fields['Crop Name (from Crop)'] || []).join(' ')).toLowerCase();
       const owner = String((l.fields['Name (from Owner)'] || []).join(' ')).toLowerCase();
       return landName.includes(term) || cropName.includes(term) || owner.includes(term);
     });
-  }, [lands, search]);
+  }, [lands, search, farmerFilter]);
 
   const selectedLand = useMemo(
-    () => lands.find((l) => l.id === selectedId) || filteredLands[0] || null,
-    [lands, filteredLands, selectedId]
+    () => filteredLands.find((l) => l.id === selectedId) || filteredLands[0] || null,
+    [filteredLands, selectedId]
   );
+
+  useEffect(() => {
+    if (selectedId || !filteredLands.length) return;
+    setSelectedId(filteredLands[0]?.id);
+  }, [filteredLands, selectedId]);
 
   const stats = useMemo(() => {
     const total = filteredLands.length;

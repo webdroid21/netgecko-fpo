@@ -217,28 +217,31 @@ export function LoanView() {
     fetchSeasons();
   }, [fetchLoans, fetchFarmers, fetchLoanTypes, fetchInputOrders, fetchSeasons]);
 
-  useEffect(() => {
-    if (selectedId || !loans.length) return;
-    const match = farmerFilter
-      ? loans.find((l) => (l.fields.Farmer ?? []).includes(farmerFilter))
-      : null;
-    setSelectedId(match?.id || loans[0]?.id);
-  }, [loans, farmerFilter, selectedId]);
-
   const filteredLoans = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return loans;
+    let list = loans;
 
-    return loans.filter((l) => {
+    if (farmerFilter) {
+      list = list.filter((l) => (l.fields.Farmer ?? []).includes(farmerFilter));
+    }
+
+    if (!term) return list;
+
+    return list.filter((l) => {
       const text = `${l.fields['Loan ID'] ?? ''} ${(l.fields['Name (from Farmer)'] || []).join(' ')} ${l.fields['Loan Status'] ?? ''}`.toLowerCase();
       return text.includes(term);
     });
-  }, [loans, search]);
+  }, [loans, search, farmerFilter]);
 
   const selectedLoan = useMemo(
-    () => loans.find((l) => l.id === selectedId) || filteredLoans[0] || null,
-    [loans, filteredLoans, selectedId]
+    () => filteredLoans.find((l) => l.id === selectedId) || filteredLoans[0] || null,
+    [filteredLoans, selectedId]
   );
+
+  useEffect(() => {
+    if (selectedId || !filteredLoans.length) return;
+    setSelectedId(filteredLoans[0]?.id);
+  }, [filteredLoans, selectedId]);
 
   const stats = useMemo(() => {
     const total = filteredLoans.reduce(

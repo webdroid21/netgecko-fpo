@@ -15,6 +15,8 @@ import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 
+import { useSearchParams } from 'src/routes/hooks/use-search-params';
+
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -81,6 +83,8 @@ function DetailRow({ label, value }: { label: string; value?: any }) {
 export function SalesView() {
   const { t } = useTranslate('sales');
   const { t: tCommon } = useTranslate('common');
+  const searchParams = useSearchParams();
+  const farmerFilter = searchParams.get('farmerId');
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -129,25 +133,34 @@ export function SalesView() {
     fetchInventory();
   }, [fetchOrders, fetchBuyers, fetchInventory]);
 
-  useEffect(() => {
-    if (selectedId || !orders.length) return;
-    setSelectedId(orders[0]?.id);
-  }, [orders, selectedId]);
-
   const filteredOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return orders;
+    let list = orders;
 
-    return orders.filter((o) => {
+    if (farmerFilter) {
+      list = list.filter((o) => {
+        const farmer = o.fields.Farmer;
+        return Array.isArray(farmer) ? farmer.includes(farmerFilter) : farmer === farmerFilter;
+      });
+    }
+
+    if (!term) return list;
+
+    return list.filter((o) => {
       const text = `${o.fields.Date ?? ''} ${(o.fields['Name (from Buyer)'] || []).join(' ')}`.toLowerCase();
       return text.includes(term);
     });
-  }, [orders, search]);
+  }, [orders, search, farmerFilter]);
 
   const selectedOrder = useMemo(
-    () => orders.find((o) => o.id === selectedId) || filteredOrders[0] || null,
-    [orders, filteredOrders, selectedId]
+    () => filteredOrders.find((o) => o.id === selectedId) || filteredOrders[0] || null,
+    [filteredOrders, selectedId]
   );
+
+  useEffect(() => {
+    if (selectedId || !filteredOrders.length) return;
+    setSelectedId(filteredOrders[0]?.id);
+  }, [filteredOrders, selectedId]);
 
   const stats = useMemo(() => {
     const total = filteredOrders.reduce(

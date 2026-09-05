@@ -16,6 +16,8 @@ import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 
+import { useSearchParams } from 'src/routes/hooks/use-search-params';
+
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -86,6 +88,8 @@ export function PaymentView() {
   const { activeFbo } = useAuthContext();
   const { t } = useTranslate('payments');
   const { t: tCommon } = useTranslate('common');
+  const searchParams = useSearchParams();
+  const farmerFilter = searchParams.get('farmerId');
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -133,25 +137,35 @@ export function PaymentView() {
     fetchLoans();
   }, [fetchPayments, fetchLoans]);
 
-  useEffect(() => {
-    if (selectedId || !payments.length) return;
-    setSelectedId(payments[0]?.id);
-  }, [payments, selectedId]);
-
   const filteredPayments = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return payments;
+    let list = payments;
 
-    return payments.filter((p) => {
+    if (farmerFilter) {
+      list = list.filter((p) => {
+        const loan = loans.find((l) => l.id === p.fields.Loans?.[0]);
+        const farmer = loan?.fields?.Farmer;
+        return Array.isArray(farmer) ? farmer.includes(farmerFilter) : farmer === farmerFilter;
+      });
+    }
+
+    if (!term) return list;
+
+    return list.filter((p) => {
       const text = `${p.fields['Payment ID'] ?? ''} ${(p.fields['FPO (from Loans)'] || []).join(' ')} ${p.fields.Source ?? ''} ${p.fields['Payment reference'] ?? ''}`.toLowerCase();
       return text.includes(term);
     });
-  }, [payments, search]);
+  }, [payments, search, farmerFilter, loans]);
 
   const selectedPayment = useMemo(
-    () => payments.find((p) => p.id === selectedId) || filteredPayments[0] || null,
-    [payments, filteredPayments, selectedId]
+    () => filteredPayments.find((p) => p.id === selectedId) || filteredPayments[0] || null,
+    [filteredPayments, selectedId]
   );
+
+  useEffect(() => {
+    if (selectedId || !filteredPayments.length) return;
+    setSelectedId(filteredPayments[0]?.id);
+  }, [filteredPayments, selectedId]);
 
   const stats = useMemo(() => {
     const total = filteredPayments.reduce(
