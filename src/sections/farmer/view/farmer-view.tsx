@@ -10,7 +10,7 @@ type Crop = {
   fields: Record<string, any>;
 };
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -84,13 +84,39 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
-function DetailRow({ label, value }: { label: string; value?: any }) {
+function parseAddress(address?: string) {
+  const parts = (address || '').split(',').map((part) => part.trim());
+  return {
+    village: parts[0] || '',
+    parish: parts[1] || '',
+    subCounty: parts[2] || '',
+    district: parts[3] || '',
+    region: parts[4] || '',
+  };
+}
+
+// ----------------------------------------------------------------------
+
+function DetailRow({
+  label,
+  value,
+  helperText,
+}: {
+  label: string;
+  value?: any;
+  helperText?: ReactNode;
+}) {
   return (
     <Box sx={{ p: 1 }}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
       </Typography>
       <Typography variant="body1">{value ?? '—'}</Typography>
+      {helperText && (
+        <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block' }}>
+          {helperText}
+        </Typography>
+      )}
     </Box>
   );
 }
@@ -554,6 +580,7 @@ export function FarmerView() {
     if (!detailFarmer) return null;
 
     const f = detailFarmer.fields;
+    const parsedAddress = parseAddress(f.Address);
     const cropIdOrName = Array.isArray(f['Main crop sold to Cooperative'])
       ? f['Main crop sold to Cooperative'][0]
       : f['Main crop sold to Cooperative'];
@@ -668,14 +695,25 @@ export function FarmerView() {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <DetailRow label={t('fields.address')} value={f.Address} />
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1, pb: 1 }}>
+                {t('address.section')}
+              </Typography>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <DetailRow
+                label={t('fields.address')}
+                value={f.Address}
+                helperText={t('fields.addressNote')}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
                 name="Village"
                 label={t('fields.village')}
-                value={f.Village}
+                value={f.Village || parsedAddress.village}
+                helperText={t('fields.addressNote')}
                 onSaved={handleFieldSaved}
               />
             </Grid>
@@ -684,7 +722,8 @@ export function FarmerView() {
                 farmerId={detailFarmer.id}
                 name="Parish"
                 label={t('fields.parish')}
-                value={f.Parish}
+                value={f.Parish || parsedAddress.parish}
+                helperText={t('fields.addressNote')}
                 onSaved={handleFieldSaved}
               />
             </Grid>
@@ -693,7 +732,8 @@ export function FarmerView() {
                 farmerId={detailFarmer.id}
                 name="Sub-county"
                 label={t('fields.subCounty')}
-                value={f['Sub-county']}
+                value={f['Sub-county'] || parsedAddress.subCounty}
+                helperText={t('fields.addressNote')}
                 onSaved={handleFieldSaved}
               />
             </Grid>
@@ -702,17 +742,17 @@ export function FarmerView() {
                 farmerId={detailFarmer.id}
                 name="District (form)"
                 label={t('fields.district')}
-                value={f['District (form)']}
+                value={f['District (form)'] || parsedAddress.district}
+                helperText={t('fields.addressNote')}
                 onSaved={handleFieldSaved}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.region')} value={f['Region Name']?.[0] ?? f.Region} />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="caption" sx={{ color: 'text.disabled', px: 1, display: 'block' }}>
-                {t('fields.addressNote')}
-              </Typography>
+              <DetailRow
+                label={t('fields.region')}
+                value={f['Region Name']?.[0] ?? f.Region ?? parsedAddress.region}
+                helperText={t('fields.addressNote')}
+              />
             </Grid>
 
             <Grid size={{ xs: 12 }}>

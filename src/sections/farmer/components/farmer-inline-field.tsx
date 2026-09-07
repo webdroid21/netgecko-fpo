@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
@@ -24,6 +24,7 @@ type InlineEditFieldProps = {
   options?: string[];
   arrayValue?: boolean;
   readOnly?: boolean;
+  helperText?: ReactNode;
   onSaved: () => void;
 };
 
@@ -36,6 +37,7 @@ export function InlineEditField({
   options,
   arrayValue,
   readOnly,
+  helperText,
   onSaved,
 }: InlineEditFieldProps) {
   const [editing, setEditing] = useState(false);
@@ -240,6 +242,12 @@ export function InlineEditField({
           />
         )}
       </Box>
+
+      {helperText && (
+        <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block' }}>
+          {helperText}
+        </Typography>
+      )}
     </Box>
   );
 }

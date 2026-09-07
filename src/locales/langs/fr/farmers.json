@@ -71,5 +71,8 @@
     "salesCount": "Nombre de ventes",
     "sales": "Ventes",
     "sale": "Vente"
+  },
+  "address": {
+    "section": "Adresse"
   }
 }

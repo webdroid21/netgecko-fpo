@@ -71,5 +71,8 @@
     "salesCount": "# sales",
     "sales": "Sales",
     "sale": "Sale"
+  },
+  "address": {
+    "section": "Eddereeva"
   }
 }
