@@ -28,6 +28,8 @@
   "emptyDetail": "Sélectionnez une commande pour voir les détails",
   "unnamedOrder": "Commande sans nom",
   "confirmDeleteOrder": "Supprimer {{reference}} ?",
+  "statusUpdateNote": "La commande ne peut être modifiée que si le statut est Ouvert",
+  "updatedByNetGecko": "Sera mis à jour par NetGecko",
   "actions": {
     "edit": "Modifier"
   },

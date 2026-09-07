@@ -28,6 +28,8 @@
   "emptyDetail": "Select an order to view details",
   "unnamedOrder": "Unnamed order",
   "confirmDeleteOrder": "Delete {{reference}}?",
+  "statusUpdateNote": "Order can only be updated if status is Open",
+  "updatedByNetGecko": "Will be updated by NetGecko",
   "actions": {
     "edit": "Edit"
   },

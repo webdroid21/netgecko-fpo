@@ -28,6 +28,8 @@
   "emptyDetail": "Londako ekiragiro okulaba ebirimu",
   "unnamedOrder": "Kiwandiiko ekitalinnya",
   "confirmDeleteOrder": "Osangula {{reference}}?",
+  "statusUpdateNote": "Ekiwandiiko kisobola okukyusibwa nga status ya Open",
+  "updatedByNetGecko": "Kikyeterekerezebwa NetGecko",
   "actions": {
     "edit": "Kyusa"
   },
