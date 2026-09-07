@@ -84,8 +84,9 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
-function parseAddress(address?: string) {
-  const parts = (address || '').split(',').map((part) => part.trim());
+function parseAddress(address?: unknown) {
+  const raw = typeof address === 'string' ? address : '';
+  const parts = (raw || '').split(',').map((part) => part.trim());
   return {
     village: parts[0] || '',
     parish: parts[1] || '',
