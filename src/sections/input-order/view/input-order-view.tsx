@@ -524,6 +524,13 @@ export function InputOrderView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.farmer')}
+                value={(f['Name (from Farmers)'] || []).join(', ')}
+                href={farmerHref}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Box sx={{ p: 1 }}>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   {t('fields.orderStatus')}
@@ -535,13 +542,6 @@ export function InputOrderView() {
                   {t('fields.orderStatusHelper')}
                 </Typography>
               </Box>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('fields.farmer')}
-                value={(f['Name (from Farmers)'] || []).join(', ')}
-                href={farmerHref}
-              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
