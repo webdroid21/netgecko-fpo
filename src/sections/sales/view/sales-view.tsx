@@ -25,6 +25,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { SalesFormDialog } from '../components/sales-form-dialog';
 
 // ----------------------------------------------------------------------
@@ -81,10 +83,12 @@ function DetailRow({ label, value }: { label: string; value?: any }) {
 // ----------------------------------------------------------------------
 
 export function SalesView() {
+  const { activeFbo } = useAuthContext();
   const { t } = useTranslate('sales');
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
+  const salesOrderId = searchParams.get('salesOrderId');
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -95,9 +99,14 @@ export function SalesView() {
   const [editingOrder, setEditingOrder] = useState<SalesOrder | null>(null);
 
   const fetchOrders = useCallback(async () => {
+    if (!activeFbo) return;
     setLoading(true);
     try {
-      const { data } = await axios.get('/api/v1/sales-orders');
+      const query = new URLSearchParams({
+        fpoId: activeFbo.id,
+        fpoName: activeFbo.name,
+      }).toString();
+      const { data } = await axios.get(`/api/v1/sales-orders?${query}`);
       setOrders(data.records || []);
     } catch (error: any) {
       console.error('Fetch sales orders error:', error?.message);
@@ -105,7 +114,7 @@ export function SalesView() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeFbo]);
 
   const fetchBuyers = useCallback(async () => {
     try {
@@ -158,9 +167,13 @@ export function SalesView() {
   );
 
   useEffect(() => {
+    if (salesOrderId && filteredOrders.some((o) => o.id === salesOrderId)) {
+      setSelectedId(salesOrderId);
+      return;
+    }
     if (selectedId || !filteredOrders.length) return;
     setSelectedId(filteredOrders[0]?.id);
-  }, [filteredOrders, selectedId]);
+  }, [filteredOrders, selectedId, salesOrderId]);
 
   const stats = useMemo(() => {
     const total = filteredOrders.reduce(

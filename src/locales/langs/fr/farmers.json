@@ -64,6 +64,12 @@
     "inputOrder": "Commande d’intrant",
     "loansCount": "Nombre de prêts",
     "loans": "Prêts",
-    "loan": "Prêt"
+    "loan": "Prêt",
+    "paymentsCount": "Nombre de paiements",
+    "payments": "Paiements",
+    "payment": "Paiement",
+    "salesCount": "Nombre de ventes",
+    "sales": "Ventes",
+    "sale": "Vente"
   }
 }

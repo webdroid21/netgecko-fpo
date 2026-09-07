@@ -1,6 +1,8 @@
 import type { Farmer } from '../types';
 import type { Land } from 'src/sections/land/types';
 import type { Loan } from 'src/sections/loan/types';
+import type { Payment } from 'src/sections/payment/types';
+import type { SalesOrder } from 'src/sections/sales/types';
 import type { InputOrder } from 'src/sections/input-order/types';
 
 type Crop = {
@@ -224,6 +226,8 @@ export function FarmerView() {
   const [lands, setLands] = useState<Land[]>([]);
   const [inputOrders, setInputOrders] = useState<InputOrder[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
 
   const fetchFarmers = useCallback(async () => {
     if (!activeFbo) return;
@@ -299,7 +303,7 @@ export function FarmerView() {
         axios.get(`/api/v1/input-orders?${fpoQuery}`),
         axios.get(`/api/v1/loans?${fpoQuery}`),
         axios.get(`/api/v1/payments?${fpoQuery}`),
-        axios.get('/api/v1/sales-orders'),
+        axios.get(`/api/v1/sales-orders?${fpoQuery}`),
       ]);
 
       const orderRecords = ordersData.records || [];
@@ -309,6 +313,8 @@ export function FarmerView() {
 
       setInputOrders(orderRecords);
       setLoans(loanRecords);
+      setPayments(paymentRecords);
+      setSalesOrders(salesRecords);
 
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
@@ -564,6 +570,11 @@ export function FarmerView() {
     const farmerLands = lands.filter(hasFarmer);
     const farmerInputOrders = inputOrders.filter(hasFarmer);
     const farmerLoans = loans.filter(hasFarmer);
+    const farmerPayments = payments.filter((p) => {
+      const loan = loans.find((l) => l.id === p.fields.Loans?.[0]);
+      return hasFarmer(loan);
+    });
+    const farmerSales = salesOrders.filter(hasFarmer);
 
     const makeLink = (module: string, recordId?: string, recordIdKey?: string) => {
       const params = new URLSearchParams({ farmerId: detailFarmer.id });
@@ -843,6 +854,16 @@ export function FarmerView() {
                 label: l.fields['Loan ID'] || l.id,
                 href: makeLink('loans', l.id, 'loanId'),
               }));
+              const paymentLinks = farmerPayments.map((p) => ({
+                id: p.id,
+                label: p.fields['Payment ID'] || p.id,
+                href: makeLink('payments', p.id, 'paymentId'),
+              }));
+              const salesLinks = farmerSales.map((s) => ({
+                id: s.id,
+                label: s.fields['Order #'] || s.fields.Date || s.id,
+                href: makeLink('sales', s.id, 'salesOrderId'),
+              }));
 
               return (
                 <>
@@ -880,6 +901,30 @@ export function FarmerView() {
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <RecordList label={t('fields.loans')} records={loanLinks} color="warning" />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RelatedLink
+                      href={makeLink('payments')}
+                      label={t('fields.paymentsCount')}
+                      value={farmerPayments.length}
+                      color="primary"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RecordList label={t('fields.payments')} records={paymentLinks} color="primary" />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RelatedLink
+                      href={makeLink('sales')}
+                      label={t('fields.salesCount')}
+                      value={farmerSales.length}
+                      color="error"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <RecordList label={t('fields.sales')} records={salesLinks} color="error" />
                   </Grid>
                 </>
               );

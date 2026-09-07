@@ -90,6 +90,7 @@ export function PaymentView() {
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
+  const paymentId = searchParams.get('paymentId');
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
@@ -163,9 +164,13 @@ export function PaymentView() {
   );
 
   useEffect(() => {
+    if (paymentId && filteredPayments.some((p) => p.id === paymentId)) {
+      setSelectedId(paymentId);
+      return;
+    }
     if (selectedId || !filteredPayments.length) return;
     setSelectedId(filteredPayments[0]?.id);
-  }, [filteredPayments, selectedId]);
+  }, [filteredPayments, selectedId, paymentId]);
 
   const stats = useMemo(() => {
     const total = filteredPayments.reduce(

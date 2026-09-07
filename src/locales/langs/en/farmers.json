@@ -64,6 +64,12 @@
     "inputOrder": "Input Order",
     "loansCount": "# Loans",
     "loans": "Loans",
-    "loan": "Loan"
+    "loan": "Loan",
+    "paymentsCount": "# Payments",
+    "payments": "Payments",
+    "payment": "Payment",
+    "salesCount": "# Sales",
+    "sales": "Sales",
+    "sale": "Sale"
   }
 }

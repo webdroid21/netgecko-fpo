@@ -64,6 +64,12 @@
     "inputOrder": "Okusaba input",
     "loansCount": "# loans",
     "loans": "Loans",
-    "loan": "Loan"
+    "loan": "Loan",
+    "paymentsCount": "# payments",
+    "payments": "Payments",
+    "payment": "Payment",
+    "salesCount": "# sales",
+    "sales": "Sales",
+    "sale": "Sale"
   }
 }
