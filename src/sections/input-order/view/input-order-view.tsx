@@ -15,10 +15,8 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
-import ToggleButton from '@mui/material/ToggleButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
@@ -99,13 +97,22 @@ function DetailRow({
   label,
   value,
   href,
-  helperText,
+  helper,
+  numberOptions,
 }: {
   label: string;
   value?: any;
   href?: string;
-  helperText?: string;
+  helper?: string;
+  numberOptions?: Intl.NumberFormatOptions;
 }) {
+  let display = value ?? '—';
+  if (typeof value === 'number') {
+    display = fNumber(value, numberOptions);
+  } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
+    display = fNumber(Number(value), numberOptions);
+  }
+
   const content = (
     <>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -115,11 +122,11 @@ function DetailRow({
         variant="body1"
         sx={href ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}
       >
-        {value ?? '—'}
+        {display}
       </Typography>
-      {helperText && (
-        <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block' }}>
-          {helperText}
+      {helper && (
+        <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+          {helper}
         </Typography>
       )}
     </>
@@ -152,6 +159,25 @@ function DetailRow({
 
 // ----------------------------------------------------------------------
 
+function getInputProductName(inputIds: string[], allProducts: InputProduct[]) {
+  if (!inputIds?.length) return '';
+  return inputIds
+    .map((id) => {
+      const product = allProducts.find((p) => p.id === id);
+      return product?.fields['Product ID'] || product?.fields['Product Name'] || product?.fields.Name || id;
+    })
+    .join(', ');
+}
+
+function getInputProductImage(inputIds: string[], allProducts: InputProduct[]) {
+  if (!inputIds?.length) return null;
+  const product = allProducts.find((p) => p.id === inputIds[0]);
+  const image = product?.fields.Image;
+  return Array.isArray(image) ? image[0] : image;
+}
+
+// ----------------------------------------------------------------------
+
 export function InputOrderView() {
   const { activeFbo } = useAuthContext();
   const { t } = useTranslate('inputOrders');
@@ -167,7 +193,6 @@ export function InputOrderView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('Open');
   const [formOpen, setFormOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<InputOrder | null>(null);
 
@@ -239,15 +264,13 @@ export function InputOrderView() {
       list = list.filter((o) => (o.fields.Farmer ?? []).includes(farmerFilter));
     }
 
-    list = list.filter((o) => o.fields['Order Status'] === statusFilter);
-
     if (!term) return list;
 
     return list.filter((o) => {
       const text = `${o.fields['Order number'] ?? ''} ${(o.fields['Name (from Farmers)'] || []).join(' ')} ${(o.fields['Name (from Season)'] || []).join(' ')}`.toLowerCase();
       return text.includes(term);
     });
-  }, [orders, search, farmerFilter, statusFilter]);
+  }, [orders, search, farmerFilter]);
 
   const selectedOrder = useMemo(
     () => filteredOrders.find((o) => o.id === selectedId) || filteredOrders[0] || null,
@@ -472,7 +495,7 @@ export function InputOrderView() {
 
             <Stack direction="row" spacing={1}>
               <Tooltip
-                title={f['Order Status'] === 'Open' ? '' : t('statusUpdateNote')}
+                title={f['Order Status'] !== 'Open' ? t('fields.orderStatusHelper') : ''}
                 disableHoverListener={f['Order Status'] === 'Open'}
               >
                 <span>
@@ -494,11 +517,17 @@ export function InputOrderView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('fields.orderStatus')}
-                value={f['Order Status']}
-                helperText={t('statusUpdateNote')}
-              />
+              <Box sx={{ p: 1 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {t('fields.orderStatus')}
+                </Typography>
+                <Box>
+                  <Label color={statusColor(f['Order Status'])}>{f['Order Status']}</Label>
+                </Box>
+                <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                  {t('fields.orderStatusHelper')}
+                </Typography>
+              </Box>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
@@ -522,44 +551,30 @@ export function InputOrderView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
                 label={t('fields.totalOrderValue')}
-                value={f['Total Order Value (UGX)'] ? fNumber(f['Total Order Value (UGX)']) : undefined}
-                helperText={t('updatedByNetGecko')}
+                value={f['Total Order Value (UGX)']}
+                helper={t('fields.willBeUpdatedByNetGecko')}
+                numberOptions={{ minimumFractionDigits: 2 }}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('fields.totalWeight')}
-                value={f['Total Weight (kg)'] ? fNumber(f['Total Weight (kg)']) : undefined}
-                helperText={t('updatedByNetGecko')}
-              />
+              <DetailRow label={t('fields.totalWeight')} value={f['Total Weight (kg)']} />
             </Grid>
 
             {[1, 2, 3, 4, 5].map((idx) => {
-              const inputRaw = f[`Input ${idx}`];
-              const inputIds = Array.isArray(inputRaw) ? inputRaw : inputRaw ? [String(inputRaw)] : [];
-              const qty = Number(f[`Quantity Input ${idx}`]) || 0;
-              const product = inputIds.length ? products.find((p) => p.id === inputIds[0]) : null;
-              const productName =
-                product?.fields['Product ID'] ||
-                product?.fields['Product Name'] ||
-                (f[`Product ID (from Input ${idx})`] || []).join(', ') ||
-                inputRaw;
+              const inputIds = f[`Input ${idx}`] || [];
+              const qty = f[`Quantity Input ${idx}`];
+              const lookupName = (
+                f[`Product ID (from Input ${idx})`] ||
+                f[`Product Name (from Input ${idx})`] ||
+                []
+              ).join(', ');
+              const resolvedName = getInputProductName(inputIds, products);
+              const productName = lookupName || resolvedName;
+              const lookupImage = f[`Image Input ${idx}`]?.[0];
+              const resolvedImage = !lookupImage ? getInputProductImage(inputIds, products) : null;
+              const image = lookupImage || resolvedImage;
 
-              if (!inputIds.length || qty <= 0) return null;
-
-              const orderImage = f[`Image Input ${idx}`];
-              const productImage =
-                product?.fields['Image']?.[0] ||
-                product?.fields['Product Image']?.[0];
-              const image = (orderImage?.[0] || productImage) as { url?: string } | undefined;
-
-              const retailPrice =
-                f[`Retail Price Input ${idx}`] ??
-                product?.fields['Price Retail (proposed)'] ??
-                product?.fields['NetGecko price (factory)'];
-              const totalValue =
-                f[`Total Value Input ${idx}`] ??
-                (retailPrice ? qty * Number(retailPrice) : undefined);
+              if ((!inputIds?.length && !productName) || !qty) return null;
 
               return (
                 <Grid size={{ xs: 12 }} key={idx}>
@@ -593,7 +608,7 @@ export function InputOrderView() {
                             <Box
                               component="img"
                               src={image.url}
-                              alt={String(productName || '')}
+                              alt={productName}
                               sx={{ width: 1, height: 1, objectFit: 'cover' }}
                             />
                           ) : (
@@ -609,20 +624,22 @@ export function InputOrderView() {
                         <DetailRow label={t('fields.input', { index: idx })} value={productName} />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailRow label={t('fields.quantityInput', { index: idx })} value={fNumber(qty)} />
+                        <DetailRow label={t('fields.quantityInput', { index: idx })} value={qty} />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <DetailRow
                           label={t('fields.retailPriceInput', { index: idx })}
-                          value={retailPrice ? fNumber(retailPrice) : undefined}
-                          helperText={t('updatedByNetGecko')}
+                          value={f[`Retail Price Input ${idx}`]}
+                          helper={t('fields.willBeUpdatedByNetGecko')}
+                          numberOptions={{ minimumFractionDigits: 2 }}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 6 }}>
                         <DetailRow
                           label={t('fields.totalValueInput', { index: idx })}
-                          value={totalValue ? fNumber(totalValue) : undefined}
-                          helperText={t('updatedByNetGecko')}
+                          value={f[`Total Value Input ${idx}`]}
+                          helper={t('fields.willBeUpdatedByNetGecko')}
+                          numberOptions={{ minimumFractionDigits: 2 }}
                         />
                       </Grid>
                     </Grid>
@@ -654,31 +671,6 @@ export function InputOrderView() {
           {t('page.newOrder')}
         </Button>
       </Stack>
-
-      <Box sx={{ mb: 3 }}>
-        <ToggleButtonGroup
-          value={statusFilter}
-          exclusive
-          onChange={(_, value) => value && setStatusFilter(value)}
-          aria-label="order status filter"
-          size="small"
-          fullWidth
-          sx={{
-            width: { sm: 'auto' },
-            '& .MuiToggleButton-root.Mui-selected': {
-              bgcolor: 'primary.main',
-              color: 'primary.contrastText',
-              '&:hover': { bgcolor: 'primary.dark' },
-            },
-          }}
-        >
-          {STATUS_CARDS.map((s) => (
-            <ToggleButton key={s.key} value={s.key} aria-label={s.label} sx={{ flex: 1, textTransform: 'none' }}>
-              {t(`summary.statusCards.${s.key}`)}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-      </Box>
 
       {renderSummary()}
 

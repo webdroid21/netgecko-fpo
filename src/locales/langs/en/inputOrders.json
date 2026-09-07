@@ -28,13 +28,13 @@
   "emptyDetail": "Select an order to view details",
   "unnamedOrder": "Unnamed order",
   "confirmDeleteOrder": "Delete {{reference}}?",
-  "statusUpdateNote": "Order can only be updated if status is Open",
-  "updatedByNetGecko": "Will be updated by NetGecko",
   "actions": {
     "edit": "Edit"
   },
   "fields": {
     "orderStatus": "Order status",
+    "orderStatusHelper": "Order can only be updated if status is Open",
+    "willBeUpdatedByNetGecko": "Will be updated by NetGecko",
     "farmer": "Farmer",
     "season": "Season",
     "payNowPayLater": "PayNow / PayLater",

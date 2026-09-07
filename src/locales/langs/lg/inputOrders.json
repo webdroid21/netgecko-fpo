@@ -28,13 +28,13 @@
   "emptyDetail": "Londako ekiragiro okulaba ebirimu",
   "unnamedOrder": "Kiwandiiko ekitalinnya",
   "confirmDeleteOrder": "Osangula {{reference}}?",
-  "statusUpdateNote": "Ekiwandiiko kisobola okukyusibwa nga status ya Open",
-  "updatedByNetGecko": "Kikyeterekerezebwa NetGecko",
   "actions": {
     "edit": "Kyusa"
   },
   "fields": {
     "orderStatus": "Embeera y’ekiragiro",
+    "orderStatusHelper": "Ekiragiro kisobola okukyusibwa nga embeera ye Open",
+    "willBeUpdatedByNetGecko": "Kijja okukyusibwa NetGecko",
     "farmer": "Mulimi",
     "season": "Sizoni",
     "payNowPayLater": "PayNow / PayLater",
