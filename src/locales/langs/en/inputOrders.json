@@ -28,6 +28,7 @@
   "emptyDetail": "Select an order to view details",
   "unnamedOrder": "Unnamed order",
   "confirmDeleteOrder": "Delete {{reference}}?",
+  "statusUpdateFailed": "Failed to update order status",
   "actions": {
     "edit": "Edit"
   },

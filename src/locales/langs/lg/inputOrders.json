@@ -28,6 +28,7 @@
   "emptyDetail": "Londako ekiragiro okulaba ebirimu",
   "unnamedOrder": "Kiwandiiko ekitalinnya",
   "confirmDeleteOrder": "Osangula {{reference}}?",
+  "statusUpdateFailed": "Okukyusa embeera y’ekiragiro kiganye",
   "actions": {
     "edit": "Kyusa"
   },

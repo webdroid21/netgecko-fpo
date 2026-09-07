@@ -28,6 +28,7 @@
   "emptyDetail": "Sélectionnez une commande pour voir les détails",
   "unnamedOrder": "Commande sans nom",
   "confirmDeleteOrder": "Supprimer {{reference}} ?",
+  "statusUpdateFailed": "Échec de la mise à jour du statut de la commande",
   "actions": {
     "edit": "Modifier"
   },
