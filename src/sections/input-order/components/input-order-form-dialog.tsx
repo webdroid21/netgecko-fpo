@@ -2,8 +2,8 @@ import type { Farmer } from 'src/sections/farmer/types';
 import type { Season, InputOrder, InputProduct } from '../types';
 
 import { z } from 'zod';
-import { useState, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { useMemo, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
@@ -69,6 +69,27 @@ type FormValues = z.infer<typeof schema>;
 
 // ----------------------------------------------------------------------
 
+function getInputProductOptions(products: InputProduct[], order?: InputOrder | null) {
+  const baseOptions = products.map((p) => ({ value: p.id, label: productLabel(p) }));
+  const seen = new Set(baseOptions.map((o) => o.value));
+
+  if (order) {
+    INPUT_KEYS.forEach((key, idx) => {
+      const value = firstInputValue(order.fields[key]);
+      if (value && !seen.has(value)) {
+        const label =
+          (order.fields[`Product ID (from ${key})`] || order.fields[`Product Name (from ${key})`] || [])[0] ||
+          order.fields[`Input ${idx + 1}`]?.[0] ||
+          value;
+        baseOptions.push({ value, label });
+        seen.add(value);
+      }
+    });
+  }
+
+  return baseOptions;
+}
+
 type InputOrderFormDialogProps = {
   open: boolean;
   order?: InputOrder | null;
@@ -82,7 +103,17 @@ type InputOrderFormDialogProps = {
 };
 
 function productPrice(product?: InputProduct | null) {
-  return product?.fields['Price Retail (proposed)'] ?? product?.fields['NetGecko price (factory)'] ?? undefined;
+  return product?.fields['Price Retail (proposed)'] ?? product?.fields['NetGecko price (factory)'] ?? product?.fields['Retail Price'] ?? product?.fields['Price'] ?? undefined;
+}
+
+function productLabel(product?: InputProduct | null) {
+  return product?.fields['Product ID'] || product?.fields['Product Name'] || product?.fields.Name || product?.fields['Crop Name'] || 'Unnamed';
+}
+
+function firstInputValue(value?: any) {
+  if (Array.isArray(value)) return value[0] ?? '';
+  if (typeof value === 'string') return value;
+  return '';
 }
 
 function getDefaultValues(order?: InputOrder | null): FormValues {
@@ -91,15 +122,15 @@ function getDefaultValues(order?: InputOrder | null): FormValues {
     Farmer: f?.Farmer?.[0] ?? '',
     Season: f?.Season?.[0] ?? '',
     'PayNow PayLater': f?.['PayNow PayLater'] ?? '',
-    'Input 1': f?.['Input 1']?.[0] ?? '',
+    'Input 1': firstInputValue(f?.['Input 1']),
     'Quantity Input 1': f?.['Quantity Input 1'] ?? undefined,
-    'Input 2': f?.['Input 2']?.[0] ?? '',
+    'Input 2': firstInputValue(f?.['Input 2']),
     'Quantity Input 2': f?.['Quantity Input 2'] ?? undefined,
-    'Input 3': f?.['Input 3']?.[0] ?? '',
+    'Input 3': firstInputValue(f?.['Input 3']),
     'Quantity Input 3': f?.['Quantity Input 3'] ?? undefined,
-    'Input 4': f?.['Input 4']?.[0] ?? '',
+    'Input 4': firstInputValue(f?.['Input 4']),
     'Quantity Input 4': f?.['Quantity Input 4'] ?? undefined,
-    'Input 5': f?.['Input 5']?.[0] ?? '',
+    'Input 5': firstInputValue(f?.['Input 5']),
     'Quantity Input 5': f?.['Quantity Input 5'] ?? undefined,
     'Retail Price Input 1': f?.['Retail Price Input 1'] ?? undefined,
     'Retail Price Input 2': f?.['Retail Price Input 2'] ?? undefined,
@@ -125,6 +156,8 @@ export function InputOrderFormDialog({
 
   const { t } = useTranslate('inputOrders');
   const { t: tCommon } = useTranslate('common');
+
+  const productOptions = useMemo(() => getInputProductOptions(products, order), [products, order]);
 
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(order),
@@ -275,10 +308,7 @@ export function InputOrderFormDialog({
                     {renderSelect(
                       INPUT_KEYS[idx],
                       t('fields.input', { index: idx + 1 }),
-                      products.map((p) => ({
-                        value: p.id,
-                        label: p.fields['Product ID'] || 'Unnamed',
-                      })),
+                      productOptions,
                       idx === 0
                     )}
                   </Box>

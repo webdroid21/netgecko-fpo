@@ -351,7 +351,7 @@ function buildOrdersFilter(fpoId, fpoName) {
   return `OR(${conditions.join(', ')})`;
 }
 
-function toOrderFields(input) {
+function toOrderFields(input, isNew = false) {
   const fields = { ...input };
 
   ['FPO', 'Farmer', 'Season', 'Loans', '(From CS)']
@@ -363,7 +363,7 @@ function toOrderFields(input) {
     });
 
   // Defaults for new orders.
-  if (!fields['Order Status']) {
+  if (isNew && !fields['Order Status']) {
     fields['Order Status'] = 'Open';
   }
 
@@ -773,7 +773,7 @@ app.post('/api/v1/input-orders', requireAuth, async (req, res) => {
     }
 
     const payload = {
-      records: [{ fields: toOrderFields(fields) }],
+      records: [{ fields: toOrderFields(fields, true) }],
       typecast: true,
     };
 
@@ -798,7 +798,7 @@ app.patch('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
     }
 
     const payload = {
-      records: [{ id: req.params.id, fields: toOrderFields(fields) }],
+      records: [{ id: req.params.id, fields: toOrderFields(fields, false) }],
       typecast: true,
     };
 
