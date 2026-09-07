@@ -12,7 +12,6 @@ import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -73,13 +72,21 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
-function getProductNames(land?: Land): string[] {
+function getProductNames(land?: Land, allCrops?: Crop[]): string[] {
   if (!land) return [];
   const names =
-    land.fields['Product Name (from Product)'] ||
-    land.fields['Crop Name (from Crop)'] ||
-    [];
-  return (Array.isArray(names) ? names : [names]).filter(Boolean) as string[];
+    land.fields['Product Name (from Crop)'] ||
+    land.fields['Crop Name (from Crop)'];
+  if (names && Array.isArray(names) && names.length) {
+    return names.filter((n) => typeof n === 'string') as string[];
+  }
+  const ids = (land.fields['Main Product (1)'] || land.fields['Main Crop (1)'] || []) as string[];
+  return ids
+    .map((id) => {
+      const crop = allCrops?.find((c) => c.id === id);
+      return crop?.fields['Crop Name'] || crop?.fields['Product Name'] || '';
+    })
+    .filter(Boolean);
 }
 
 function DetailRow({
@@ -213,11 +220,11 @@ export function LandView() {
 
     return list.filter((l) => {
       const landName = String(l.fields.Land || '').toLowerCase();
-      const productName = String(getProductNames(l).join(' ')).toLowerCase();
+      const productName = String(getProductNames(l, crops).join(' ')).toLowerCase();
       const owner = String((l.fields['Name (from Owner)'] || []).join(' ')).toLowerCase();
       return landName.includes(term) || productName.includes(term) || owner.includes(term);
     });
-  }, [lands, search, farmerFilter]);
+  }, [lands, search, farmerFilter, crops]);
 
   const selectedLand = useMemo(
     () => filteredLands.find((l) => l.id === selectedId) || filteredLands[0] || null,
@@ -241,7 +248,7 @@ export function LandView() {
 
     const productCounts: Record<string, number> = {};
     filteredLands.forEach((l) => {
-      const names = getProductNames(l);
+      const names = getProductNames(l, crops);
       names.forEach((name) => {
         if (!name) return;
         productCounts[name] = (productCounts[name] || 0) + 1;
@@ -252,7 +259,7 @@ export function LandView() {
         .sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
 
     return { total, acres, owned, rented, mainProduct };
-  }, [filteredLands]);
+  }, [filteredLands, crops]);
 
   const handleAdd = () => {
     setEditingLand(null);
@@ -262,17 +269,6 @@ export function LandView() {
   const handleEdit = (land: Land) => {
     setEditingLand(land);
     setFormOpen(true);
-  };
-
-  const handleDelete = async (land: Land) => {
-    const name = land.fields.Land ?? t('unnamedLand');
-    if (!confirm(t('confirmDeleteLand', { name }))) return;
-    try {
-      await axios.delete(`/api/v1/lands/${land.id}`);
-      fetchLands();
-    } catch (error: any) {
-      console.error('Delete land error:', error?.message);
-    }
   };
 
   const handleFarmerCreated = (farmer: Farmer) => {
@@ -369,7 +365,7 @@ export function LandView() {
                     {(land.fields['Name (from Owner)'] || []).join(', ')}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {getProductNames(land).join(', ') || t('noProduct')} · {land.fields['Land Size (Acres)']} acres
+                    {getProductNames(land, crops).join(', ') || t('noProduct')} · {land.fields['Land Size (Acres)']} acres
                   </Typography>
                 </ListItemButton>
               );
@@ -410,14 +406,9 @@ export function LandView() {
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
-                {t('actions.edit')}
-              </Button>
-              <IconButton color="error" onClick={() => handleDelete(selectedLand)}>
-                <Iconify icon={'solar:trash-bin-trash-bold' as any} />
-              </IconButton>
-            </Stack>
+            <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
+              {t('actions.edit')}
+            </Button>
           </Stack>
 
           <Grid container spacing={3}>
@@ -445,52 +436,51 @@ export function LandView() {
               <DetailRow label={t('lands:fields.longitude')} value={f.Longitude} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.mainProduct')} value={getProductNames(selectedLand).join(', ')} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.numPlantsProduct1')} value={f['Number of plants (Product 1)'] ?? f['Number of plants (Crop 1)']} />
+              <DetailRow label={t('lands:fields.mainProduct')} value={getProductNames(selectedLand, crops).join(', ')} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.product1HarvestSeasonA')}
-                value={f['Product 1 Estimated Harvest (KG) Season A'] ?? f['Crop 1 Estimated Harvest (KG) Season A']}
+                label={t('lands:fields.product1ProductionSeasonA')}
+                value={f['Product 1 Estimated Production Season A (kg, heads, litres, units)']}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.product1HarvestSeasonB')}
-                value={f['Product 1 Estimated Harvest (KG) Season B'] ?? f['Crop 1 Estimated Harvest (KG) Season B']}
+                label={t('lands:fields.product1ProductionSeasonB')}
+                value={f['Product 1 Estimated Production Season B (kg, heads, litres, units)']}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
                 label={t('lands:fields.otherProduct')}
-                value={
-                  (f['Product 2 Name (from Other product (2))'] || f['Crop 2 Name (from Other crop (2))'] || []).join(', ') ||
-                  (f['Other product (2)']?.join(', ') || f['Other crop (2)']?.join(', '))
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.numPlantsProduct2')} value={f['Number of plants (Product 2)'] ?? f['Number of plants (Crop 2)']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('lands:fields.product2HarvestSeasonA')}
-                value={f['Product 2 Estimated Harvest (KG) Season A'] ?? f['Crop 2 Estimated Harvest (KG) Season A']}
+                value={(() => {
+                  const ids = (f['Other product (2)'] || []) as string[];
+                  return ids
+                    .map((id) => {
+                      const crop = crops.find((c) => c.id === id);
+                      return crop?.fields['Crop Name'] || crop?.fields['Product Name'] || id;
+                    })
+                    .join(', ');
+                })()}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.crop2HarvestSeasonB')}
-                value={f['Crop 2 Estimated Harvest (KG) Season B']}
+                label={t('lands:fields.product2ProductionSeasonA')}
+                value={f['Product 2 Estimated Production Season A (kg, heads, litres, units)']}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.estimatedHarvestSeasonA')} value={f['Estimated harvest Season A']} />
+              <DetailRow
+                label={t('lands:fields.product2ProductionSeasonB')}
+                value={f['Product 2 Estimated Production Season B (kg, heads, litres, units)']}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.estimatedHarvestSeasonB')} value={f['Estimated harvest Season B']} />
+              <DetailRow label={t('lands:fields.estimatedProductionSeasonA')} value={f['Estimated production Season A']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('lands:fields.estimatedProductionSeasonB')} value={f['Estimated production Season B']} />
             </Grid>
           </Grid>
         </CardContent>

@@ -37,15 +37,13 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Eky’obugagga ekikulu",
-    "numPlantsProduct1": "Omuwendo gw’emmuli (eky’obugagga 1)",
-    "product1HarvestSeasonA": "Empeke ezisubirwa (KG) eky’obugagga 1 sizoni A",
-    "product1HarvestSeasonB": "Empeke ezisubirwa (KG) eky’obugagga 1 sizoni B",
+    "product1ProductionSeasonA": "Eby’obugagga 1 ebisubirwa sizoni A",
+    "product1ProductionSeasonB": "Eby’obugagga 1 ebisubirwa sizoni B",
     "otherProduct": "Eky’obugagga ekirala",
-    "numPlantsProduct2": "Omuwendo gw’emmuli (eky’obugagga 2)",
-    "product2HarvestSeasonA": "Empeke ezisubirwa (KG) eky’obugagga 2 sizoni A",
-    "product2HarvestSeasonB": "Empeke ezisubirwa (KG) eky’obugagga 2 sizoni B",
-    "estimatedHarvestSeasonA": "Empeke ezisubirwa sizoni A",
-    "estimatedHarvestSeasonB": "Empeke ezisubirwa sizoni B"
+    "product2ProductionSeasonA": "Eby’obugagga 2 ebisubirwa sizoni A",
+    "product2ProductionSeasonB": "Eby’obugagga 2 ebisubirwa sizoni B",
+    "estimatedProductionSeasonA": "Eby’obugagga ebisubirwa sizoni A",
+    "estimatedProductionSeasonB": "Eby’obugagga ebisubirwa sizoni B"
   },
   "form": {
     "title": {
@@ -59,13 +57,11 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Eky’obugagga ekikulu (1)",
-    "numPlantsProduct1": "Omuwendo gw’emmuli (eky’obugagga 1)",
-    "product1HarvestSeasonA": "Empeke ezisubirwa (KG) eky’obugagga 1 sizoni A",
-    "product1HarvestSeasonB": "Empeke ezisubirwa (KG) eky’obugagga 1 sizoni B",
+    "product1ProductionSeasonA": "Eby’obugagga 1 ebisubirwa sizoni A",
+    "product1ProductionSeasonB": "Eby’obugagga 1 ebisubirwa sizoni B",
     "otherProduct": "Eky’obugagga ekirala (2)",
-    "numPlantsProduct2": "Omuwendo gw’emmuli (eky’obugagga 2)",
-    "product2HarvestSeasonA": "Empeke ezisubirwa (KG) eky’obugagga 2 sizoni A",
-    "product2HarvestSeasonB": "Empeke ezisubirwa (KG) eky’obugagga 2 sizoni B",
+    "product2ProductionSeasonA": "Eby’obugagga 2 ebisubirwa sizoni A",
+    "product2ProductionSeasonB": "Eby’obugagga 2 ebisubirwa sizoni B",
     "noneOption": "Tewali",
     "selectPlaceholder": "Londako..."
   }

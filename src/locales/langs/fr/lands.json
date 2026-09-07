@@ -37,15 +37,13 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Produit principal",
-    "numPlantsProduct1": "Nombre de plants (produit 1)",
-    "product1HarvestSeasonA": "Récolte estimée produit 1 (KG) saison A",
-    "product1HarvestSeasonB": "Récolte estimée produit 1 (KG) saison B",
+    "product1ProductionSeasonA": "Production estimée produit 1 saison A",
+    "product1ProductionSeasonB": "Production estimée produit 1 saison B",
     "otherProduct": "Autre produit",
-    "numPlantsProduct2": "Nombre de plants (produit 2)",
-    "product2HarvestSeasonA": "Récolte estimée produit 2 (KG) saison A",
-    "product2HarvestSeasonB": "Récolte estimée produit 2 (KG) saison B",
-    "estimatedHarvestSeasonA": "Récolte totale estimée saison A",
-    "estimatedHarvestSeasonB": "Récolte totale estimée saison B"
+    "product2ProductionSeasonA": "Production estimée produit 2 saison A",
+    "product2ProductionSeasonB": "Production estimée produit 2 saison B",
+    "estimatedProductionSeasonA": "Production estimée saison A",
+    "estimatedProductionSeasonB": "Production estimée saison B"
   },
   "form": {
     "title": {
@@ -59,13 +57,11 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Produit principal (1)",
-    "numPlantsProduct1": "Nombre de plants (produit 1)",
-    "product1HarvestSeasonA": "Récolte estimée produit 1 (KG) saison A",
-    "product1HarvestSeasonB": "Récolte estimée produit 1 (KG) saison B",
+    "product1ProductionSeasonA": "Production estimée produit 1 saison A",
+    "product1ProductionSeasonB": "Production estimée produit 1 saison B",
     "otherProduct": "Autre produit (2)",
-    "numPlantsProduct2": "Nombre de plants (produit 2)",
-    "product2HarvestSeasonA": "Récolte estimée produit 2 (KG) saison A",
-    "product2HarvestSeasonB": "Récolte estimée produit 2 (KG) saison B",
+    "product2ProductionSeasonA": "Production estimée produit 2 saison A",
+    "product2ProductionSeasonB": "Production estimée produit 2 saison B",
     "noneOption": "Aucune",
     "selectPlaceholder": "Sélectionner..."
   }

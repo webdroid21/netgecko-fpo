@@ -37,15 +37,13 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Main product",
-    "numPlantsProduct1": "Number of plants (product 1)",
-    "product1HarvestSeasonA": "Product 1 estimated harvest (KG) Season A",
-    "product1HarvestSeasonB": "Product 1 estimated harvest (KG) Season B",
+    "product1ProductionSeasonA": "Product 1 estimated production Season A",
+    "product1ProductionSeasonB": "Product 1 estimated production Season B",
     "otherProduct": "Other product",
-    "numPlantsProduct2": "Number of plants (product 2)",
-    "product2HarvestSeasonA": "Product 2 estimated harvest (KG) Season A",
-    "product2HarvestSeasonB": "Product 2 estimated harvest (KG) Season B",
-    "estimatedHarvestSeasonA": "Estimated harvest Season A",
-    "estimatedHarvestSeasonB": "Estimated harvest Season B"
+    "product2ProductionSeasonA": "Product 2 estimated production Season A",
+    "product2ProductionSeasonB": "Product 2 estimated production Season B",
+    "estimatedProductionSeasonA": "Estimated production Season A",
+    "estimatedProductionSeasonB": "Estimated production Season B"
   },
   "form": {
     "title": {
@@ -59,13 +57,11 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Main product (1)",
-    "numPlantsProduct1": "Number of plants (product 1)",
-    "product1HarvestSeasonA": "Product 1 estimated harvest (KG) Season A",
-    "product1HarvestSeasonB": "Product 1 estimated harvest (KG) Season B",
+    "product1ProductionSeasonA": "Product 1 estimated production Season A",
+    "product1ProductionSeasonB": "Product 1 estimated production Season B",
     "otherProduct": "Other product (2)",
-    "numPlantsProduct2": "Number of plants (product 2)",
-    "product2HarvestSeasonA": "Product 2 estimated harvest (KG) Season A",
-    "product2HarvestSeasonB": "Product 2 estimated harvest (KG) Season B",
+    "product2ProductionSeasonA": "Product 2 estimated production Season A",
+    "product2ProductionSeasonB": "Product 2 estimated production Season B",
     "noneOption": "None",
     "selectPlaceholder": "Select..."
   }

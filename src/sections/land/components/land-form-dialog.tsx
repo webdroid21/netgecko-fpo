@@ -29,6 +29,11 @@ import { FarmerFormDialog } from 'src/sections/farmer/components/farmer-form-dia
 
 const OWNERSHIP_OPTIONS = ['Owned', 'Rented'];
 
+const PROD_A = 'Product 1 Estimated Production Season A (kg, heads, litres, units)';
+const PROD_B = 'Product 1 Estimated Production Season B (kg, heads, litres, units)';
+const PROD2_A = 'Product 2 Estimated Production Season A (kg, heads, litres, units)';
+const PROD2_B = 'Product 2 Estimated Production Season B (kg, heads, litres, units)';
+
 const schema = z.object({
   Farmer: z.string().min(1, { message: 'Required' }),
   'Land Size (Acres)': z.number().min(0, { message: 'Required' }),
@@ -36,13 +41,11 @@ const schema = z.object({
   Latitude: z.number().optional(),
   Longitude: z.number().optional(),
   'Main Product (1)': z.string().min(1, { message: 'Required' }),
-  'Number of plants (Product 1)': z.number().optional(),
-  'Product 1 Estimated Harvest (KG) Season A': z.number().min(0, { message: 'Required' }),
-  'Product 1 Estimated Harvest (KG) Season B': z.number().min(0, { message: 'Required' }),
+  [PROD_A]: z.number().min(0, { message: 'Required' }),
+  [PROD_B]: z.number().min(0, { message: 'Required' }),
   'Other product (2)': z.string().optional(),
-  'Number of plants (Product 2)': z.number().optional(),
-  'Product 2 Estimated Harvest (KG) Season A': z.number().optional(),
-  'Product 2 Estimated Harvest (KG) Season B': z.number().optional(),
+  [PROD2_A]: z.number().optional(),
+  [PROD2_B]: z.number().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -69,13 +72,11 @@ function getDefaultValues(land?: Land | null): FormValues {
     Latitude: f?.Latitude ?? undefined,
     Longitude: f?.Longitude ?? undefined,
     'Main Product (1)': f?.['Main Product (1)']?.[0] ?? f?.['Main Crop (1)']?.[0] ?? '',
-    'Number of plants (Product 1)': f?.['Number of plants (Product 1)'] ?? f?.['Number of plants (Crop 1)'] ?? undefined,
-    'Product 1 Estimated Harvest (KG) Season A': f?.['Product 1 Estimated Harvest (KG) Season A'] ?? f?.['Crop 1 Estimated Harvest (KG) Season A'] ?? undefined,
-    'Product 1 Estimated Harvest (KG) Season B': f?.['Product 1 Estimated Harvest (KG) Season B'] ?? f?.['Crop 1 Estimated Harvest (KG) Season B'] ?? undefined,
+    [PROD_A]: f?.[PROD_A] ?? f?.['Product 1 Estimated Harvest (KG) Season A'] ?? f?.['Crop 1 Estimated Harvest (KG) Season A'] ?? undefined,
+    [PROD_B]: f?.[PROD_B] ?? f?.['Product 1 Estimated Harvest (KG) Season B'] ?? f?.['Crop 1 Estimated Harvest (KG) Season B'] ?? undefined,
     'Other product (2)': f?.['Other product (2)']?.[0] ?? f?.['Other crop (2)']?.[0] ?? '',
-    'Number of plants (Product 2)': f?.['Number of plants (Product 2)'] ?? f?.['Number of plants (Crop 2)'] ?? undefined,
-    'Product 2 Estimated Harvest (KG) Season A': f?.['Product 2 Estimated Harvest (KG) Season A'] ?? f?.['Crop 2 Estimated Harvest (KG) Season A'] ?? undefined,
-    'Product 2 Estimated Harvest (KG) Season B': f?.['Product 2 Estimated Harvest (KG) Season B'] ?? f?.['Crop 2 Estimated Harvest (KG) Season B'] ?? undefined,
+    [PROD2_A]: f?.[PROD2_A] ?? f?.['Product 2 Estimated Harvest (KG) Season A'] ?? f?.['Crop 2 Estimated Harvest (KG) Season A'] ?? undefined,
+    [PROD2_B]: f?.[PROD2_B] ?? f?.['Product 2 Estimated Harvest (KG) Season B'] ?? f?.['Crop 2 Estimated Harvest (KG) Season B'] ?? undefined,
   };
 }
 
@@ -116,12 +117,21 @@ export function LandFormDialog({
   const onSubmit = handleSubmit(async (data) => {
     const payload: Record<string, any> = { ...data };
 
-    // Omit empty optional product fields.
-    if (!payload['Other product (2)']) {
+    // Airtable linked-record fields expect arrays of record IDs.
+    payload.Farmer = payload.Farmer ? [payload.Farmer] : [];
+    payload['Main Product (1)'] = payload['Main Product (1)'] ? [payload['Main Product (1)']] : [];
+    payload['Other product (2)'] = payload['Other product (2)'] ? [payload['Other product (2)']] : [];
+
+    // Omit undefined values so optional fields are not cleared.
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined) delete payload[key];
+    });
+
+    // Omit empty optional product 2 production fields.
+    if (!payload['Other product (2)']?.length) {
       delete payload['Other product (2)'];
-      delete payload['Number of plants (Product 2)'];
-      delete payload['Product 2 Estimated Harvest (KG) Season A'];
-      delete payload['Product 2 Estimated Harvest (KG) Season B'];
+      delete payload[PROD2_A];
+      delete payload[PROD2_B];
     }
 
     try {
@@ -134,6 +144,8 @@ export function LandFormDialog({
       onClose();
     } catch (error: any) {
       console.error('Land save error:', error?.message);
+      const message = error?.response?.data?.error?.message || error?.message || 'Failed to save land';
+      alert(message);
     }
   });
 
@@ -197,6 +209,7 @@ export function LandFormDialog({
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
+                required
                 type="number"
                 name="Land Size (Acres)"
                 label={t('form.landSize')}
@@ -231,25 +244,19 @@ export function LandFormDialog({
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
+                required
                 type="number"
-                name="Number of plants (Product 1)"
-                label={t('form.numPlantsProduct1')}
+                name={PROD_A}
+                label={t('form.product1ProductionSeasonA')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
+                required
                 type="number"
-                name="Product 1 Estimated Harvest (KG) Season A"
-                label={t('form.product1HarvestSeasonA')}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text
-                type="number"
-                name="Product 1 Estimated Harvest (KG) Season B"
-                label={t('form.product1HarvestSeasonB')}
+                name={PROD_B}
+                label={t('form.product1ProductionSeasonB')}
               />
             </Grid>
 
@@ -267,24 +274,16 @@ export function LandFormDialog({
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Number of plants (Product 2)"
-                label={t('form.numPlantsProduct2')}
+                name={PROD2_A}
+                label={t('form.product2ProductionSeasonA')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Product 2 Estimated Harvest (KG) Season A"
-                label={t('form.product2HarvestSeasonA')}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text
-                type="number"
-                name="Product 2 Estimated Harvest (KG) Season B"
-                label={t('form.product2HarvestSeasonB')}
+                name={PROD2_B}
+                label={t('form.product2ProductionSeasonB')}
               />
             </Grid>
           </Grid>
