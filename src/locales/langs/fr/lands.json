@@ -1,8 +1,8 @@
 {
   "page": {
-    "title": "Gestion des terres",
-    "subtitle": "{{count}} parcelles · {{acres}} acres au total",
-    "addParcel": "Ajouter une parcelle"
+    "title": "Terres",
+    "subtitle": "Enregistrer, mettre à jour, consulter les terres",
+    "addParcel": "Ajouter une terre"
   },
   "summary": {
     "totalParcels": {

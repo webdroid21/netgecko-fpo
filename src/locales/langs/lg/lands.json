@@ -1,8 +1,8 @@
 {
   "page": {
-    "title": "Okufuga ettaka",
-    "subtitle": "{{count}} ettaka · {{acres}} acres zonna",
-    "addParcel": "Yongerako ekitundu ky’ettaka"
+    "title": "Ettaka",
+    "subtitle": "Wandika, tuukiriza, laba ebikwata ku ttaka",
+    "addParcel": "Yongerako ettaka"
   },
   "summary": {
     "totalParcels": {

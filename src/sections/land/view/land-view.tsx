@@ -485,10 +485,11 @@ export function LandView() {
         <Box>
           <Typography variant="h4" color="primary">{t('page.title')}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {t('page.subtitle', { count: stats.total, acres: fNumber(stats.acres) })}
+            {t('page.subtitle')}
           </Typography>
         </Box>
         <Button
+          color="primary"
           variant="contained"
           startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
           onClick={handleAdd}

@@ -1,8 +1,8 @@
 {
   "page": {
-    "title": "Land management",
-    "subtitle": "{{count}} parcels · {{acres}} total acres",
-    "addParcel": "Add parcel"
+    "title": "Lands",
+    "subtitle": "Register, update, view lands records",
+    "addParcel": "Add land"
   },
   "summary": {
     "totalParcels": {

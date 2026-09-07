@@ -587,6 +587,7 @@ export function InputOrderView() {
           </Typography>
         </Box>
         <Button
+          color="primary"
           variant="contained"
           startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
           onClick={handleAdd}
