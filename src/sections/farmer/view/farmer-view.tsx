@@ -509,13 +509,14 @@ export function FarmerView() {
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
                       primary={farmer.fields.Name || t('unnamed')}
-                      primaryTypographyProps={{ variant: 'subtitle2' }}
+                      primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     {gender && (
                       <Label color={gender === 'Female' ? 'success' : 'info'}>
                         {gender}
                       </Label>
                     )}
+                    <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>

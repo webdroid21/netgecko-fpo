@@ -234,11 +234,12 @@ export function PaymentView() {
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
                       primary={`${t('unnamedPayment')} #${payment.fields['Payment ID'] ?? '-'}`}
-                      primaryTypographyProps={{ variant: 'subtitle2' }}
+                      primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     <Label color={payment.fields.Check === 'OK' ? 'success' : 'warning'}>
                       {payment.fields.Check || '—'}
                     </Label>
+                    <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>

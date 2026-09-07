@@ -264,10 +264,13 @@ export function SalesView() {
                   onClick={() => setSelectedId(order.id)}
                   sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
                 >
-                  <ListItemText
-                    primary={order.fields.Date || `${t('fields.orderNumber')} ${order.fields['Order #']}`}
-                    primaryTypographyProps={{ variant: 'subtitle2' }}
-                  />
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
+                    <ListItemText
+                      primary={order.fields.Date || `${t('fields.orderNumber')} ${order.fields['Order #']}`}
+                      primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
+                    />
+                    <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
+                  </Stack>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     {buyerName(order.fields.Buyer?.[0])} · {productName(order.fields.Product?.[0])}
                   </Typography>

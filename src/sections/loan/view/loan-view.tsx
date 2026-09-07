@@ -95,7 +95,12 @@ function DetailRow({
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
       </Typography>
-      <Typography variant="body1">{value ?? '—'}</Typography>
+      <Typography
+        variant="body1"
+        sx={href ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}
+      >
+        {value ?? '—'}
+      </Typography>
     </>
   );
 
@@ -113,7 +118,10 @@ function DetailRow({
           '&:hover': { bgcolor: 'action.hover' },
         }}
       >
-        {content}
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>{content}</Box>
+          <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ flexShrink: 0 }} />
+        </Stack>
       </MuiLink>
     );
   }
@@ -383,13 +391,14 @@ export function LoanView() {
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
                       primary={loan.fields['Loan ID'] || t('unnamedLoan')}
-                      primaryTypographyProps={{ variant: 'subtitle2' }}
+                      primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     {loan.fields['Loan Status'] && (
                       <Label color={statusColor(loan.fields['Loan Status'])}>
                         {loan.fields['Loan Status']}
                       </Label>
                     )}
+                    <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
