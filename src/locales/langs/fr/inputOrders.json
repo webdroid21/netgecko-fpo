@@ -1,8 +1,8 @@
 {
   "page": {
-    "title": "File d’attente des commandes d’intrants",
-    "subtitle": "Gérer la distribution des semences, engrais et outils",
-    "newOrder": "Nouvelle commande"
+    "title": "Commandes d’intrants",
+    "subtitle": "Commander des intrants et gérer les commandes",
+    "newOrder": "Ajouter une commande"
   },
   "summary": {
     "totalOrders": {

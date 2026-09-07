@@ -1,8 +1,8 @@
 {
   "page": {
-    "title": "Input Order Queue",
-    "subtitle": "Manage seed, fertilizer, and tool distribution",
-    "newOrder": "New order"
+    "title": "Input orders",
+    "subtitle": "Order inputs and manage input orders",
+    "newOrder": "Add input order"
   },
   "summary": {
     "totalOrders": {
