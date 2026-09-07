@@ -703,15 +703,6 @@ export function FarmerView() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Farmer Code"
-                label={t('fields.farmerCode')}
-                value={f['Farmer Code']}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.farmerIdFrontBack')} value={f['Farmer ID (front back)']} />
             </Grid>
 
