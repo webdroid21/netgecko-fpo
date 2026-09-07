@@ -36,25 +36,28 @@ import { InputOrderFormDialog } from '../components/input-order-form-dialog';
 // ----------------------------------------------------------------------
 
 const STATUS_CARDS = [
-  { key: 'Open', label: 'Pending Fulfillment', color: 'warning' as const },
-  { key: 'Active', label: 'Requested', color: 'info' as const },
-  { key: 'Closed', label: 'Delivered', color: 'success' as const },
-  { key: 'Cancelled', label: 'Cancelled', color: 'error' as const },
+  { key: 'Open', label: 'Open', color: 'warning' as const },
+  { key: 'Active', label: 'Active', color: 'info' as const },
+  { key: 'Closed', label: 'Closed', color: 'success' as const },
 ];
 
 function SummaryCard({
   title,
   total,
   subtext,
+  trend,
   color,
   icon,
 }: {
   title: string;
   total: number;
-  subtext: string;
+  subtext?: string;
+  trend?: { value: number; label: string };
   color: 'primary' | 'success' | 'info' | 'warning' | 'error';
   icon: string;
 }) {
+  const trendIcon = trend ? (trend.value > 0 ? 'solar:arrow-up-bold-duotone' : trend.value < 0 ? 'solar:arrow-down-bold-duotone' : 'solar:arrow-right-bold-duotone') : null;
+
   return (
     <Card sx={{ p: 2.5 }}>
       <Stack direction="row" alignItems="center" spacing={2}>
@@ -69,9 +72,18 @@ function SummaryCard({
           <Typography variant="h4" sx={{ my: 0.5 }}>
             {fNumber(total)}
           </Typography>
-          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            {subtext}
-          </Typography>
+          {trend ? (
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <Iconify icon={trendIcon as any} width={14} sx={{ color: 'text.disabled' }} />
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                {trend.value}% {trend.label}
+              </Typography>
+            </Stack>
+          ) : (
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+              {subtext}
+            </Typography>
+          )}
         </Box>
       </Stack>
     </Card>
@@ -301,7 +313,7 @@ export function InputOrderView() {
           <SummaryCard
             title={t('summary.totalOrders.title')}
             total={stats.total}
-            subtext={t('summary.totalOrders.subtext', { value: fNumber(stats.value) })}
+            trend={{ value: 0, label: t('summary.trendLabel') }}
             color="primary"
             icon="solar:cart-4-bold-duotone"
           />
@@ -310,7 +322,7 @@ export function InputOrderView() {
           <SummaryCard
             title={t('summary.totalValue.title')}
             total={stats.value}
-            subtext={t('summary.totalValue.subtext')}
+            trend={{ value: 0, label: t('summary.trendLabel') }}
             color="success"
             icon="solar:tag-price-bold-duotone"
           />
@@ -319,7 +331,7 @@ export function InputOrderView() {
           <SummaryCard
             title={t('summary.totalWeight.title')}
             total={stats.weight}
-            subtext={t('summary.totalWeight.subtext')}
+            trend={{ value: 0, label: t('summary.trendLabel') }}
             color="info"
             icon="solar:scale-bold-duotone"
           />
@@ -328,25 +340,14 @@ export function InputOrderView() {
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {STATUS_CARDS.map((s) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={s.key}>
-            <Card sx={{ p: 2.5 }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <Box sx={{ color: `${s.color}.main` }}>
-                  <Iconify icon={'solar:notes-bold-duotone' as any} width={28} />
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                    {t(`summary.statusCards.${s.key}`)}
-                  </Typography>
-                  <Typography variant="h4" sx={{ my: 0.5 }}>
-                    {fNumber(statusCounts[s.key])}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {s.key}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Card>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
+            <SummaryCard
+              title={t(`summary.statusCards.${s.key}`)}
+              total={statusCounts[s.key]}
+              subtext={s.label}
+              color={s.color}
+              icon="solar:notes-bold-duotone"
+            />
           </Grid>
         ))}
       </Grid>

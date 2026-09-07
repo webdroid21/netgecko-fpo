@@ -5,23 +5,23 @@
     "newOrder": "Ajouter une commande"
   },
   "summary": {
+    "trendLabel": "vs l’année en cours",
     "totalOrders": {
       "title": "Nombre total de commandes",
       "subtext": "{{value}} UGX de valeur totale"
     },
     "totalValue": {
-      "title": "Valeur totale",
+      "title": "Valeur totale (UGX)",
       "subtext": "UGX"
     },
     "totalWeight": {
-      "title": "Poids total",
+      "title": "Poids total (kg)",
       "subtext": "kg"
     },
     "statusCards": {
-      "Open": "En attente de livraison",
-      "Active": "Demandée",
-      "Closed": "Livrée",
-      "Cancelled": "Annulée"
+      "Open": "Ouvert",
+      "Active": "Actif",
+      "Closed": "Clôturé"
     }
   },
   "searchPlaceholder": "Rechercher des commandes...",

@@ -5,23 +5,23 @@
     "newOrder": "Add input order"
   },
   "summary": {
+    "trendLabel": "vs current year",
     "totalOrders": {
       "title": "Total orders",
       "subtext": "{{value}} UGX total value"
     },
     "totalValue": {
-      "title": "Total value",
+      "title": "Total value (UGX)",
       "subtext": "UGX"
     },
     "totalWeight": {
-      "title": "Total weight",
+      "title": "Total weight (kg)",
       "subtext": "kg"
     },
     "statusCards": {
-      "Open": "Pending fulfillment",
-      "Active": "Requested",
-      "Closed": "Delivered",
-      "Cancelled": "Cancelled"
+      "Open": "Open",
+      "Active": "Active",
+      "Closed": "Closed"
     }
   },
   "searchPlaceholder": "Search orders...",

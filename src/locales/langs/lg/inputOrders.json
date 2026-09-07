@@ -5,23 +5,23 @@
     "newOrder": "Yongerako ekisabibwa"
   },
   "summary": {
+    "trendLabel": "okwesongeza omwaka guno",
     "totalOrders": {
       "title": "Ebisabibwa byonna",
       "subtext": "{{value}} UGX omuwendo gwonna"
     },
     "totalValue": {
-      "title": "Omuwendo gwonna",
+      "title": "Omuwendo gwonna (UGX)",
       "subtext": "UGX"
     },
     "totalWeight": {
-      "title": "Obuzito bwonna",
+      "title": "Obuzito bwonna (kg)",
       "subtext": "kg"
     },
     "statusCards": {
-      "Open": "Birindiriddwa okuweebwa",
-      "Active": "Bisabye",
-      "Closed": "Biwedde okuweebwa",
-      "Cancelled": "Bisaziddwamu"
+      "Open": "Ebigazi",
+      "Active": "Ebiriko",
+      "Closed": "Biggwa"
     }
   },
   "searchPlaceholder": "Noonya biragiro by’inputs...",
