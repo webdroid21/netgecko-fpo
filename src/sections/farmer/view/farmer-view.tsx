@@ -84,8 +84,14 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
+function isRecordIdLike(value?: unknown) {
+  if (typeof value === 'string') return value.startsWith('rec');
+  if (Array.isArray(value)) return value.some((v) => typeof v === 'string' && v.startsWith('rec'));
+  return false;
+}
+
 function parseAddress(address?: unknown) {
-  const raw = typeof address === 'string' ? address : '';
+  const raw = typeof address === 'string' && !isRecordIdLike(address) ? address : '';
   const parts = (raw || '').split(',').map((part) => part.trim());
   return {
     village: parts[0] || '',
@@ -701,13 +707,15 @@ export function FarmerView() {
               </Typography>
             </Grid>
 
-            <Grid size={{ xs: 12 }}>
-              <DetailRow
-                label={t('fields.address')}
-                value={f.Address}
-                helperText={t('fields.addressNote')}
-              />
-            </Grid>
+            {!isRecordIdLike(f.Address) && (
+              <Grid size={{ xs: 12 }}>
+                <DetailRow
+                  label={t('fields.address')}
+                  value={f.Address}
+                  helperText={t('fields.addressNote')}
+                />
+              </Grid>
+            )}
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
