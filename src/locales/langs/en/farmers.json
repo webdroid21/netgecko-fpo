@@ -35,6 +35,7 @@
     "birthDate": "Birth date",
     "age": "Age",
     "farmerCode": "Farmer Code",
+    "nin": "National ID (NIN)",
     "farmerIdFrontBack": "Farmer ID (front back)",
     "phoneNumber": "Phone Number",
     "mobileMoneyNumber": "Mobile Money Number",

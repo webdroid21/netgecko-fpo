@@ -538,6 +538,9 @@ export function FarmerView() {
               const isSelected = farmer.id === selectedFarmer?.id;
               const gender = farmer.fields.Gender;
 
+              const fullName = `${farmer.fields['Given Name'] || ''} ${farmer.fields.Surname || ''}`.trim() || farmer.fields.Name || t('unnamed');
+              const displayedFarmerId = farmer.fields['NIN (National Identification Number)'] || farmer.fields['Farmer Code'] || '';
+
               return (
                 <ListItemButton
                   key={farmer.id}
@@ -547,7 +550,7 @@ export function FarmerView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={farmer.fields.Name || t('unnamed')}
+                      primary={displayedFarmerId ? `${fullName} - ${displayedFarmerId}` : fullName}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     {gender && (
@@ -628,7 +631,13 @@ export function FarmerView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{f.Name || t('unnamed')}</Typography>
+              <Typography variant="h5">
+                {(() => {
+                  const fullName = `${f['Given Name'] || ''} ${f.Surname || ''}`.trim() || f.Name || t('unnamed');
+                  const displayedFarmerId = f['NIN (National Identification Number)'] || f['Farmer Code'] || '';
+                  return displayedFarmerId ? `${fullName} - ${displayedFarmerId}` : fullName;
+                })()}
+              </Typography>
             </Box>
 
             <Button
@@ -681,6 +690,15 @@ export function FarmerView() {
                 value={f.Gender}
                 type="select"
                 options={['Male', 'Female']}
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="NIN (National Identification Number)"
+                label={t('fields.nin')}
+                value={f['NIN (National Identification Number)']}
                 onSaved={handleFieldSaved}
               />
             </Grid>
