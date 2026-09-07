@@ -1,7 +1,7 @@
 import type { Land , Crop } from '../types';
 import type { Farmer } from 'src/sections/farmer/types';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -43,7 +43,7 @@ function SummaryCard({
   icon,
 }: {
   title: string;
-  total: number;
+  total: ReactNode;
   subtext: string;
   color: 'primary' | 'success' | 'info' | 'warning' | 'error';
   icon: string;
@@ -59,8 +59,8 @@ function SummaryCard({
           <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
             {title}
           </Typography>
-          <Typography variant="h4" sx={{ my: 0.5 }}>
-            {fNumber(total)}
+          <Typography variant="h4" sx={{ my: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {typeof total === 'number' ? fNumber(total) : total}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
             {subtext}
@@ -72,6 +72,15 @@ function SummaryCard({
 }
 
 // ----------------------------------------------------------------------
+
+function getProductNames(land?: Land): string[] {
+  if (!land) return [];
+  const names =
+    land.fields['Product Name (from Product)'] ||
+    land.fields['Crop Name (from Crop)'] ||
+    [];
+  return (Array.isArray(names) ? names : [names]).filter(Boolean) as string[];
+}
 
 function DetailRow({
   label,
@@ -204,9 +213,9 @@ export function LandView() {
 
     return list.filter((l) => {
       const landName = String(l.fields.Land || '').toLowerCase();
-      const cropName = String((l.fields['Crop Name (from Crop)'] || []).join(' ')).toLowerCase();
+      const productName = String(getProductNames(l).join(' ')).toLowerCase();
       const owner = String((l.fields['Name (from Owner)'] || []).join(' ')).toLowerCase();
-      return landName.includes(term) || cropName.includes(term) || owner.includes(term);
+      return landName.includes(term) || productName.includes(term) || owner.includes(term);
     });
   }, [lands, search, farmerFilter]);
 
@@ -227,15 +236,22 @@ export function LandView() {
   const stats = useMemo(() => {
     const total = filteredLands.length;
     const acres = filteredLands.reduce((sum, l) => sum + (Number(l.fields['Land Size (Acres)']) || 0), 0);
-    const seasonA = filteredLands.reduce(
-      (sum, l) => sum + (Number(l.fields['Crop 1 Estimated Harvest (KG) Season A']) || 0),
-      0
-    );
-    const seasonB = filteredLands.reduce(
-      (sum, l) => sum + (Number(l.fields['Crop 1 Estimated Harvest (KG) Season B']) || 0),
-      0
-    );
-    return { total, acres, seasonA, seasonB };
+    const owned = filteredLands.filter((l) => l.fields['Land Ownership'] === 'Owned').length;
+    const rented = filteredLands.filter((l) => l.fields['Land Ownership'] === 'Rented').length;
+
+    const productCounts: Record<string, number> = {};
+    filteredLands.forEach((l) => {
+      const names = getProductNames(l);
+      names.forEach((name) => {
+        if (!name) return;
+        productCounts[name] = (productCounts[name] || 0) + 1;
+      });
+    });
+    const mainProduct =
+      Object.entries(productCounts)
+        .sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+
+    return { total, acres, owned, rented, mainProduct };
   }, [filteredLands]);
 
   const handleAdd = () => {
@@ -267,9 +283,9 @@ export function LandView() {
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title={t('summary.totalParcels.title')}
+          title={t('summary.totalLands.title')}
           total={stats.total}
-          subtext={t('summary.totalParcels.subtext')}
+          subtext={t('summary.totalLands.subtext')}
           color="success"
           icon="solar:map-bold-duotone"
         />
@@ -285,18 +301,18 @@ export function LandView() {
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title={t('summary.seasonAHarvest.title')}
-          total={stats.seasonA}
-          subtext={t('summary.seasonAHarvest.subtext')}
+          title={t('summary.landOwned.title')}
+          total={stats.owned}
+          subtext={t('summary.landOwned.subtext', { count: stats.rented })}
           color="warning"
           icon="solar:chart-square-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <SummaryCard
-          title={t('summary.seasonBHarvest.title')}
-          total={stats.seasonB}
-          subtext={t('summary.seasonBHarvest.subtext')}
+          title={t('summary.mainProduct.title')}
+          total={stats.mainProduct}
+          subtext={t('summary.mainProduct.subtext')}
           color="info"
           icon="solar:chart-2-bold-duotone"
         />
@@ -353,7 +369,7 @@ export function LandView() {
                     {(land.fields['Name (from Owner)'] || []).join(', ')}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {(land.fields['Crop Name (from Crop)'] || []).join(', ')} · {land.fields['Land Size (Acres)']} acres
+                    {getProductNames(land).join(', ') || t('noProduct')} · {land.fields['Land Size (Acres)']} acres
                   </Typography>
                 </ListItemButton>
               );
@@ -429,36 +445,39 @@ export function LandView() {
               <DetailRow label={t('lands:fields.longitude')} value={f.Longitude} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.mainCrop')} value={(f['Crop Name (from Crop)'] || []).join(', ')} />
+              <DetailRow label={t('lands:fields.mainProduct')} value={getProductNames(selectedLand).join(', ')} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.numPlantsCrop1')} value={f['Number of plants (Crop 1)']} />
+              <DetailRow label={t('lands:fields.numPlantsProduct1')} value={f['Number of plants (Product 1)'] ?? f['Number of plants (Crop 1)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.crop1HarvestSeasonA')}
-                value={f['Crop 1 Estimated Harvest (KG) Season A']}
+                label={t('lands:fields.product1HarvestSeasonA')}
+                value={f['Product 1 Estimated Harvest (KG) Season A'] ?? f['Crop 1 Estimated Harvest (KG) Season A']}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.crop1HarvestSeasonB')}
-                value={f['Crop 1 Estimated Harvest (KG) Season B']}
+                label={t('lands:fields.product1HarvestSeasonB')}
+                value={f['Product 1 Estimated Harvest (KG) Season B'] ?? f['Crop 1 Estimated Harvest (KG) Season B']}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.otherCrop')}
-                value={(f['Crop 2 Name (from Other crop (2))'] || []).join(', ') || (f['Other crop (2)']?.join(', '))}
+                label={t('lands:fields.otherProduct')}
+                value={
+                  (f['Product 2 Name (from Other product (2))'] || f['Crop 2 Name (from Other crop (2))'] || []).join(', ') ||
+                  (f['Other product (2)']?.join(', ') || f['Other crop (2)']?.join(', '))
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.numPlantsCrop2')} value={f['Number of plants (Crop 2)']} />
+              <DetailRow label={t('lands:fields.numPlantsProduct2')} value={f['Number of plants (Product 2)'] ?? f['Number of plants (Crop 2)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.crop2HarvestSeasonA')}
-                value={f['Crop 2 Estimated Harvest (KG) Season A']}
+                label={t('lands:fields.product2HarvestSeasonA')}
+                value={f['Product 2 Estimated Harvest (KG) Season A'] ?? f['Crop 2 Estimated Harvest (KG) Season A']}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>

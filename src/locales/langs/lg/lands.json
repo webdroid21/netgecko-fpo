@@ -5,25 +5,26 @@
     "addParcel": "Yongerako ettaka"
   },
   "summary": {
-    "totalParcels": {
-      "title": "Ebitundu by’ettaka byonna",
-      "subtext": "Ebitundu by’ettaka ebyewandiikiddwa"
+    "totalLands": {
+      "title": "Ettaka lyonna",
+      "subtext": "Ettaka ekyewandiikiddwa"
     },
     "totalAcres": {
       "title": "Acres zonna",
       "subtext": "Obugazi bw’ettaka bwonna"
     },
-    "seasonAHarvest": {
-      "title": "Empeke ezisubirwa mu sizoni A",
-      "subtext": "KG (ekirime ekikulu)"
+    "landOwned": {
+      "title": "Ettaka ery’obusika",
+      "subtext": "{{count}} ettaka erikyase"
     },
-    "seasonBHarvest": {
-      "title": "Empeke ezisubirwa mu sizoni B",
-      "subtext": "KG (ekirime ekikulu)"
+    "mainProduct": {
+      "title": "Eby’obugagga ebikulu",
+      "subtext": "Eby’obugagga ebibera nnyo"
     }
   },
-  "searchPlaceholder": "Noonya ettaka oba ebirime...",
-  "emptyDetail": "Londako ekitundu ky’ettaka okulaba ebikikwataako",
+  "searchPlaceholder": "Noonya ettaka oba eby’obugagga...",
+  "emptyDetail": "Londako ettaka okulaba ebikikwataako",
+  "noProduct": "Tewali by’obugagga",
   "unnamedLand": "Ettaka eritali na linnya",
   "confirmDeleteLand": "Osangula {{name}}?",
   "actions": {
@@ -35,14 +36,14 @@
     "landSize": "Obugazi bw’ettaka (acres)",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainCrop": "Ekirime ekikulu",
-    "numPlantsCrop1": "Omuwendo gw’emmuli (ekirime 1)",
-    "crop1HarvestSeasonA": "Empeke ezisubirwa (KG) ekirime 1 sizoni A",
-    "crop1HarvestSeasonB": "Empeke ezisubirwa (KG) ekirime 1 sizoni B",
-    "otherCrop": "Ekirime ekirala",
-    "numPlantsCrop2": "Omuwendo gw’emmuli (ekirime 2)",
-    "crop2HarvestSeasonA": "Empeke ezisubirwa (KG) ekirime 2 sizoni A",
-    "crop2HarvestSeasonB": "Empeke ezisubirwa (KG) ekirime 2 sizoni B",
+    "mainProduct": "Eky’obugagga ekikulu",
+    "numPlantsProduct1": "Omuwendo gw’emmuli (eky’obugagga 1)",
+    "product1HarvestSeasonA": "Empeke ezisubirwa (KG) eky’obugagga 1 sizoni A",
+    "product1HarvestSeasonB": "Empeke ezisubirwa (KG) eky’obugagga 1 sizoni B",
+    "otherProduct": "Eky’obugagga ekirala",
+    "numPlantsProduct2": "Omuwendo gw’emmuli (eky’obugagga 2)",
+    "product2HarvestSeasonA": "Empeke ezisubirwa (KG) eky’obugagga 2 sizoni A",
+    "product2HarvestSeasonB": "Empeke ezisubirwa (KG) eky’obugagga 2 sizoni B",
     "estimatedHarvestSeasonA": "Empeke ezisubirwa sizoni A",
     "estimatedHarvestSeasonB": "Empeke ezisubirwa sizoni B"
   },
@@ -57,14 +58,14 @@
     "landOwnership": "Engeri y’okusika ettaka",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainCrop": "Ekirime ekikulu (1)",
-    "numPlantsCrop1": "Omuwendo gw’emmuli (ekirime 1)",
-    "crop1HarvestSeasonA": "Empeke ezisubirwa (KG) ekirime 1 sizoni A",
-    "crop1HarvestSeasonB": "Empeke ezisubirwa (KG) ekirime 1 sizoni B",
-    "otherCrop": "Ekirime ekirala (2)",
-    "numPlantsCrop2": "Omuwendo gw’emmuli (ekirime 2)",
-    "crop2HarvestSeasonA": "Empeke ezisubirwa (KG) ekirime 2 sizoni A",
-    "crop2HarvestSeasonB": "Empeke ezisubirwa (KG) ekirime 2 sizoni B",
+    "mainProduct": "Eky’obugagga ekikulu (1)",
+    "numPlantsProduct1": "Omuwendo gw’emmuli (eky’obugagga 1)",
+    "product1HarvestSeasonA": "Empeke ezisubirwa (KG) eky’obugagga 1 sizoni A",
+    "product1HarvestSeasonB": "Empeke ezisubirwa (KG) eky’obugagga 1 sizoni B",
+    "otherProduct": "Eky’obugagga ekirala (2)",
+    "numPlantsProduct2": "Omuwendo gw’emmuli (eky’obugagga 2)",
+    "product2HarvestSeasonA": "Empeke ezisubirwa (KG) eky’obugagga 2 sizoni A",
+    "product2HarvestSeasonB": "Empeke ezisubirwa (KG) eky’obugagga 2 sizoni B",
     "noneOption": "Tewali",
     "selectPlaceholder": "Londako..."
   }

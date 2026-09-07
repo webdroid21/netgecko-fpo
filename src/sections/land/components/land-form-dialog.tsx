@@ -35,14 +35,14 @@ const schema = z.object({
   'Land Ownership': z.string().min(1, { message: 'Required' }),
   Latitude: z.number().optional(),
   Longitude: z.number().optional(),
-  'Main Crop (1)': z.string().min(1, { message: 'Required' }),
-  'Number of plants (Crop 1)': z.number().optional(),
-  'Crop 1 Estimated Harvest (KG) Season A': z.number().min(0, { message: 'Required' }),
-  'Crop 1 Estimated Harvest (KG) Season B': z.number().min(0, { message: 'Required' }),
-  'Other crop (2)': z.string().optional(),
-  'Number of plants (Crop 2)': z.number().optional(),
-  'Crop 2 Estimated Harvest (KG) Season A': z.number().optional(),
-  'Crop 2 Estimated Harvest (KG) Season B': z.number().optional(),
+  'Main Product (1)': z.string().min(1, { message: 'Required' }),
+  'Number of plants (Product 1)': z.number().optional(),
+  'Product 1 Estimated Harvest (KG) Season A': z.number().min(0, { message: 'Required' }),
+  'Product 1 Estimated Harvest (KG) Season B': z.number().min(0, { message: 'Required' }),
+  'Other product (2)': z.string().optional(),
+  'Number of plants (Product 2)': z.number().optional(),
+  'Product 2 Estimated Harvest (KG) Season A': z.number().optional(),
+  'Product 2 Estimated Harvest (KG) Season B': z.number().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -68,14 +68,14 @@ function getDefaultValues(land?: Land | null): FormValues {
     'Land Ownership': f?.['Land Ownership'] ?? '',
     Latitude: f?.Latitude ?? undefined,
     Longitude: f?.Longitude ?? undefined,
-    'Main Crop (1)': f?.['Main Crop (1)']?.[0] ?? '',
-    'Number of plants (Crop 1)': f?.['Number of plants (Crop 1)'] ?? undefined,
-    'Crop 1 Estimated Harvest (KG) Season A': f?.['Crop 1 Estimated Harvest (KG) Season A'] ?? undefined,
-    'Crop 1 Estimated Harvest (KG) Season B': f?.['Crop 1 Estimated Harvest (KG) Season B'] ?? undefined,
-    'Other crop (2)': f?.['Other crop (2)']?.[0] ?? '',
-    'Number of plants (Crop 2)': f?.['Number of plants (Crop 2)'] ?? undefined,
-    'Crop 2 Estimated Harvest (KG) Season A': f?.['Crop 2 Estimated Harvest (KG) Season A'] ?? undefined,
-    'Crop 2 Estimated Harvest (KG) Season B': f?.['Crop 2 Estimated Harvest (KG) Season B'] ?? undefined,
+    'Main Product (1)': f?.['Main Product (1)']?.[0] ?? f?.['Main Crop (1)']?.[0] ?? '',
+    'Number of plants (Product 1)': f?.['Number of plants (Product 1)'] ?? f?.['Number of plants (Crop 1)'] ?? undefined,
+    'Product 1 Estimated Harvest (KG) Season A': f?.['Product 1 Estimated Harvest (KG) Season A'] ?? f?.['Crop 1 Estimated Harvest (KG) Season A'] ?? undefined,
+    'Product 1 Estimated Harvest (KG) Season B': f?.['Product 1 Estimated Harvest (KG) Season B'] ?? f?.['Crop 1 Estimated Harvest (KG) Season B'] ?? undefined,
+    'Other product (2)': f?.['Other product (2)']?.[0] ?? f?.['Other crop (2)']?.[0] ?? '',
+    'Number of plants (Product 2)': f?.['Number of plants (Product 2)'] ?? f?.['Number of plants (Crop 2)'] ?? undefined,
+    'Product 2 Estimated Harvest (KG) Season A': f?.['Product 2 Estimated Harvest (KG) Season A'] ?? f?.['Crop 2 Estimated Harvest (KG) Season A'] ?? undefined,
+    'Product 2 Estimated Harvest (KG) Season B': f?.['Product 2 Estimated Harvest (KG) Season B'] ?? f?.['Crop 2 Estimated Harvest (KG) Season B'] ?? undefined,
   };
 }
 
@@ -116,12 +116,12 @@ export function LandFormDialog({
   const onSubmit = handleSubmit(async (data) => {
     const payload: Record<string, any> = { ...data };
 
-    // Omit empty optional crop fields.
-    if (!payload['Other crop (2)']) {
-      delete payload['Other crop (2)'];
-      delete payload['Number of plants (Crop 2)'];
-      delete payload['Crop 2 Estimated Harvest (KG) Season A'];
-      delete payload['Crop 2 Estimated Harvest (KG) Season B'];
+    // Omit empty optional product fields.
+    if (!payload['Other product (2)']) {
+      delete payload['Other product (2)'];
+      delete payload['Number of plants (Product 2)'];
+      delete payload['Product 2 Estimated Harvest (KG) Season A'];
+      delete payload['Product 2 Estimated Harvest (KG) Season B'];
     }
 
     try {
@@ -222,9 +222,9 @@ export function LandFormDialog({
 
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelectField(
-                'Main Crop (1)',
-                t('form.mainCrop'),
-                crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.id })),
+                'Main Product (1)',
+                t('form.mainProduct'),
+                crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id })),
                 true
               )}
             </Grid>
@@ -232,34 +232,34 @@ export function LandFormDialog({
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Number of plants (Crop 1)"
-                label={t('form.numPlantsCrop1')}
+                name="Number of plants (Product 1)"
+                label={t('form.numPlantsProduct1')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Crop 1 Estimated Harvest (KG) Season A"
-                label={t('form.crop1HarvestSeasonA')}
+                name="Product 1 Estimated Harvest (KG) Season A"
+                label={t('form.product1HarvestSeasonA')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Crop 1 Estimated Harvest (KG) Season B"
-                label={t('form.crop1HarvestSeasonB')}
+                name="Product 1 Estimated Harvest (KG) Season B"
+                label={t('form.product1HarvestSeasonB')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelectField(
-                'Other crop (2)',
-                t('form.otherCrop'),
+                'Other product (2)',
+                t('form.otherProduct'),
                 [
                   { value: '', label: t('form.noneOption') },
-                  ...crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.id })),
+                  ...crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id })),
                 ]
               )}
             </Grid>
@@ -267,24 +267,24 @@ export function LandFormDialog({
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Number of plants (Crop 2)"
-                label={t('form.numPlantsCrop2')}
+                name="Number of plants (Product 2)"
+                label={t('form.numPlantsProduct2')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Crop 2 Estimated Harvest (KG) Season A"
-                label={t('form.crop2HarvestSeasonA')}
+                name="Product 2 Estimated Harvest (KG) Season A"
+                label={t('form.product2HarvestSeasonA')}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Crop 2 Estimated Harvest (KG) Season B"
-                label={t('form.crop2HarvestSeasonB')}
+                name="Product 2 Estimated Harvest (KG) Season B"
+                label={t('form.product2HarvestSeasonB')}
               />
             </Grid>
           </Grid>

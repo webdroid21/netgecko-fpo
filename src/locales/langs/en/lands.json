@@ -5,25 +5,26 @@
     "addParcel": "Add land"
   },
   "summary": {
-    "totalParcels": {
-      "title": "Total parcels",
-      "subtext": "Land parcels registered"
+    "totalLands": {
+      "title": "Total lands",
+      "subtext": "Land registered"
     },
     "totalAcres": {
       "title": "Total acres",
       "subtext": "Combined land size"
     },
-    "seasonAHarvest": {
-      "title": "Season A harvest",
-      "subtext": "KG (main crop)"
+    "landOwned": {
+      "title": "Land owned",
+      "subtext": "{{count}} land rented"
     },
-    "seasonBHarvest": {
-      "title": "Season B harvest",
-      "subtext": "KG (main crop)"
+    "mainProduct": {
+      "title": "Main product",
+      "subtext": "Most common produce"
     }
   },
-  "searchPlaceholder": "Search parcels or crops...",
-  "emptyDetail": "Select a parcel to view details",
+  "searchPlaceholder": "Search lands or products...",
+  "emptyDetail": "Select a land to view details",
+  "noProduct": "No product",
   "unnamedLand": "Unnamed land",
   "confirmDeleteLand": "Delete {{name}}?",
   "actions": {
@@ -35,14 +36,14 @@
     "landSize": "Land size (acres)",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainCrop": "Main crop",
-    "numPlantsCrop1": "Number of plants (crop 1)",
-    "crop1HarvestSeasonA": "Crop 1 estimated harvest (KG) Season A",
-    "crop1HarvestSeasonB": "Crop 1 estimated harvest (KG) Season B",
-    "otherCrop": "Other crop",
-    "numPlantsCrop2": "Number of plants (crop 2)",
-    "crop2HarvestSeasonA": "Crop 2 estimated harvest (KG) Season A",
-    "crop2HarvestSeasonB": "Crop 2 estimated harvest (KG) Season B",
+    "mainProduct": "Main product",
+    "numPlantsProduct1": "Number of plants (product 1)",
+    "product1HarvestSeasonA": "Product 1 estimated harvest (KG) Season A",
+    "product1HarvestSeasonB": "Product 1 estimated harvest (KG) Season B",
+    "otherProduct": "Other product",
+    "numPlantsProduct2": "Number of plants (product 2)",
+    "product2HarvestSeasonA": "Product 2 estimated harvest (KG) Season A",
+    "product2HarvestSeasonB": "Product 2 estimated harvest (KG) Season B",
     "estimatedHarvestSeasonA": "Estimated harvest Season A",
     "estimatedHarvestSeasonB": "Estimated harvest Season B"
   },
@@ -57,14 +58,14 @@
     "landOwnership": "Land ownership",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainCrop": "Main crop (1)",
-    "numPlantsCrop1": "Number of plants (crop 1)",
-    "crop1HarvestSeasonA": "Crop 1 estimated harvest (KG) Season A",
-    "crop1HarvestSeasonB": "Crop 1 estimated harvest (KG) Season B",
-    "otherCrop": "Other crop (2)",
-    "numPlantsCrop2": "Number of plants (crop 2)",
-    "crop2HarvestSeasonA": "Crop 2 estimated harvest (KG) Season A",
-    "crop2HarvestSeasonB": "Crop 2 estimated harvest (KG) Season B",
+    "mainProduct": "Main product (1)",
+    "numPlantsProduct1": "Number of plants (product 1)",
+    "product1HarvestSeasonA": "Product 1 estimated harvest (KG) Season A",
+    "product1HarvestSeasonB": "Product 1 estimated harvest (KG) Season B",
+    "otherProduct": "Other product (2)",
+    "numPlantsProduct2": "Number of plants (product 2)",
+    "product2HarvestSeasonA": "Product 2 estimated harvest (KG) Season A",
+    "product2HarvestSeasonB": "Product 2 estimated harvest (KG) Season B",
     "noneOption": "None",
     "selectPlaceholder": "Select..."
   }

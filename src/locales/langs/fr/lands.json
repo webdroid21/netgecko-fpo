@@ -5,25 +5,26 @@
     "addParcel": "Ajouter une terre"
   },
   "summary": {
-    "totalParcels": {
-      "title": "Nombre total de parcelles",
-      "subtext": "Parcelles de terre enregistrées"
+    "totalLands": {
+      "title": "Total terres",
+      "subtext": "Terres enregistrées"
     },
     "totalAcres": {
       "title": "Nombre total d’acres",
       "subtext": "Superficie totale des terres"
     },
-    "seasonAHarvest": {
-      "title": "Récolte saison A",
-      "subtext": "KG (culture principale)"
+    "landOwned": {
+      "title": "Terres possédées",
+      "subtext": "{{count}} terres louées"
     },
-    "seasonBHarvest": {
-      "title": "Récolte saison B",
-      "subtext": "KG (culture principale)"
+    "mainProduct": {
+      "title": "Produit principal",
+      "subtext": "Produit le plus commun"
     }
   },
-  "searchPlaceholder": "Rechercher des parcelles ou des cultures...",
-  "emptyDetail": "Sélectionnez une parcelle pour voir les détails",
+  "searchPlaceholder": "Rechercher des terres ou des produits...",
+  "emptyDetail": "Sélectionnez une terre pour voir les détails",
+  "noProduct": "Aucun produit",
   "unnamedLand": "Parcelle sans nom",
   "confirmDeleteLand": "Supprimer {{name}} ?",
   "actions": {
@@ -35,14 +36,14 @@
     "landSize": "Superficie de la terre (acres)",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainCrop": "Culture principale",
-    "numPlantsCrop1": "Nombre de plants (culture 1)",
-    "crop1HarvestSeasonA": "Récolte estimée culture 1 (KG) saison A",
-    "crop1HarvestSeasonB": "Récolte estimée culture 1 (KG) saison B",
-    "otherCrop": "Autre culture",
-    "numPlantsCrop2": "Nombre de plants (culture 2)",
-    "crop2HarvestSeasonA": "Récolte estimée culture 2 (KG) saison A",
-    "crop2HarvestSeasonB": "Récolte estimée culture 2 (KG) saison B",
+    "mainProduct": "Produit principal",
+    "numPlantsProduct1": "Nombre de plants (produit 1)",
+    "product1HarvestSeasonA": "Récolte estimée produit 1 (KG) saison A",
+    "product1HarvestSeasonB": "Récolte estimée produit 1 (KG) saison B",
+    "otherProduct": "Autre produit",
+    "numPlantsProduct2": "Nombre de plants (produit 2)",
+    "product2HarvestSeasonA": "Récolte estimée produit 2 (KG) saison A",
+    "product2HarvestSeasonB": "Récolte estimée produit 2 (KG) saison B",
     "estimatedHarvestSeasonA": "Récolte totale estimée saison A",
     "estimatedHarvestSeasonB": "Récolte totale estimée saison B"
   },
@@ -57,14 +58,14 @@
     "landOwnership": "Type de propriété de la terre",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainCrop": "Culture principale (1)",
-    "numPlantsCrop1": "Nombre de plants (culture 1)",
-    "crop1HarvestSeasonA": "Récolte estimée culture 1 (KG) saison A",
-    "crop1HarvestSeasonB": "Récolte estimée culture 1 (KG) saison B",
-    "otherCrop": "Autre culture (2)",
-    "numPlantsCrop2": "Nombre de plants (culture 2)",
-    "crop2HarvestSeasonA": "Récolte estimée culture 2 (KG) saison A",
-    "crop2HarvestSeasonB": "Récolte estimée culture 2 (KG) saison B",
+    "mainProduct": "Produit principal (1)",
+    "numPlantsProduct1": "Nombre de plants (produit 1)",
+    "product1HarvestSeasonA": "Récolte estimée produit 1 (KG) saison A",
+    "product1HarvestSeasonB": "Récolte estimée produit 1 (KG) saison B",
+    "otherProduct": "Autre produit (2)",
+    "numPlantsProduct2": "Nombre de plants (produit 2)",
+    "product2HarvestSeasonA": "Récolte estimée produit 2 (KG) saison A",
+    "product2HarvestSeasonB": "Récolte estimée produit 2 (KG) saison B",
     "noneOption": "Aucune",
     "selectPlaceholder": "Sélectionner..."
   }
