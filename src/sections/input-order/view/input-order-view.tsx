@@ -15,8 +15,10 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
+import ToggleButton from '@mui/material/ToggleButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
@@ -193,6 +195,7 @@ export function InputOrderView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'Open' | 'Active' | 'Closed'>('Open');
   const [formOpen, setFormOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<InputOrder | null>(null);
 
@@ -264,13 +267,17 @@ export function InputOrderView() {
       list = list.filter((o) => (o.fields.Farmer ?? []).includes(farmerFilter));
     }
 
+    if (statusFilter) {
+      list = list.filter((o) => o.fields['Order Status'] === statusFilter);
+    }
+
     if (!term) return list;
 
     return list.filter((o) => {
       const text = `${o.fields['Order number'] ?? ''} ${(o.fields['Name (from Farmers)'] || []).join(' ')} ${(o.fields['Name (from Season)'] || []).join(' ')}`.toLowerCase();
       return text.includes(term);
     });
-  }, [orders, search, farmerFilter]);
+  }, [orders, search, farmerFilter, statusFilter]);
 
   const selectedOrder = useMemo(
     () => filteredOrders.find((o) => o.id === selectedId) || filteredOrders[0] || null,
@@ -673,6 +680,27 @@ export function InputOrderView() {
       </Stack>
 
       {renderSummary()}
+
+      <Card sx={{ mb: 3, p: 1.5 }}>
+        <ToggleButtonGroup
+          value={statusFilter}
+          exclusive
+          fullWidth
+          onChange={(_, value) => value && setStatusFilter(value)}
+          aria-label={t('fields.orderStatus')}
+        >
+          {STATUS_CARDS.map((s) => (
+            <ToggleButton
+              key={s.key}
+              value={s.key}
+              color="primary"
+              aria-label={s.label}
+            >
+              {t(`summary.statusCards.${s.key}`)}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Card>
 
       <Grid container spacing={2} sx={{ height: { md: 'calc(100vh - 360px)' } }}>
         <Grid size={{ xs: 12, md: 4 }} sx={{ height: 1 }}>
