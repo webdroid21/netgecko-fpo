@@ -28,7 +28,7 @@ import { FarmerFormDialog } from 'src/sections/farmer/components/farmer-form-dia
 
 // ----------------------------------------------------------------------
 
-const LOAN_STATUS_OPTIONS = ['Active', 'Open', 'Closed', 'Cancelled'];
+const LOAN_STATUS_OPTIONS = ['Open', 'Approved', 'Active', 'Closed', 'Cancelled'];
 
 const baseSchema = z.object({
   Farmer: z.string().min(1, { message: 'Required' }),
