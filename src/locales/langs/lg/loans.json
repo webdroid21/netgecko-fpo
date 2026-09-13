@@ -1,24 +1,19 @@
 {
   "page": {
     "title": "Loans",
-    "subtitle": "Fuga loans z’inputs n’ensimbi z’empewo",
-    "newLoan": "Loan empya"
+    "subtitle": "Nonda loans z’abalimi bo"
   },
   "summary": {
-    "totalAmount": {
-      "title": "Ssente z’aloan zonna",
-      "subtext": "UGX"
-    },
-    "totalPending": {
-      "title": "Ssente ezisigadde okusasulwa",
-      "subtext": "UGX"
-    },
-    "statusCards": {
-      "Open": "Ekigguddwawo",
-      "Active": "Ekikolamu",
-      "Closed": "Kiwedde",
-      "Cancelled": "Kisaziddwamu"
-    }
+    "womenSubtext": "{{count}} abakyala",
+    "activeLoans": "Loans ezikolamu zonna",
+    "approvedLoans": "Loans ezikkiriziddwa zonna",
+    "openLoans": "Loans ezigulu zonna",
+    "activeAmount": "Omuwendo gwa loans ezikolamu",
+    "approvedAmount": "Omuwendo gwa loans ezikkiriziddwa",
+    "openAmount": "Omuwendo gwa loans ezigulu",
+    "repaymentRed": "Okusasula okumyufu",
+    "repaymentOrange": "Okusasula okw’ekijungu",
+    "repaymentGreen": "Okusasula okw’ekiragala"
   },
   "searchPlaceholder": "Noonya loans...",
   "emptyDetail": "Londako loan okulaba ebirimu",

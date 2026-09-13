@@ -36,11 +36,22 @@ import { LoanFormDialog } from '../components/loan-form-dialog';
 
 // ----------------------------------------------------------------------
 
-const STATUS_CARDS = [
-  { key: 'Open', label: 'Open', color: 'warning' as const },
-  { key: 'Active', label: 'Active', color: 'info' as const },
-  { key: 'Closed', label: 'Closed', color: 'success' as const },
-  { key: 'Cancelled', label: 'Cancelled', color: 'error' as const },
+const STATUS_SUMMARY_CARDS = [
+  { key: 'Active', titleKey: 'summary.activeLoans', color: 'info' as const, icon: 'solar:chart-square-bold-duotone' },
+  { key: 'Approved', titleKey: 'summary.approvedLoans', color: 'success' as const, icon: 'solar:check-circle-bold-duotone' },
+  { key: 'Open', titleKey: 'summary.openLoans', color: 'warning' as const, icon: 'solar:clipboard-list-bold-duotone' },
+];
+
+const AMOUNT_SUMMARY_CARDS = [
+  { key: 'Active', titleKey: 'summary.activeAmount', color: 'info' as const },
+  { key: 'Approved', titleKey: 'summary.approvedAmount', color: 'success' as const },
+  { key: 'Open', titleKey: 'summary.openAmount', color: 'warning' as const },
+];
+
+const REPAYMENT_SUMMARY_CARDS = [
+  { key: 'Red', titleKey: 'summary.repaymentRed', color: 'error' as const, icon: 'solar:danger-triangle-bold-duotone' },
+  { key: 'Orange', titleKey: 'summary.repaymentOrange', color: 'warning' as const, icon: 'solar:alarm-bold-duotone' },
+  { key: 'Green', titleKey: 'summary.repaymentGreen', color: 'success' as const, icon: 'solar:check-circle-bold-duotone' },
 ];
 
 function SummaryCard({
@@ -256,32 +267,44 @@ export function LoanView() {
     setSelectedId(filteredLoans[0]?.id);
   }, [filteredLoans, selectedId, loanId]);
 
-  const stats = useMemo(() => {
-    const total = filteredLoans.reduce(
-      (sum, l) => sum + (Number(l.fields['Total amount']) || 0),
-      0
-    );
-    const pending = filteredLoans.reduce(
-      (sum, l) => sum + (Number(l.fields['Total Amount Pending']) || 0),
-      0
-    );
-    return { total, pending };
-  }, [filteredLoans]);
+  const { statusStats, repaymentStats } = useMemo(() => {
+    const statuses: Record<string, { count: number; women: number; amount: number }> = {
+      Active: { count: 0, women: 0, amount: 0 },
+      Approved: { count: 0, women: 0, amount: 0 },
+      Open: { count: 0, women: 0, amount: 0 },
+    };
+    const repayments: Record<string, { count: number; pending: number }> = {
+      Red: { count: 0, pending: 0 },
+      Orange: { count: 0, pending: 0 },
+      Green: { count: 0, pending: 0 },
+    };
 
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    STATUS_CARDS.forEach((s) => (counts[s.key] = 0));
-    loans.forEach((l) => {
+    filteredLoans.forEach((l) => {
       const status = l.fields['Loan Status'];
-      if (status && counts[status] !== undefined) counts[status] += 1;
-    });
-    return counts;
-  }, [loans]);
+      const statusBucket = statuses[status ?? ''];
+      if (statusBucket) {
+        statusBucket.count += 1;
+        statusBucket.amount += Number(l.fields['Total amount']) || 0;
+        const farmer = farmers.find((f) => f.id === l.fields.Farmer?.[0]);
+        if (farmer?.fields.Gender === 'Female') statusBucket.women += 1;
+      }
 
-  const handleAdd = () => {
-    setEditingLoan(null);
-    setFormOpen(true);
-  };
+      const rep = String(l.fields['Repayment Status'] ?? '').toLowerCase();
+      const repKey = rep.includes('red')
+        ? 'Red'
+        : rep.includes('orange')
+          ? 'Orange'
+          : rep.includes('green')
+            ? 'Green'
+            : null;
+      if (repKey) {
+        repayments[repKey].count += 1;
+        repayments[repKey].pending += Number(l.fields['Total Amount Pending']) || 0;
+      }
+    });
+
+    return { statusStats: statuses, repaymentStats: repayments };
+  }, [filteredLoans, farmers]);
 
   const handleEdit = (loan: Loan) => {
     setEditingLoan(loan);
@@ -305,6 +328,7 @@ export function LoanView() {
 
   const statusColor = (status?: string) => {
     if (status === 'Open') return 'warning';
+    if (status === 'Approved') return 'success';
     if (status === 'Active') return 'info';
     if (status === 'Closed') return 'success';
     if (status === 'Cancelled') return 'error';
@@ -314,44 +338,43 @@ export function LoanView() {
   const renderSummary = () => (
     <>
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 6 }}>
-          <SummaryCard
-            title={t('summary.totalAmount.title')}
-            total={stats.total}
-            subtext={t('summary.totalAmount.subtext')}
-            color="primary"
-            icon="solar:tag-price-bold-duotone"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 6 }}>
-          <SummaryCard
-            title={t('summary.totalPending.title')}
-            total={stats.pending}
-            subtext={t('summary.totalPending.subtext')}
-            color="warning"
-            icon="solar:alarm-bold-duotone"
-          />
-        </Grid>
+        {STATUS_SUMMARY_CARDS.map((s) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
+            <SummaryCard
+              title={t(s.titleKey)}
+              total={statusStats[s.key]?.count ?? 0}
+              subtext={t('summary.womenSubtext', { count: fNumber(statusStats[s.key]?.women ?? 0) })}
+              color={s.color}
+              icon={s.icon}
+            />
+          </Grid>
+        ))}
       </Grid>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        {STATUS_CARDS.map((s) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={s.key}>
-            <Card sx={{ p: 2.5 }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <Box sx={{ color: `${s.color}.main` }}>
-                  <Iconify icon={'solar:reorder-bold' as any} width={28} />
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                    {t(`summary.statusCards.${s.key}`)}
-                  </Typography>
-                  <Typography variant="h4" sx={{ my: 0.5 }}>
-                    {fNumber(statusCounts[s.key])}
-                  </Typography>
-                </Box>
-              </Stack>
-            </Card>
+        {AMOUNT_SUMMARY_CARDS.map((s) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
+            <SummaryCard
+              title={t(s.titleKey)}
+              total={statusStats[s.key]?.amount ?? 0}
+              subtext="UGX"
+              color={s.color}
+              icon="solar:tag-price-bold-duotone"
+            />
+          </Grid>
+        ))}
+      </Grid>
+
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {REPAYMENT_SUMMARY_CARDS.map((s) => (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
+            <SummaryCard
+              title={t(s.titleKey)}
+              total={repaymentStats[s.key]?.count ?? 0}
+              subtext={`${fNumber(repaymentStats[s.key]?.pending ?? 0)} UGX`}
+              color={s.color}
+              icon={s.icon}
+            />
           </Grid>
         ))}
       </Grid>
@@ -543,14 +566,6 @@ export function LoanView() {
             {t('page.subtitle')}
           </Typography>
         </Box>
-        <Button
-          color="primary"
-          variant="contained"
-          startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
-          onClick={handleAdd}
-        >
-          {t('page.newLoan')}
-        </Button>
       </Stack>
 
       {renderSummary()}

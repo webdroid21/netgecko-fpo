@@ -1,24 +1,19 @@
 {
   "page": {
     "title": "Loans",
-    "subtitle": "Manage input loans and cash advances",
-    "newLoan": "New loan"
+    "subtitle": "Track loans of your farmers"
   },
   "summary": {
-    "totalAmount": {
-      "title": "Total loan amount",
-      "subtext": "UGX"
-    },
-    "totalPending": {
-      "title": "Total pending",
-      "subtext": "UGX"
-    },
-    "statusCards": {
-      "Open": "Open",
-      "Active": "Active",
-      "Closed": "Closed",
-      "Cancelled": "Cancelled"
-    }
+    "womenSubtext": "{{count}} women",
+    "activeLoans": "Total active loans",
+    "approvedLoans": "Total approved loans",
+    "openLoans": "Total open loans",
+    "activeAmount": "Total active loan amount",
+    "approvedAmount": "Total approved loan amount",
+    "openAmount": "Total open loan amount",
+    "repaymentRed": "Red repayment",
+    "repaymentOrange": "Orange repayment",
+    "repaymentGreen": "Green repayment"
   },
   "searchPlaceholder": "Search loans...",
   "emptyDetail": "Select a loan to view details",

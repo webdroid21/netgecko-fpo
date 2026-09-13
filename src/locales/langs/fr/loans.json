@@ -1,24 +1,19 @@
 {
   "page": {
     "title": "Prêts",
-    "subtitle": "Gérer les prêts d’intrants et les avances de trésorerie",
-    "newLoan": "Nouveau prêt"
+    "subtitle": "Suivez les prêts de vos agriculteurs"
   },
   "summary": {
-    "totalAmount": {
-      "title": "Montant total des prêts",
-      "subtext": "UGX"
-    },
-    "totalPending": {
-      "title": "Montant total en attente",
-      "subtext": "UGX"
-    },
-    "statusCards": {
-      "Open": "Ouvert",
-      "Active": "Actif",
-      "Closed": "Clôturé",
-      "Cancelled": "Annulé"
-    }
+    "womenSubtext": "{{count}} femmes",
+    "activeLoans": "Total prêts actifs",
+    "approvedLoans": "Total prêts approuvés",
+    "openLoans": "Total prêts ouverts",
+    "activeAmount": "Montant total des prêts actifs",
+    "approvedAmount": "Montant total des prêts approuvés",
+    "openAmount": "Montant total des prêts ouverts",
+    "repaymentRed": "Remboursement rouge",
+    "repaymentOrange": "Remboursement orange",
+    "repaymentGreen": "Remboursement vert"
   },
   "searchPlaceholder": "Rechercher des prêts...",
   "emptyDetail": "Sélectionnez un prêt pour voir les détails",
