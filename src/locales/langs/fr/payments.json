@@ -1,8 +1,7 @@
 {
   "page": {
     "title": "Paiements",
-    "subtitle": "Suivre les remboursements de prêts et les avances de trésorerie",
-    "newPayment": "Nouveau paiement"
+    "subtitle": "Suivez les paiements de vos agriculteurs"
   },
   "summary": {
     "totalPayments": {
@@ -12,7 +11,10 @@
     "totalReceived": {
       "title": "Total reçu",
       "subtext": "UGX"
-    }
+    },
+    "paymentsThisYear": "Total paiements cette année",
+    "amountThisYear": "Montant total des paiements cette année",
+    "vsLastYear": "vs l'an dernier"
   },
   "searchPlaceholder": "Rechercher des paiements...",
   "emptyDetail": "Sélectionnez un paiement pour voir les détails",

@@ -37,15 +37,19 @@ function SummaryCard({
   title,
   total,
   subtext,
+  trend,
   color,
   icon,
 }: {
   title: string;
   total: number;
-  subtext: string;
+  subtext?: string;
+  trend?: { value: number; label: string };
   color: 'primary' | 'success' | 'info' | 'warning' | 'error';
   icon: string;
 }) {
+  const trendIcon = trend ? (trend.value > 0 ? 'solar:arrow-up-bold-duotone' : trend.value < 0 ? 'solar:arrow-down-bold-duotone' : 'solar:arrow-right-bold-duotone') : null;
+
   return (
     <Card sx={{ p: 2.5 }}>
       <Stack direction="row" alignItems="center" spacing={2}>
@@ -60,9 +64,18 @@ function SummaryCard({
           <Typography variant="h4" sx={{ my: 0.5 }}>
             {fNumber(total)}
           </Typography>
-          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            {subtext}
-          </Typography>
+          {trend ? (
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <Iconify icon={trendIcon as any} width={14} sx={{ color: 'text.disabled' }} />
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                {trend.value}% {trend.label}
+              </Typography>
+            </Stack>
+          ) : (
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+              {subtext}
+            </Typography>
+          )}
         </Box>
       </Stack>
     </Card>
@@ -81,6 +94,9 @@ function DetailRow({ label, value }: { label: string; value?: any }) {
     </Box>
   );
 }
+
+const yearTrend = (current: number, previous: number) =>
+  previous !== 0 ? Math.round(((current - previous) / previous) * 100) : current > 0 ? 100 : 0;
 
 // ----------------------------------------------------------------------
 
@@ -173,17 +189,32 @@ export function PaymentView() {
   }, [filteredPayments, selectedId, paymentId]);
 
   const stats = useMemo(() => {
-    const total = filteredPayments.reduce(
-      (sum, p) => sum + (Number(p.fields['Payment Amount (UGX)']) || 0),
-      0
-    );
-    return { total, count: filteredPayments.length };
-  }, [filteredPayments]);
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+    const s = {
+      total: 0,
+      count: filteredPayments.length,
+      countThisYear: 0,
+      amountThisYear: 0,
+      countLastYear: 0,
+      amountLastYear: 0,
+    };
 
-  const handleAdd = () => {
-    setEditingPayment(null);
-    setFormOpen(true);
-  };
+    filteredPayments.forEach((p) => {
+      const amount = Number(p.fields['Payment Amount (UGX)']) || 0;
+      s.total += amount;
+      const year = new Date(p.fields['Payment Date']).getFullYear();
+      if (year === currentYear) {
+        s.countThisYear += 1;
+        s.amountThisYear += amount;
+      } else if (year === lastYear) {
+        s.countLastYear += 1;
+        s.amountLastYear += amount;
+      }
+    });
+
+    return s;
+  }, [filteredPayments]);
 
   const handleEdit = (payment: Payment) => {
     setEditingPayment(payment);
@@ -345,18 +376,10 @@ export function PaymentView() {
             {t('page.subtitle')}
           </Typography>
         </Box>
-        <Button
-          color="primary"
-          variant="contained"
-          startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
-          onClick={handleAdd}
-        >
-          {t('page.newPayment')}
-        </Button>
       </Stack>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <SummaryCard
             title={t('summary.totalPayments.title')}
             total={stats.count}
@@ -365,13 +388,37 @@ export function PaymentView() {
             icon="solar:wallet-money-bold-duotone"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <SummaryCard
             title={t('summary.totalReceived.title')}
             total={stats.total}
             subtext={t('summary.totalReceived.subtext')}
             color="success"
             icon="solar:tag-price-bold-duotone"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <SummaryCard
+            title={t('summary.paymentsThisYear')}
+            total={stats.countThisYear}
+            trend={{
+              value: yearTrend(stats.countThisYear, stats.countLastYear),
+              label: t('summary.vsLastYear'),
+            }}
+            color="info"
+            icon="solar:calendar-bold-duotone"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <SummaryCard
+            title={t('summary.amountThisYear')}
+            total={stats.amountThisYear}
+            trend={{
+              value: yearTrend(stats.amountThisYear, stats.amountLastYear),
+              label: t('summary.vsLastYear'),
+            }}
+            color="warning"
+            icon="solar:graph-up-bold-duotone"
           />
         </Grid>
       </Grid>

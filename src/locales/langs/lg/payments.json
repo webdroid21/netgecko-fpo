@@ -1,8 +1,7 @@
 {
   "page": {
     "title": "Ensasula",
-    "subtitle": "Londoola okusasula kwa loans n’ensimbi z’empewo",
-    "newPayment": "Ensasula empya"
+    "subtitle": "Nonda ensasula z’abalimi bo"
   },
   "summary": {
     "totalPayments": {
@@ -12,7 +11,10 @@
     "totalReceived": {
       "title": "Ssente zonna ezifuniddwa",
       "subtext": "UGX"
-    }
+    },
+    "paymentsThisYear": "Ensasula z’omwaka guno",
+    "amountThisYear": "Omuwendo gw’ensasula omwaka guno",
+    "vsLastYear": "vs omwaka oguwedde"
   },
   "searchPlaceholder": "Noonya ensasula...",
   "emptyDetail": "Londako ensasula okulaba ebirimu",

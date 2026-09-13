@@ -1,8 +1,7 @@
 {
   "page": {
     "title": "Payments",
-    "subtitle": "Track loan repayments and cash advances",
-    "newPayment": "New payment"
+    "subtitle": "Track payments of your farmers"
   },
   "summary": {
     "totalPayments": {
@@ -12,7 +11,10 @@
     "totalReceived": {
       "title": "Total received",
       "subtext": "UGX"
-    }
+    },
+    "paymentsThisYear": "Total payment this year",
+    "amountThisYear": "Total payment amount this year",
+    "vsLastYear": "vs last year"
   },
   "searchPlaceholder": "Search payments...",
   "emptyDetail": "Select a payment to view details",
