@@ -1,4 +1,7 @@
-import type { Buyer, SalesOrder, InventoryItem } from '../types';
+import type { SalesOrder } from '../types';
+import type { Crop } from 'src/sections/land/types';
+import type { Farmer } from 'src/sections/farmer/types';
+import type { Season } from 'src/sections/input-order/types';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -7,6 +10,7 @@ import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
+import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -15,6 +19,7 @@ import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 
+import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
 import { fNumber } from 'src/utils/format-number';
@@ -35,15 +40,19 @@ function SummaryCard({
   title,
   total,
   subtext,
+  trend,
   color,
   icon,
 }: {
   title: string;
   total: number;
-  subtext: string;
+  subtext?: string;
+  trend?: { value: number; label: string };
   color: 'primary' | 'success' | 'info' | 'warning' | 'error';
   icon: string;
 }) {
+  const trendIcon = trend ? (trend.value > 0 ? 'solar:arrow-up-bold-duotone' : trend.value < 0 ? 'solar:arrow-down-bold-duotone' : 'solar:arrow-right-bold-duotone') : null;
+
   return (
     <Card sx={{ p: 2.5 }}>
       <Stack direction="row" alignItems="center" spacing={2}>
@@ -58,9 +67,18 @@ function SummaryCard({
           <Typography variant="h4" sx={{ my: 0.5 }}>
             {fNumber(total)}
           </Typography>
-          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            {subtext}
-          </Typography>
+          {trend ? (
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <Iconify icon={trendIcon as any} width={14} sx={{ color: 'text.disabled' }} />
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                {trend.value}% {trend.label}
+              </Typography>
+            </Stack>
+          ) : (
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+              {subtext}
+            </Typography>
+          )}
         </Box>
       </Stack>
     </Card>
@@ -69,16 +87,65 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
-function DetailRow({ label, value }: { label: string; value?: any }) {
-  return (
-    <Box sx={{ p: 1 }}>
+function DetailRow({
+  label,
+  value,
+  href,
+  numberOptions,
+}: {
+  label: string;
+  value?: any;
+  href?: string;
+  numberOptions?: Intl.NumberFormatOptions;
+}) {
+  let display = value ?? '—';
+  if (typeof value === 'number') {
+    display = fNumber(value, numberOptions);
+  } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
+    display = fNumber(Number(value), numberOptions);
+  }
+
+  const content = (
+    <>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
       </Typography>
-      <Typography variant="body1">{value ?? '—'}</Typography>
-    </Box>
+      <Typography
+        variant="body1"
+        sx={href ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}
+      >
+        {display}
+      </Typography>
+    </>
   );
+
+  if (href) {
+    return (
+      <MuiLink
+        component={RouterLink}
+        href={href}
+        underline="none"
+        color="text.primary"
+        sx={{
+          p: 1,
+          display: 'block',
+          borderRadius: 1,
+          '&:hover': { bgcolor: 'action.hover' },
+        }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>{content}</Box>
+          <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ flexShrink: 0 }} />
+        </Stack>
+      </MuiLink>
+    );
+  }
+
+  return <Box sx={{ p: 1 }}>{content}</Box>;
 }
+
+const yearTrend = (current: number, previous: number) =>
+  previous !== 0 ? Math.round(((current - previous) / previous) * 100) : current > 0 ? 100 : 0;
 
 // ----------------------------------------------------------------------
 
@@ -90,8 +157,9 @@ export function SalesView() {
   const farmerFilter = searchParams.get('farmerId');
   const salesOrderId = searchParams.get('salesOrderId');
   const [orders, setOrders] = useState<SalesOrder[]>([]);
-  const [buyers, setBuyers] = useState<Buyer[]>([]);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [farmers, setFarmers] = useState<Farmer[]>([]);
+  const [crops, setCrops] = useState<Crop[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -116,31 +184,47 @@ export function SalesView() {
     }
   }, [activeFbo]);
 
-  const fetchBuyers = useCallback(async () => {
+  const fetchFarmers = useCallback(async () => {
+    if (!activeFbo) return;
     try {
-      const { data } = await axios.get('/api/v1/buyers');
-      setBuyers(data.records || []);
+      const query = new URLSearchParams({
+        fpoId: activeFbo.id,
+        fpoName: activeFbo.name,
+      }).toString();
+      const { data } = await axios.get(`/api/v1/farmers?${query}`);
+      setFarmers(data.records || []);
     } catch (error: any) {
-      console.error('Fetch buyers error:', error?.message);
-      setBuyers([]);
+      console.error('Fetch farmers error:', error?.message);
+      setFarmers([]);
+    }
+  }, [activeFbo]);
+
+  const fetchCrops = useCallback(async () => {
+    try {
+      const { data } = await axios.get('/api/v1/crops');
+      setCrops(data.records || []);
+    } catch (error: any) {
+      console.error('Fetch crops error:', error?.message);
+      setCrops([]);
     }
   }, []);
 
-  const fetchInventory = useCallback(async () => {
+  const fetchSeasons = useCallback(async () => {
     try {
-      const { data } = await axios.get('/api/v1/inventory');
-      setInventory(data.records || []);
+      const { data } = await axios.get('/api/v1/seasons');
+      setSeasons(data.records || []);
     } catch (error: any) {
-      console.error('Fetch inventory error:', error?.message);
-      setInventory([]);
+      console.error('Fetch seasons error:', error?.message);
+      setSeasons([]);
     }
   }, []);
 
   useEffect(() => {
     fetchOrders();
-    fetchBuyers();
-    fetchInventory();
-  }, [fetchOrders, fetchBuyers, fetchInventory]);
+    fetchFarmers();
+    fetchCrops();
+    fetchSeasons();
+  }, [fetchOrders, fetchFarmers, fetchCrops, fetchSeasons]);
 
   const filteredOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -148,15 +232,15 @@ export function SalesView() {
 
     if (farmerFilter) {
       list = list.filter((o) => {
-        const farmer = o.fields.Farmer;
-        return Array.isArray(farmer) ? farmer.includes(farmerFilter) : farmer === farmerFilter;
+        const farmerIds = o.fields.Farmers;
+        return Array.isArray(farmerIds) ? farmerIds.includes(farmerFilter) : farmerIds === farmerFilter;
       });
     }
 
     if (!term) return list;
 
     return list.filter((o) => {
-      const text = `${o.fields.Date ?? ''} ${(o.fields['Name (from Buyer)'] || []).join(' ')}`.toLowerCase();
+      const text = `${o.fields.Name ?? ''} ${o.fields['Order #'] ?? ''} ${(o.fields['Name (from Season)'] || []).join(' ')}`.toLowerCase();
       return text.includes(term);
     });
   }, [orders, search, farmerFilter]);
@@ -176,15 +260,38 @@ export function SalesView() {
   }, [filteredOrders, selectedId, salesOrderId]);
 
   const stats = useMemo(() => {
-    const total = filteredOrders.reduce(
-      (sum, o) => sum + (Number(o.fields.Revenue) || 0),
-      0
-    );
-    const quantity = filteredOrders.reduce(
-      (sum, o) => sum + (Number(o.fields['Quantity (kg)']) || 0),
-      0
-    );
-    return { total, quantity, count: filteredOrders.length };
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+    const s = {
+      count: filteredOrders.length,
+      value: 0,
+      quantity: 0,
+      countThisYear: 0,
+      valueThisYear: 0,
+      quantityThisYear: 0,
+      countLastYear: 0,
+      valueLastYear: 0,
+      quantityLastYear: 0,
+    };
+
+    filteredOrders.forEach((o) => {
+      const amount = Number(o.fields['Total Price']) || 0;
+      const qty = Number(o.fields['Quantity (kg)']) || 0;
+      s.value += amount;
+      s.quantity += qty;
+      const year = Number(o.fields['Arrive Year']) || new Date(o.fields['Date Received']).getFullYear();
+      if (year === currentYear) {
+        s.countThisYear += 1;
+        s.valueThisYear += amount;
+        s.quantityThisYear += qty;
+      } else if (year === lastYear) {
+        s.countLastYear += 1;
+        s.valueLastYear += amount;
+        s.quantityLastYear += qty;
+      }
+    });
+
+    return s;
   }, [filteredOrders]);
 
   const handleAdd = () => {
@@ -198,7 +305,7 @@ export function SalesView() {
   };
 
   const handleDelete = async (order: SalesOrder) => {
-    const date = order.fields.Date ?? order.fields['Order Date'] ?? '';
+    const date = order.fields['Date Received'] ?? order.fields.Name ?? '';
     if (!confirm(t('confirmDeleteOrder', { date }))) return;
     try {
       await axios.delete(`/api/v1/sales-orders/${order.id}`);
@@ -208,29 +315,46 @@ export function SalesView() {
     }
   };
 
-  const handleBuyerCreated = (buyer: Buyer) => {
-    setBuyers((prev) => [...prev, buyer]);
+  const handleFarmerCreated = (farmer: Farmer) => {
+    setFarmers((prev) => [...prev, farmer]);
   };
 
-  const buyerName = (id?: string) => buyers.find((b) => b.id === id)?.fields.Name || '—';
-  const productName = (id?: string) => inventory.find((i) => i.id === id)?.fields['Product ID'] || inventory.find((i) => i.id === id)?.fields.Name || '—';
+  const farmerName = (id?: string) => {
+    const farmer = farmers.find((f) => f.id === id);
+    if (!farmer) return '—';
+    return (
+      `${farmer.fields['Given Name'] || ''} ${farmer.fields.Surname || ''}`.trim() ||
+      farmer.fields.Name ||
+      '—'
+    );
+  };
+  const productName = (id?: string) =>
+    crops.find((c) => c.id === id)?.fields['Crop Name'] ||
+    crops.find((c) => c.id === id)?.fields['Product Name'] ||
+    '—';
 
   const renderSummary = () => (
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <SummaryCard
           title={t('summary.totalOrders.title')}
-          total={stats.count}
-          subtext={t('summary.totalOrders.subtext')}
+          total={stats.countThisYear}
+          trend={{
+            value: yearTrend(stats.countThisYear, stats.countLastYear),
+            label: t('summary.vsLastYear'),
+          }}
           color="primary"
           icon="solar:cart-4-bold-duotone"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <SummaryCard
-          title={t('summary.totalRevenue.title')}
-          total={stats.total}
-          subtext={t('summary.totalRevenue.subtext')}
+          title={t('summary.totalValue.title')}
+          total={stats.valueThisYear}
+          trend={{
+            value: yearTrend(stats.valueThisYear, stats.valueLastYear),
+            label: t('summary.vsLastYear'),
+          }}
           color="success"
           icon="solar:tag-price-bold-duotone"
         />
@@ -238,8 +362,11 @@ export function SalesView() {
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <SummaryCard
           title={t('summary.totalQuantity.title')}
-          total={stats.quantity}
-          subtext={t('summary.totalQuantity.subtext')}
+          total={stats.quantityThisYear}
+          trend={{
+            value: yearTrend(stats.quantityThisYear, stats.quantityLastYear),
+            label: t('summary.vsLastYear'),
+          }}
           color="info"
           icon="solar:scale-bold-duotone"
         />
@@ -279,16 +406,17 @@ export function SalesView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={order.fields.Date || `${t('fields.orderNumber')} ${order.fields['Order #']}`}
+                      primary={order.fields.Name || `${t('fields.orderNumber')} ${order.fields['Order #']}`}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {buyerName(order.fields.Buyer?.[0])} · {productName(order.fields.Product?.[0])}
+                    {productName(order.fields.Product?.[0])} ·{' '}
+                    {(order.fields['Name (from Season)'] || []).join(', ')}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {fNumber(order.fields['Quantity (kg)'])} kg · {fNumber(order.fields.Revenue)} UGX
+                    {fNumber(order.fields['Quantity (kg)'])} kg · {fNumber(order.fields['Total Price'])} UGX
                   </Typography>
                 </ListItemButton>
               );
@@ -311,6 +439,9 @@ export function SalesView() {
     }
 
     const f = selectedOrder.fields;
+    const farmerHref = f.Farmers?.[0]
+      ? `/dashboard/farmers?farmerId=${f.Farmers[0]}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`
+      : undefined;
 
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
@@ -323,9 +454,9 @@ export function SalesView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{f.Date || `${t('fields.orderNumber')} ${f['Order #']}`}</Typography>
+              <Typography variant="h5">{f.Name || `${t('fields.orderNumber')} ${f['Order #']}`}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {f['Order Date']} · {buyerName(f.Buyer?.[0])}
+                {f['Date Received']} · {(f['Name (from Season)'] || []).join(', ')}
               </Typography>
             </Box>
 
@@ -344,13 +475,23 @@ export function SalesView() {
               <DetailRow label={t('fields.orderNumber')} value={f['Order #']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.orderDate')} value={f['Order Date']} />
+              <DetailRow label={t('fields.dateReceived')} value={f['Date Received']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.buyer')} value={buyerName(f.Buyer?.[0])} />
+              <DetailRow
+                label={t('fields.farmer')}
+                value={farmerName(f.Farmers?.[0])}
+                href={farmerHref}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.product')} value={productName(f.Product?.[0])} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.season')}
+                value={(f['Name (from Season)'] || []).join(', ')}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.quantityKg')} value={f['Quantity (kg)']} />
@@ -359,10 +500,19 @@ export function SalesView() {
               <DetailRow label={t('fields.pricePerKg')} value={f['Price per KG (UGX)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.revenue')} value={f.Revenue} />
+              <DetailRow label={t('fields.totalPrice')} value={f['Total Price']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.year')} value={f.Year} />
+              <DetailRow label={t('fields.millingFee')} value={f['Milling Fee (UGX)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.transportFee')} value={f['Transport Fee (UGX)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.voucherTotal')} value={f['Voucher Total (UGX)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.paid')} value={f.Paid ? t('fields.paidYes') : t('fields.paidNo')} />
             </Grid>
           </Grid>
         </CardContent>
@@ -404,11 +554,13 @@ export function SalesView() {
       <SalesFormDialog
         open={formOpen}
         order={editingOrder}
-        buyers={buyers}
-        inventory={inventory}
+        fpoId={activeFbo?.id}
+        farmers={farmers}
+        crops={crops}
+        seasons={seasons}
         onClose={() => setFormOpen(false)}
         onSaved={fetchOrders}
-        onBuyerCreated={handleBuyerCreated}
+        onFarmerCreated={handleFarmerCreated}
       />
     </DashboardContent>
   );

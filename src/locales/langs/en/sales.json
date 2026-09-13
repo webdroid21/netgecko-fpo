@@ -1,22 +1,20 @@
 {
   "page": {
     "title": "Sales",
-    "subtitle": "Track crop and produce sales",
-    "newOrder": "New order"
+    "subtitle": "Record sales from farmers",
+    "newOrder": "New sales order"
   },
   "summary": {
     "totalOrders": {
-      "title": "Total orders",
-      "subtext": "Sales orders"
+      "title": "Total orders"
     },
-    "totalRevenue": {
-      "title": "Total revenue",
-      "subtext": "UGX"
+    "totalValue": {
+      "title": "Total value"
     },
     "totalQuantity": {
-      "title": "Total quantity",
-      "subtext": "kg"
-    }
+      "title": "Total quantity"
+    },
+    "vsLastYear": "vs last year"
   },
   "searchPlaceholder": "Search sales orders...",
   "emptyDetail": "Select an order to view details",
@@ -26,25 +24,32 @@
   },
   "fields": {
     "orderNumber": "Order #",
-    "orderDate": "Order date",
-    "buyer": "Buyer",
+    "dateReceived": "Date received",
+    "farmer": "Farmer",
     "product": "Product",
+    "season": "Season",
     "quantityKg": "Quantity (kg)",
     "pricePerKg": "Price per kg (UGX)",
-    "revenue": "Revenue",
-    "year": "Year"
+    "totalPrice": "Total price (UGX)",
+    "millingFee": "Milling fee (UGX)",
+    "transportFee": "Transport fee (UGX)",
+    "voucherTotal": "Voucher total (UGX)",
+    "paid": "Paid",
+    "paidYes": "Yes",
+    "paidNo": "No"
   },
   "form": {
     "title": {
       "new": "Enter a new sales order",
       "edit": "Edit sales order"
     },
-    "buyer": "Buyer",
+    "farmer": "Farmer",
+    "season": "Season",
     "product": "Product",
-    "orderDate": "Order date",
+    "dateReceived": "Date received",
     "quantityKg": "Quantity (kg)",
     "pricePerKg": "Price per kg (UGX)",
-    "addNewBuyer": "Add new",
+    "addNew": "Add new",
     "selectPlaceholder": "Select..."
   },
   "buyerForm": {

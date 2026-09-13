@@ -317,7 +317,7 @@ export function OverviewAppView() {
         axios.get(`/api/v1/input-orders?${fpoQuery}`),
         axios.get(`/api/v1/loans?${fpoQuery}`),
         axios.get(`/api/v1/payments?${fpoQuery}`),
-        axios.get('/api/v1/sales-orders'),
+        axios.get(`/api/v1/sales-orders?${fpoQuery}`),
       ]);
 
       const farmers: Farmer[] = farmersData.records || [];

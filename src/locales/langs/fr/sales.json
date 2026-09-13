@@ -1,22 +1,20 @@
 {
   "page": {
     "title": "Ventes",
-    "subtitle": "Suivre les ventes de cultures et de produits",
-    "newOrder": "Nouvelle commande"
+    "subtitle": "Enregistrez les ventes de vos agriculteurs",
+    "newOrder": "Nouvelle commande de vente"
   },
   "summary": {
     "totalOrders": {
-      "title": "Nombre total de commandes",
-      "subtext": "Commandes de vente"
+      "title": "Total commandes"
     },
-    "totalRevenue": {
-      "title": "Revenu total",
-      "subtext": "UGX"
+    "totalValue": {
+      "title": "Valeur totale"
     },
     "totalQuantity": {
-      "title": "Quantité totale",
-      "subtext": "kg"
-    }
+      "title": "Quantité totale"
+    },
+    "vsLastYear": "vs l'an dernier"
   },
   "searchPlaceholder": "Rechercher des commandes de vente...",
   "emptyDetail": "Sélectionnez une commande pour voir les détails",
@@ -26,25 +24,32 @@
   },
   "fields": {
     "orderNumber": "Commande n°",
-    "orderDate": "Date de commande",
-    "buyer": "Acheteur",
+    "dateReceived": "Date de réception",
+    "farmer": "Agriculteur",
     "product": "Produit",
+    "season": "Saison",
     "quantityKg": "Quantité (kg)",
     "pricePerKg": "Prix par kg (UGX)",
-    "revenue": "Revenu",
-    "year": "Année"
+    "totalPrice": "Prix total (UGX)",
+    "millingFee": "Frais de mouture (UGX)",
+    "transportFee": "Frais de transport (UGX)",
+    "voucherTotal": "Total du bon (UGX)",
+    "paid": "Payé",
+    "paidYes": "Oui",
+    "paidNo": "Non"
   },
   "form": {
     "title": {
       "new": "Enregistrer une nouvelle commande de vente",
       "edit": "Modifier la commande de vente"
     },
-    "buyer": "Acheteur",
+    "farmer": "Agriculteur",
+    "season": "Saison",
     "product": "Produit",
-    "orderDate": "Date de commande",
+    "dateReceived": "Date de réception",
     "quantityKg": "Quantité (kg)",
     "pricePerKg": "Prix par kg (UGX)",
-    "addNewBuyer": "Ajouter un nouveau",
+    "addNew": "Ajouter un nouveau",
     "selectPlaceholder": "Sélectionner..."
   },
   "buyerForm": {

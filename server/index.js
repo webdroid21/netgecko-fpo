@@ -28,7 +28,7 @@ const AIRTABLE_PAYMENTS_TABLE_ID =
 const AIRTABLE_LOAN_TYPES_TABLE_ID =
   process.env.AIRTABLE_LOAN_TYPES_TABLE_ID || 'Loan Types';
 const AIRTABLE_SALES_ORDERS_TABLE_ID =
-  process.env.AIRTABLE_SALES_ORDERS_TABLE_ID || 'tblxGEmQmGu9ctM5O';
+  process.env.AIRTABLE_SALES_ORDERS_TABLE_ID || 'tblatBt8bxcjUmBan';
 const AIRTABLE_BUYERS_TABLE_ID =
   process.env.AIRTABLE_BUYERS_TABLE_ID || 'tblCKzHEbQs1fZzic';
 const AIRTABLE_INVENTORY_TABLE_ID =
@@ -433,10 +433,28 @@ function toPaymentsFields(input) {
   return fields;
 }
 
+function buildSalesOrdersFilter(fpoId, fpoName) {
+  const escapedId = (fpoId || '').replace(/'/g, "''");
+  const escapedName = (fpoName || '').replace(/'/g, "''");
+  const conditions = [];
+
+  if (escapedName) {
+    conditions.push(`SEARCH('${escapedName}', ARRAYJOIN({Name (from FPOs)}, ',')) > 0`);
+  }
+
+  if (escapedId) {
+    conditions.push(`FIND('${escapedId}', ARRAYJOIN({FPOs}, ',')) > 0`);
+  }
+
+  if (!conditions.length) return '1';
+  if (conditions.length === 1) return conditions[0];
+  return `OR(${conditions.join(', ')})`;
+}
+
 function toSalesOrderFields(input) {
   const fields = { ...input };
 
-  ['Buyer', 'Product'].forEach((key) => {
+  ['FPOs', 'Farmers', 'Season', 'Product'].forEach((key) => {
     if (fields[key] && typeof fields[key] === 'string') {
       fields[key] = [fields[key]];
     }
@@ -1127,7 +1145,15 @@ app.get('/api/v1/inventory', requireAuth, async (req, res) => {
 
 app.get('/api/v1/sales-orders', requireAuth, async (req, res) => {
   try {
+    const { fpoId, fpoName } = req.query;
+
+    if (!fpoId && !fpoName) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId or fpoName is required.' });
+    }
+
+    const filter = buildSalesOrdersFilter(fpoId, fpoName);
     const { data } = await airtableApi.post(`/${AIRTABLE_SALES_ORDERS_TABLE_ID}/listRecords`, {
+      filterByFormula: filter,
       maxRecords: 100,
     });
 

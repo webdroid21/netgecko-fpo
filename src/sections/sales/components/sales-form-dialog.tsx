@@ -1,4 +1,7 @@
-import type { Buyer, SalesOrder, InventoryItem } from '../types';
+import type { SalesOrder } from '../types';
+import type { Crop } from 'src/sections/land/types';
+import type { Farmer } from 'src/sections/farmer/types';
+import type { Season } from 'src/sections/input-order/types';
 
 import { z } from 'zod';
 import dayjs from 'dayjs';
@@ -22,14 +25,15 @@ import { useTranslate } from 'src/locales';
 
 import { Form, Field } from 'src/components/hook-form';
 
-import { BuyerFormDialog } from './buyer-form-dialog';
+import { FarmerFormDialog } from 'src/sections/farmer/components/farmer-form-dialog';
 
 // ----------------------------------------------------------------------
 
 const schema = z.object({
-  'Order Date': z.date({ message: 'Required' }),
-  Buyer: z.string().min(1, { message: 'Required' }),
+  Farmers: z.string().min(1, { message: 'Required' }),
+  Season: z.string().min(1, { message: 'Required' }),
   Product: z.string().min(1, { message: 'Required' }),
+  'Date Received': z.date({ message: 'Required' }),
   'Quantity (kg)': z.number().min(1, { message: 'Required' }),
   'Price per KG (UGX)': z.number().min(1, { message: 'Required' }),
 });
@@ -41,23 +45,22 @@ type FormValues = z.infer<typeof schema>;
 type SalesFormDialogProps = {
   open: boolean;
   order?: SalesOrder | null;
-  buyers: Buyer[];
-  inventory: InventoryItem[];
+  fpoId?: string;
+  farmers: Farmer[];
+  crops: Crop[];
+  seasons: Season[];
   onClose: () => void;
   onSaved: () => void;
-  onBuyerCreated?: (buyer: Buyer) => void;
+  onFarmerCreated?: (farmer: Farmer) => void;
 };
-
-function itemLabel(item: InventoryItem) {
-  return item.fields['Product ID'] || item.fields.Name || 'Unnamed';
-}
 
 function getDefaultValues(order?: SalesOrder | null): FormValues {
   const f = order?.fields;
   return {
-    'Order Date': f?.['Order Date'] ? dayjs(f['Order Date']).toDate() : (undefined as any),
-    Buyer: f?.Buyer?.[0] ?? '',
+    Farmers: f?.Farmers?.[0] ?? '',
+    Season: f?.Season?.[0] ?? '',
     Product: f?.Product?.[0] ?? '',
+    'Date Received': f?.['Date Received'] ? dayjs(f['Date Received']).toDate() : (undefined as any),
     'Quantity (kg)': f?.['Quantity (kg)'] ?? undefined,
     'Price per KG (UGX)': f?.['Price per KG (UGX)'] ?? undefined,
   };
@@ -66,14 +69,16 @@ function getDefaultValues(order?: SalesOrder | null): FormValues {
 export function SalesFormDialog({
   open,
   order,
-  buyers,
-  inventory,
+  fpoId,
+  farmers,
+  crops,
+  seasons,
   onClose,
   onSaved,
-  onBuyerCreated,
+  onFarmerCreated,
 }: SalesFormDialogProps) {
   const isEdit = Boolean(order);
-  const [buyerFormOpen, setBuyerFormOpen] = useState(false);
+  const [farmerFormOpen, setFarmerFormOpen] = useState(false);
 
   const { t } = useTranslate('sales');
   const { t: tCommon } = useTranslate('common');
@@ -95,8 +100,12 @@ export function SalesFormDialog({
   const onSubmit = handleSubmit(async (data) => {
     const payload: Record<string, any> = { ...data };
 
-    if (data['Order Date']) {
-      payload['Order Date'] = dayjs(data['Order Date']).format('YYYY-MM-DD');
+    if (data['Date Received']) {
+      payload['Date Received'] = dayjs(data['Date Received']).format('YYYY-MM-DD');
+    }
+
+    if (!isEdit && fpoId) {
+      payload.FPOs = fpoId;
     }
 
     try {
@@ -112,13 +121,31 @@ export function SalesFormDialog({
     }
   });
 
-  const handleNewBuyer = (buyer?: Buyer) => {
-    setBuyerFormOpen(false);
-    if (buyer) {
-      setValue('Buyer', buyer.id, { shouldValidate: true });
-      onBuyerCreated?.(buyer);
+  const handleNewFarmer = (farmer?: Farmer) => {
+    setFarmerFormOpen(false);
+    if (farmer) {
+      setValue('Farmers', farmer.id, { shouldValidate: true });
+      onFarmerCreated?.(farmer);
     }
   };
+
+  const renderSelect = (
+    name: keyof FormValues,
+    label: string,
+    options: { value: string; label: string }[],
+    required = false
+  ) => (
+    <Field.Select name={name} label={label} required={required}>
+      <MenuItem value="">
+        <em>{t('form.selectPlaceholder')}</em>
+      </MenuItem>
+      {options.map((opt) => (
+        <MenuItem key={opt.value} value={opt.value}>
+          {opt.label}
+        </MenuItem>
+      ))}
+    </Field.Select>
+  );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -130,47 +157,57 @@ export function SalesFormDialog({
             <Grid size={{ xs: 12 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box sx={{ flexGrow: 1 }}>
-                  <Field.Select name="Buyer" label={t('form.buyer')} required>
-                    <MenuItem value="">
-                      <em>{t('form.selectPlaceholder')}</em>
-                    </MenuItem>
-                    {buyers.map((b) => (
-                      <MenuItem key={b.id} value={b.id}>
-                        {b.fields.Name || 'Unnamed'}
-                      </MenuItem>
-                    ))}
-                  </Field.Select>
+                  {renderSelect(
+                    'Farmers',
+                    t('form.farmer'),
+                    farmers.map((f) => ({
+                      value: f.id,
+                      label:
+                        `${f.fields['Given Name'] || ''} ${f.fields.Surname || ''}`.trim() ||
+                        f.fields.Name ||
+                        'Unnamed',
+                    })),
+                    true
+                  )}
                 </Box>
                 <Button
                   variant="outlined"
                   size="large"
-                  onClick={() => setBuyerFormOpen(true)}
+                  onClick={() => setFarmerFormOpen(true)}
                   startIcon={
                     <Box component="span" sx={{ fontSize: 20 }}>
                       +
                     </Box>
                   }
                 >
-                  {t('form.addNewBuyer')}
+                  {t('form.addNew')}
                 </Button>
               </Stack>
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Select name="Product" label={t('form.product')} required>
-                <MenuItem value="">
-                  <em>{t('form.selectPlaceholder')}</em>
-                </MenuItem>
-                {inventory.map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {itemLabel(item)}
-                  </MenuItem>
-                ))}
-              </Field.Select>
+              {renderSelect(
+                'Season',
+                t('form.season'),
+                seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' })),
+                true
+              )}
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.DatePicker name="Order Date" label={t('form.orderDate')} />
+              {renderSelect(
+                'Product',
+                t('form.product'),
+                crops.map((c) => ({
+                  value: c.id,
+                  label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? 'Unnamed',
+                })),
+                true
+              )}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Field.DatePicker name="Date Received" label={t('form.dateReceived')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
@@ -203,10 +240,11 @@ export function SalesFormDialog({
         </DialogActions>
       </Form>
 
-      <BuyerFormDialog
-        open={buyerFormOpen}
-        onClose={() => setBuyerFormOpen(false)}
-        onSaved={handleNewBuyer}
+      <FarmerFormDialog
+        open={farmerFormOpen}
+        fpoId={fpoId}
+        onClose={() => setFarmerFormOpen(false)}
+        onSaved={handleNewFarmer}
       />
     </Dialog>
   );
