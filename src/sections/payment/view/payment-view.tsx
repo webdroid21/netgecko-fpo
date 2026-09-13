@@ -8,10 +8,8 @@ import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -24,12 +22,9 @@ import axios from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
 import { useAuthContext } from 'src/auth/hooks';
-
-import { PaymentFormDialog } from '../components/payment-form-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -84,13 +79,28 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
-function DetailRow({ label, value }: { label: string; value?: any }) {
+function DetailRow({
+  label,
+  value,
+  numberOptions,
+}: {
+  label: string;
+  value?: any;
+  numberOptions?: Intl.NumberFormatOptions;
+}) {
+  let display = value ?? '—';
+  if (typeof value === 'number') {
+    display = fNumber(value, numberOptions);
+  } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
+    display = fNumber(Number(value), numberOptions);
+  }
+
   return (
     <Box sx={{ p: 1 }}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
       </Typography>
-      <Typography variant="body1">{value ?? '—'}</Typography>
+      <Typography variant="body1">{display}</Typography>
     </Box>
   );
 }
@@ -113,8 +123,6 @@ export function PaymentView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
 
   const fetchPayments = useCallback(async () => {
     if (!activeFbo) return;
@@ -216,22 +224,6 @@ export function PaymentView() {
     return s;
   }, [filteredPayments]);
 
-  const handleEdit = (payment: Payment) => {
-    setEditingPayment(payment);
-    setFormOpen(true);
-  };
-
-  const handleDelete = async (payment: Payment) => {
-    const id = payment.fields['Payment ID'] ?? '-';
-    if (!confirm(t('confirmDeletePayment', { id }))) return;
-    try {
-      await axios.delete(`/api/v1/payments/${payment.id}`);
-      fetchPayments();
-    } catch (error: any) {
-      console.error('Delete payment error:', error?.message);
-    }
-  };
-
   const loanLabel = (id?: string) => {
     const loan = loans.find((l) => l.id === id);
     return loan ? loan.fields['Loan ID'] || t('unnamedLoan') : '—';
@@ -272,9 +264,6 @@ export function PaymentView() {
                       primary={`${t('unnamedPayment')} #${payment.fields['Payment ID'] ?? '-'}`}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
-                    <Label color={payment.fields.Check === 'OK' ? 'success' : 'warning'}>
-                      {payment.fields.Check || '—'}
-                    </Label>
                     <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
@@ -309,34 +298,14 @@ export function PaymentView() {
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
-          <Stack
-            direction="row"
-            alignItems="flex-start"
-            justifyContent="space-between"
-            spacing={2}
-            sx={{ mb: 3 }}
-          >
-            <Box>
-              <Typography variant="h5">{`${t('unnamedPayment')} #${f['Payment ID'] ?? '-'}`}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {f['Payment Date']} · {f.Source}
-              </Typography>
-            </Box>
-
-            <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" onClick={() => handleEdit(selectedPayment)}>
-                {t('actions.edit')}
-              </Button>
-              <IconButton color="error" onClick={() => handleDelete(selectedPayment)}>
-                <Iconify icon={'solar:trash-bin-trash-bold' as any} />
-              </IconButton>
-            </Stack>
-          </Stack>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h5">{`${t('unnamedPayment')} #${f['Payment ID'] ?? '-'}`}</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {f['Payment Date']} · {f.Source}
+            </Typography>
+          </Box>
 
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.check')} value={f.Check} />
-            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.loan')} value={loanLabel(f.Loans?.[0])} />
             </Grid>
@@ -354,9 +323,6 @@ export function PaymentView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.mobileMoneyNumberUsed')} value={f['Mobile Money Number Used']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.fpo')} value={(f['FPO (from Loans)'] || []).join(', ')} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.season')} value={(f['Season (from Loans)'] || []).join(', ')} />
@@ -432,14 +398,6 @@ export function PaymentView() {
           {renderDetail()}
         </Grid>
       </Grid>
-
-      <PaymentFormDialog
-        open={formOpen}
-        payment={editingPayment}
-        loans={loans}
-        onClose={() => setFormOpen(false)}
-        onSaved={fetchPayments}
-      />
     </DashboardContent>
   );
 }
