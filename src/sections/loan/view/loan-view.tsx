@@ -374,7 +374,6 @@ export function LoanView() {
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {(loan.fields['Name (from Farmer)'] || []).join(', ')} ·{' '}
                     {(loan.fields['Loan Object'] || []).join(', ')}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
