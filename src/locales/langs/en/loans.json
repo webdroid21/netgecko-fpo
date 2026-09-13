@@ -22,7 +22,13 @@
   "actions": {
     "edit": "Edit"
   },
+  "sections": {
+    "details": "Loan details",
+    "amount": "Loan amount",
+    "repayment": "Repayment"
+  },
   "fields": {
+    "willBeUpdatedByNetGecko": "Will be updated by NetGecko",
     "loanStatus": "Loan status",
     "farmer": "Farmer",
     "loanType": "Loan type",

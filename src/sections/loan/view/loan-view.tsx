@@ -1,6 +1,5 @@
-import type { Loan, LoanType } from '../types';
+import type { Loan } from '../types';
 import type { Farmer } from 'src/sections/farmer/types';
-import type { Season, InputOrder } from 'src/sections/input-order/types';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -10,10 +9,9 @@ import Grid from '@mui/material/Grid';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
 import MuiLink from '@mui/material/Link';
-import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -31,8 +29,6 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
 import { useAuthContext } from 'src/auth/hooks';
-
-import { LoanFormDialog } from '../components/loan-form-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -96,11 +92,22 @@ function DetailRow({
   label,
   value,
   href,
+  helper,
+  numberOptions,
 }: {
   label: string;
   value?: any;
   href?: string;
+  helper?: string;
+  numberOptions?: Intl.NumberFormatOptions;
 }) {
+  let display = value ?? '—';
+  if (typeof value === 'number') {
+    display = fNumber(value, numberOptions);
+  } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
+    display = fNumber(Number(value), numberOptions);
+  }
+
   const content = (
     <>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -110,8 +117,13 @@ function DetailRow({
         variant="body1"
         sx={href ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}
       >
-        {value ?? '—'}
+        {display}
       </Typography>
+      {helper && (
+        <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+          {helper}
+        </Typography>
+      )}
     </>
   );
 
@@ -152,14 +164,9 @@ export function LoanView() {
 
   const [loans, setLoans] = useState<Loan[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
-  const [loanTypes, setLoanTypes] = useState<LoanType[]>([]);
-  const [inputOrders, setInputOrders] = useState<InputOrder[]>([]);
-  const [seasons, setSeasons] = useState<Season[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
 
   const fetchLoans = useCallback(async () => {
     if (!activeFbo) return;
@@ -194,48 +201,10 @@ export function LoanView() {
     }
   }, [activeFbo]);
 
-  const fetchLoanTypes = useCallback(async () => {
-    try {
-      const { data } = await axios.get('/api/v1/loan-types');
-      setLoanTypes(data.records || []);
-    } catch (error: any) {
-      console.error('Fetch loan types error:', error?.message);
-      setLoanTypes([]);
-    }
-  }, []);
-
-  const fetchInputOrders = useCallback(async () => {
-    if (!activeFbo) return;
-    try {
-      const query = new URLSearchParams({
-        fpoId: activeFbo.id,
-        fpoName: activeFbo.name,
-      }).toString();
-      const { data } = await axios.get(`/api/v1/input-orders?${query}`);
-      setInputOrders(data.records || []);
-    } catch (error: any) {
-      console.error('Fetch input orders error:', error?.message);
-      setInputOrders([]);
-    }
-  }, [activeFbo]);
-
-  const fetchSeasons = useCallback(async () => {
-    try {
-      const { data } = await axios.get('/api/v1/seasons');
-      setSeasons(data.records || []);
-    } catch (error: any) {
-      console.error('Fetch seasons error:', error?.message);
-      setSeasons([]);
-    }
-  }, []);
-
   useEffect(() => {
     fetchLoans();
     fetchFarmers();
-    fetchLoanTypes();
-    fetchInputOrders();
-    fetchSeasons();
-  }, [fetchLoans, fetchFarmers, fetchLoanTypes, fetchInputOrders, fetchSeasons]);
+  }, [fetchLoans, fetchFarmers]);
 
   const filteredLoans = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -305,26 +274,6 @@ export function LoanView() {
 
     return { statusStats: statuses, repaymentStats: repayments };
   }, [filteredLoans, farmers]);
-
-  const handleEdit = (loan: Loan) => {
-    setEditingLoan(loan);
-    setFormOpen(true);
-  };
-
-  const handleDelete = async (loan: Loan) => {
-    const reference = loan.fields['Loan ID'] ?? t('unnamedLoan');
-    if (!confirm(t('confirmDeleteLoan', { reference }))) return;
-    try {
-      await axios.delete(`/api/v1/loans/${loan.id}`);
-      fetchLoans();
-    } catch (error: any) {
-      console.error('Delete loan error:', error?.message);
-    }
-  };
-
-  const handleFarmerCreated = (farmer: Farmer) => {
-    setFarmers((prev) => [...prev, farmer]);
-  };
 
   const statusColor = (status?: string) => {
     if (status === 'Open') return 'warning';
@@ -456,34 +405,24 @@ export function LoanView() {
       ? `/dashboard/farmers?farmerId=${f.Farmer[0]}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`
       : undefined;
 
+    const netgeckoHelper = t('fields.willBeUpdatedByNetGecko');
+
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
-          <Stack
-            direction="row"
-            alignItems="flex-start"
-            justifyContent="space-between"
-            spacing={2}
-            sx={{ mb: 3 }}
-          >
-            <Box>
-              <Typography variant="h5">{f['Loan ID'] || t('unnamedLoan')}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {(f['Loan Object'] || []).join(', ')} · {(f['Name (from Season)'] || []).join(', ')}
-              </Typography>
-            </Box>
-
-            <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLoan)}>
-                {t('actions.edit')}
-              </Button>
-              <IconButton color="error" onClick={() => handleDelete(selectedLoan)}>
-                <Iconify icon={'solar:trash-bin-trash-bold' as any} />
-              </IconButton>
-            </Stack>
-          </Stack>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h5">{f['Loan ID'] || t('unnamedLoan')}</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {(f['Loan Object'] || []).join(', ')} · {(f['Name (from Season)'] || []).join(', ')}
+            </Typography>
+          </Box>
 
           <Grid container spacing={3}>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1, pb: 1 }}>
+                {t('sections.details')}
+              </Typography>
+            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.loanStatus')} value={f['Loan Status']} />
             </Grid>
@@ -501,33 +440,8 @@ export function LoanView() {
               <DetailRow label={t('fields.issueDate')} value={f['Issue Date']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.totalAmount')} value={f['Total amount']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.principal')} value={f['Principal']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.interest')} value={f['Interest']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.downpayment')} value={f['Downpayment']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.principalPlusInterest')} value={f['Principal + Interest']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.repaymentDueDate')} value={f['Repayment Due Date']} />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.totalAmountPending')} value={f['Total Amount Pending']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.repaymentStatus')} value={f['Repayment Status']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.sumPaymentReceived')} value={f['Sum payment received']} />
-            </Grid>
-
             {f['Orders (Input)']?.[0] && (
               <Grid size={{ xs: 12, sm: 6 }}>
                 <DetailRow
@@ -537,6 +451,82 @@ export function LoanView() {
                 />
               </Grid>
             )}
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1, pb: 1 }}>
+                {t('sections.amount')}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.totalAmount')}
+                value={f['Total amount']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.principal')}
+                value={f['Principal']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.interest')}
+                value={f['Interest']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.downpayment')}
+                value={f['Downpayment']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.principalPlusInterest')}
+                value={f['Principal + Interest']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1, pb: 1 }}>
+                {t('sections.repayment')}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.repaymentStatus')}
+                value={f['Repayment Status']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.totalAmountPending')}
+                value={f['Total Amount Pending']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.sumPaymentReceived')}
+                value={f['Sum payment received']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
 
             {f['Payments Received Link']?.length ? (
               <Grid size={{ xs: 12 }}>
@@ -579,19 +569,6 @@ export function LoanView() {
           {renderDetail()}
         </Grid>
       </Grid>
-
-      <LoanFormDialog
-        open={formOpen}
-        loan={editingLoan}
-        fpoId={activeFbo?.id}
-        farmers={farmers}
-        loanTypes={loanTypes}
-        inputOrders={inputOrders}
-        seasons={seasons}
-        onClose={() => setFormOpen(false)}
-        onSaved={fetchLoans}
-        onFarmerCreated={handleFarmerCreated}
-      />
     </DashboardContent>
   );
 }

@@ -22,7 +22,13 @@
   "actions": {
     "edit": "Kyusa"
   },
+  "sections": {
+    "details": "Ebikwata ku loan",
+    "amount": "Omuwendo gwa loan",
+    "repayment": "Okusasula"
+  },
   "fields": {
+    "willBeUpdatedByNetGecko": "Kijja okukyusibwa NetGecko",
     "loanStatus": "Embeera ya loan",
     "farmer": "Mulimi",
     "loanType": "Ekika kya loan",

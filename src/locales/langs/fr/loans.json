@@ -22,7 +22,13 @@
   "actions": {
     "edit": "Modifier"
   },
+  "sections": {
+    "details": "Détails du prêt",
+    "amount": "Montant du prêt",
+    "repayment": "Remboursement"
+  },
   "fields": {
+    "willBeUpdatedByNetGecko": "Sera mis à jour par NetGecko",
     "loanStatus": "Statut du prêt",
     "farmer": "Agriculteur",
     "loanType": "Type de prêt",
