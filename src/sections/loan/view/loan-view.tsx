@@ -292,7 +292,7 @@ export function LoanView() {
             <SummaryCard
               title={t(s.titleKey)}
               total={statusStats[s.key]?.count ?? 0}
-              subtext={t('summary.womenSubtext', { count: fNumber(statusStats[s.key]?.women ?? 0) })}
+              subtext={t('summary.womenSubtext', { count: statusStats[s.key]?.women ?? 0 })}
               color={s.color}
               icon={s.icon}
             />
