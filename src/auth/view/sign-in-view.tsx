@@ -242,10 +242,10 @@ export function SignInView() {
           severity="info"
           sx={(theme) => ({
             mb: 3,
-            color: 'primary.darker',
+            color: 'primary.main',
             bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.5),
-            '& .MuiAlert-icon': { color: 'primary.darker' },
-            '& .MuiAlert-message': { color: 'primary.darker' },
+            '& .MuiAlert-icon': { color: 'primary.main' },
+            '& .MuiAlert-message': { color: 'primary.main' },
           })}
         >
           {info}
