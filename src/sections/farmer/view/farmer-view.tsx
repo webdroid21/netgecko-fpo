@@ -326,55 +326,68 @@ export function FarmerView() {
       fpoName: activeFbo.name,
     }).toString();
 
-    try {
-      const [
-        { data: ordersData },
-        { data: loansData },
-        { data: paymentsData },
-        { data: salesData },
-      ] = await Promise.all([
-        axios.get(`/api/v1/input-orders?${fpoQuery}`),
-        axios.get(`/api/v1/loans?${fpoQuery}`),
-        axios.get(`/api/v1/payments?${fpoQuery}`),
-        axios.get(`/api/v1/sales-orders?${fpoQuery}`),
-      ]);
+    const endpoints = ['input-orders', 'loans', 'payments', 'sales-orders'];
+    const results = await Promise.allSettled(
+      endpoints.map((endpoint) => axios.get(`/api/v1/${endpoint}?${fpoQuery}`))
+    );
 
-      const orderRecords = ordersData.records || [];
-      const loanRecords = loansData.records || [];
-      const paymentRecords = paymentsData.records || [];
-      const salesRecords = salesData.records || [];
+    const recordsOf = (res: PromiseSettledResult<any>) => {
+      if (res.status === 'rejected') {
+        console.error('Fetch transactions error:', res.reason?.message ?? res.reason);
+        return [];
+      }
+      return res.value?.data?.records || [];
+    };
 
-      setInputOrders(orderRecords);
-      setLoans(loanRecords);
-      setPayments(paymentRecords);
-      setSalesOrders(salesRecords);
+    const orderRecords = recordsOf(results[0]);
+    const loanRecords = recordsOf(results[1]);
+    const paymentRecords = recordsOf(results[2]);
+    const salesRecords = recordsOf(results[3]);
 
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    setInputOrders(orderRecords);
+    setLoans(loanRecords);
+    setPayments(paymentRecords);
+    setSalesOrders(salesRecords);
 
-      const records = [...orderRecords, ...loanRecords, ...paymentRecords, ...salesRecords];
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-      const ids = new Set<string>();
-      records.forEach((record: any) => {
-        const date =
-          record.fields['Order date'] ||
-          record.fields['Order Date'] ||
-          record.fields['Issue Date'] ||
-          record.fields['Payment Date'] ||
-          record.createdTime;
-        if (!date) return;
-        const d = new Date(date);
-        if (Number.isNaN(d.getTime()) || d < oneYearAgo) return;
+    const isRecent = (record: any) => {
+      const date =
+        record.fields['Order date'] ||
+        record.fields['Order Date'] ||
+        record.fields['Issue Date'] ||
+        record.fields['Payment Date'] ||
+        record.fields['Date Received'] ||
+        record.createdTime;
+      if (!date) return false;
+      const d = new Date(date);
+      return !Number.isNaN(d.getTime()) && d >= oneYearAgo;
+    };
 
-        const farmer = record.fields.Farmer;
-        const recordFarmerId = Array.isArray(farmer) ? farmer[0] : farmer;
-        if (recordFarmerId) ids.add(recordFarmerId);
+    const addFarmerLinks = (record: any, ids: Set<string>) => {
+      const farmer = record.fields.Farmer ?? record.fields.Farmers;
+      (Array.isArray(farmer) ? farmer : [farmer]).forEach((id) => {
+        if (id) ids.add(id);
       });
+    };
 
-      setActiveFarmerIds(ids);
-    } catch (error: any) {
-      console.error('Fetch transactions error:', error?.message);
-    }
+    const ids = new Set<string>();
+    [...orderRecords, ...loanRecords, ...paymentRecords, ...salesRecords].forEach((record: any) => {
+      if (isRecent(record)) addFarmerLinks(record, ids);
+    });
+
+    // Payments have no direct farmer link; resolve through the linked loan
+    const loansById = new Map<string, any>(loanRecords.map((l: any) => [l.id, l]));
+    paymentRecords.forEach((payment: any) => {
+      if (!isRecent(payment)) return;
+      (payment.fields.Loans || []).forEach((loanId: string) => {
+        const loan = loansById.get(loanId);
+        if (loan) addFarmerLinks(loan, ids);
+      });
+    });
+
+    setActiveFarmerIds(ids);
   }, [activeFbo]);
 
   useEffect(() => {
@@ -430,18 +443,18 @@ export function FarmerView() {
     const total = totalFarmers.length;
     const totalWomen = totalFarmers.filter(isWoman).length;
 
-    const pendingFarmers = totalFarmers.filter((f) => f.fields.Checked === true);
+    const pendingFarmers = totalFarmers.filter((f) => f.fields.Checked !== true);
     const pending = pendingFarmers.length;
     const pendingWomen = pendingFarmers.filter(isWoman).length;
 
     const activeFarmers = totalFarmers.filter(
-      (f) => !f.fields.Checked && activeFarmerIds.has(f.id)
+      (f) => f.fields.Checked === true && activeFarmerIds.has(f.id)
     );
     const active = activeFarmers.length;
     const activeWomen = activeFarmers.filter(isWoman).length;
 
     const inactiveFarmers = totalFarmers.filter(
-      (f) => !f.fields.Checked && !activeFarmerIds.has(f.id)
+      (f) => f.fields.Checked === true && !activeFarmerIds.has(f.id)
     );
     const inactive = inactiveFarmers.length;
     const inactiveWomen = inactiveFarmers.filter(isWoman).length;

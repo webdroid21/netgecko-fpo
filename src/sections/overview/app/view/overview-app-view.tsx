@@ -335,7 +335,46 @@ export function OverviewAppView() {
       const payments: Payment[] = recordsOf(results[4]);
       const sales: SalesOrder[] = recordsOf(results[5]);
 
-      const active = farmers.filter((f) => f.fields.Checked === true).length;
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const isRecent = (record: any) => {
+        const date =
+          record.fields['Order date'] ||
+          record.fields['Order Date'] ||
+          record.fields['Issue Date'] ||
+          record.fields['Payment Date'] ||
+          record.fields['Date Received'] ||
+          record.createdTime;
+        if (!date) return false;
+        const d = new Date(date);
+        return !Number.isNaN(d.getTime()) && d >= oneYearAgo;
+      };
+
+      const addFarmerLinks = (record: any, ids: Set<string>) => {
+        const farmer = record.fields?.Farmer ?? record.fields?.Farmers;
+        (Array.isArray(farmer) ? farmer : [farmer]).forEach((id) => {
+          if (id) ids.add(id);
+        });
+      };
+
+      const recentFarmerIds = new Set<string>();
+      [...orders, ...loans, ...payments, ...sales].forEach((record: any) => {
+        if (isRecent(record)) addFarmerLinks(record, recentFarmerIds);
+      });
+      const loansById = new Map<string, any>(loans.map((l: any) => [l.id, l]));
+      payments.forEach((payment: any) => {
+        if (!isRecent(payment)) return;
+        (payment.fields.Loans || []).forEach((loanId: string) => {
+          const loan = loansById.get(loanId);
+          if (loan) addFarmerLinks(loan, recentFarmerIds);
+        });
+      });
+
+      const active = farmers.filter(
+        (f) => f.fields.Checked === true && recentFarmerIds.has(f.id)
+      ).length;
+      const pending = farmers.filter((f) => f.fields.Checked !== true).length;
 
       setStats({
         farmers: farmers.length,
@@ -368,8 +407,8 @@ export function OverviewAppView() {
         memberStatus: {
           total: farmers.length,
           active,
-          pending: 0,
-          inactive: farmers.length - active,
+          pending,
+          inactive: farmers.length - active - pending,
         },
         orderStatus: orders.reduce(
           (acc, o) => {
