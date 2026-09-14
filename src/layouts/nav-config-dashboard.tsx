@@ -30,7 +30,7 @@ export function useDashboardNavData(): NavSectionProps['data'] {
 
   return [
     {
-      subheader: t('subheader'),
+      // subheader: t('subheader'),
       items: [
         { title: t('home'), path: paths.dashboard.root, icon: ICONS.dashboard },
         { title: t('farmers'), path: paths.dashboard.fpo.farmers, icon: ICONS.user },

@@ -42,7 +42,7 @@ export function NavVertical({
   const renderNavVertical = () => (
     <>
       {slots?.topArea ?? (
-        <Box sx={{ pl: 3.5, pt: 2.5, pb: 1 }}>
+        <Box sx={{ pl: 3.5, pt: 2.5, pb: 4.5 }}>
           <Logo width={160} height={64} />
         </Box>
       )}
@@ -63,7 +63,7 @@ export function NavVertical({
   const renderNavMini = () => (
     <>
       {slots?.topArea ?? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2.5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2.5, pb: 4 }}>
           <Logo width={80} height={32} />
         </Box>
       )}

@@ -35,7 +35,7 @@ export function FboSelectDialog({ open }: FboSelectDialogProps) {
         // prevent closing without selection
       }}
     >
-      <DialogTitle>Select NetGecko Partner to manage</DialogTitle>
+      <DialogTitle>Select NetGecko Partner to view manage.</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
           Your profile has access to multiple NetGecko Partners. Please choose one to continue.
