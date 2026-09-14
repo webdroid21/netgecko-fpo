@@ -294,7 +294,10 @@ export function OverviewAppView() {
   const [loading, setLoading] = useState(true);
 
   const fetchStats = useCallback(async () => {
-    if (!activeFbo) return;
+    if (!activeFbo) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
 
@@ -304,28 +307,33 @@ export function OverviewAppView() {
     }).toString();
 
     try {
-      const [
-        { data: farmersData },
-        { data: landsData },
-        { data: ordersData },
-        { data: loansData },
-        { data: paymentsData },
-        { data: salesData },
-      ] = await Promise.all([
-        axios.get(`/api/v1/farmers?${fpoQuery}`),
-        axios.get(`/api/v1/lands?${fpoQuery}`),
-        axios.get(`/api/v1/input-orders?${fpoQuery}`),
-        axios.get(`/api/v1/loans?${fpoQuery}`),
-        axios.get(`/api/v1/payments?${fpoQuery}`),
-        axios.get(`/api/v1/sales-orders?${fpoQuery}`),
-      ]);
+      const endpoints = [
+        'farmers',
+        'lands',
+        'input-orders',
+        'loans',
+        'payments',
+        'sales-orders',
+      ];
+      const results = await Promise.allSettled(
+        endpoints.map((ep) => axios.get(`/api/v1/${ep}?${fpoQuery}`))
+      );
 
-      const farmers: Farmer[] = farmersData.records || [];
-      const lands: any[] = landsData.records || [];
-      const orders: InputOrder[] = ordersData.records || [];
-      const loans: Loan[] = loansData.records || [];
-      const payments: Payment[] = paymentsData.records || [];
-      const sales: SalesOrder[] = salesData.records || [];
+      results.forEach((res, idx) => {
+        if (res.status === 'rejected') {
+          console.error(`Dashboard fetch /${endpoints[idx]} failed:`, res.reason?.message ?? res.reason);
+        }
+      });
+
+      const recordsOf = (res: PromiseSettledResult<any>) =>
+        res.status === 'fulfilled' ? res.value?.data?.records || [] : [];
+
+      const farmers: Farmer[] = recordsOf(results[0]);
+      const lands: any[] = recordsOf(results[1]);
+      const orders: InputOrder[] = recordsOf(results[2]);
+      const loans: Loan[] = recordsOf(results[3]);
+      const payments: Payment[] = recordsOf(results[4]);
+      const sales: SalesOrder[] = recordsOf(results[5]);
 
       const active = farmers.filter((f) => f.fields.Checked === true).length;
 
@@ -353,7 +361,7 @@ export function OverviewAppView() {
           0
         ),
         sales: sales.length,
-        salesRevenue: sales.reduce((sum, s) => sum + (Number(s.fields.Revenue) || 0), 0),
+        salesRevenue: sales.reduce((sum, s) => sum + (Number(s.fields['Total Price']) || 0), 0),
         recentInputOrders: orders.slice(0, 5),
         recentLoans: loans.slice(0, 5),
         recentPayments: payments.slice(0, 5),
