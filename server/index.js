@@ -150,7 +150,7 @@ app.post('/api/v1/auth/verify', async (req, res) => {
     if (!email && !phone) {
       return res.status(403).json({
         error: 'ACCESS_DENIED',
-        message: 'Your account is not registered or active. Please contact system admin.',
+        message: 'Your account is not registered, please contact support@netgecko.net to gain access',
       });
     }
 
@@ -167,7 +167,7 @@ app.post('/api/v1/auth/verify', async (req, res) => {
     if (!record || !record.fields?.Active) {
       return res.status(403).json({
         error: 'ACCESS_DENIED',
-        message: 'Your account is not registered or active. Please contact system admin.',
+        message: 'Your account is not registered, please contact support@netgecko.net to gain access',
       });
     }
 
