@@ -288,8 +288,8 @@ function toAirtableFields(input, fpoId) {
   const fields = { ...input };
 
   // Link fields expect arrays of record IDs.
-  if (fields['Main crop sold to Cooperative'] && typeof fields['Main crop sold to Cooperative'] === 'string') {
-    fields['Main crop sold to Cooperative'] = [fields['Main crop sold to Cooperative']];
+  if (fields['Main product sold to Partner'] && typeof fields['Main product sold to Partner'] === 'string') {
+    fields['Main product sold to Partner'] = [fields['Main product sold to Partner']];
   }
 
   if (fpoId) {
@@ -375,13 +375,18 @@ function buildLoansFilter(fpoId, fpoName) {
   const escapedName = (fpoName || '').replace(/'/g, "''");
   const conditions = [];
 
+  // Loans store the partner as free text in {FPO} and as links in
+  // {FPO Input} / {FPO Cash Advance}; ARRAYJOIN on a link yields names,
+  // so match the partner name across all of them.
   if (escapedName) {
     conditions.push(`SEARCH('${escapedName}', {FPO}) > 0`);
+    conditions.push(`SEARCH('${escapedName}', ARRAYJOIN({FPO Input}, ',')) > 0`);
+    conditions.push(`SEARCH('${escapedName}', ARRAYJOIN({FPO Cash Advance}, ',')) > 0`);
+    conditions.push(`SEARCH('${escapedName}', ARRAYJOIN({Name (from FPOs 2)}, ',')) > 0`);
   }
 
   if (escapedId) {
-    conditions.push(`FIND('${escapedId}', ARRAYJOIN({FPO Input}, ',')) > 0`);
-    conditions.push(`FIND('${escapedId}', ARRAYJOIN({FPO Cash Advance}, ',')) > 0`);
+    conditions.push(`FIND('${escapedId}', {FPO}) > 0`);
   }
 
   if (!conditions.length) return '1';

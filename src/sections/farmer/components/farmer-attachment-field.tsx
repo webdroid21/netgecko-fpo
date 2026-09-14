@@ -1,0 +1,187 @@
+import { toast } from 'sonner';
+import { useRef, useState } from 'react';
+import { ref, getStorage, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import MuiLink from '@mui/material/Link';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
+
+import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
+import { firebaseApp } from 'src/lib/firebase';
+
+import { Iconify } from 'src/components/iconify';
+
+// ----------------------------------------------------------------------
+
+type Attachment = {
+  id: string;
+  url: string;
+  filename?: string;
+  type?: string;
+  thumbnails?: { small?: { url: string } };
+};
+
+type FarmerAttachmentFieldProps = {
+  farmerId: string;
+  name: string;
+  label: string;
+  value?: Attachment[];
+  onSaved: () => void;
+};
+
+export function FarmerAttachmentField({
+  farmerId,
+  name,
+  label,
+  value,
+  onSaved,
+}: FarmerAttachmentFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslate('farmers');
+  const [uploading, setUploading] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const attachments: Attachment[] = Array.isArray(value) ? value : [];
+
+  const patchAttachments = async (next: { id?: string; url?: string; filename?: string }[]) => {
+    await axios.patch(`/api/v1/farmers/${farmerId}`, { fields: { [name]: next } });
+    onSaved();
+  };
+
+  const handleFile = async (file: File) => {
+    setUploading(true);
+    try {
+      const storage = getStorage(firebaseApp);
+      const fileRef = ref(storage, `farmer-ids/${farmerId}/${Date.now()}-${file.name}`);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      await patchAttachments([
+        ...attachments.map((a) => ({ id: a.id })),
+        { url, filename: file.name },
+      ]);
+      toast.success(`${label} updated successfully`);
+    } catch (error: any) {
+      toast.error(error?.message || `Failed to upload ${label}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemove = async (attachment: Attachment) => {
+    setRemovingId(attachment.id);
+    try {
+      await patchAttachments(
+        attachments.filter((a) => a.id !== attachment.id).map((a) => ({ id: a.id }))
+      );
+      toast.success('Attachment removed');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to remove attachment');
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  return (
+    <Box sx={{ p: 1 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {label}
+      </Typography>
+
+      {attachments.length === 0 ? (
+        <Typography variant="body1" sx={{ color: 'text.disabled' }}>
+          —
+        </Typography>
+      ) : (
+        <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+          {attachments.map((attachment) => {
+            const filename = attachment.filename || 'Attachment';
+            const isImage =
+              attachment.type?.startsWith('image/') ||
+              /\.(png|jpe?g|gif|webp|heic)$/i.test(filename);
+            const thumb = attachment.thumbnails?.small?.url ?? (isImage ? attachment.url : null);
+
+            return (
+              <Stack key={attachment.id} direction="row" alignItems="center" spacing={1}>
+                {thumb && (
+                  <Box
+                    component="img"
+                    src={thumb}
+                    alt={filename}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      objectFit: 'cover',
+                      borderRadius: 0.5,
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+                <MuiLink
+                  href={attachment.url}
+                  target="_blank"
+                  rel="noopener"
+                  variant="body2"
+                  sx={{
+                    flex: 1,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {filename}
+                </MuiLink>
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemove(attachment)}
+                  disabled={Boolean(removingId)}
+                >
+                  {removingId === attachment.id ? (
+                    <CircularProgress size={16} />
+                  ) : (
+                    <Iconify icon={'solar:trash-bin-trash-bold' as any} width={16} />
+                  )}
+                </IconButton>
+              </Stack>
+            );
+          })}
+        </Stack>
+      )}
+
+      <Button
+        size="small"
+        startIcon={
+          uploading ? (
+            <CircularProgress size={14} />
+          ) : (
+            <Iconify icon={'solar:upload-bold' as any} width={16} />
+          )
+        }
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        sx={{ mt: 0.5 }}
+      >
+        {uploading
+          ? t('fields.uploading')
+          : attachments.length
+            ? t('fields.addFile')
+            : t('fields.attachFile')}
+      </Button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = '';
+        }}
+      />
+    </Box>
+  );
+}

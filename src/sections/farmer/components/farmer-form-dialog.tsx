@@ -1,8 +1,8 @@
 import type { Farmer } from '../types';
 
 import { z } from 'zod';
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
@@ -39,9 +39,9 @@ const schema = z.object({
   'District (form)': z.string().min(1, { message: 'Required' }),
   Region: z.string().optional(),
   'Member since (date)': z.string().min(1, { message: 'Required' }),
-  'Main crop sold to Cooperative': z.string().optional(),
-  'Volume sold last season A to Cooperative (kg)': z.number().optional(),
-  'Volume sold last season B to Cooperative (kg) copy': z.number().optional(),
+  'Main product sold to Partner': z.string().optional(),
+  'Quantity sold last season A to Partner (units, kg, liter)': z.number().optional(),
+  'Quantity sold last season B to Partner (units, kg, liter)': z.number().optional(),
   '# seasonal/temporary workers hired & paid by farmer': z.number().optional(),
   '# permanent workers hired & paid by farmer': z.number().optional(),
 });
@@ -76,10 +76,11 @@ function getDefaultValues(farmer?: Farmer | null): FormValues {
     'District (form)': f?.['District (form)'] ?? '',
     Region: f?.Region ?? '',
     'Member since (date)': f?.['Member since (date)'] ?? '',
-    'Main crop sold to Cooperative': f?.['Main crop sold to Cooperative']?.[0] ?? '',
-    'Volume sold last season A to Cooperative (kg)': f?.['Volume sold last season A to Cooperative (kg)'] ?? undefined,
-    'Volume sold last season B to Cooperative (kg) copy':
-      f?.['Volume sold last season B to Cooperative (kg) copy'] ?? undefined,
+    'Main product sold to Partner': f?.['Main product sold to Partner']?.[0] ?? '',
+    'Quantity sold last season A to Partner (units, kg, liter)':
+      f?.['Quantity sold last season A to Partner (units, kg, liter)'] ?? undefined,
+    'Quantity sold last season B to Partner (units, kg, liter)':
+      f?.['Quantity sold last season B to Partner (units, kg, liter)'] ?? undefined,
     '# seasonal/temporary workers hired & paid by farmer':
       f?.['# seasonal/temporary workers hired & paid by farmer'] ?? undefined,
     '# permanent workers hired & paid by farmer': f?.['# permanent workers hired & paid by farmer'] ?? undefined,
@@ -88,6 +89,7 @@ function getDefaultValues(farmer?: Farmer | null): FormValues {
 
 export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: FarmerFormDialogProps) {
   const isEdit = Boolean(farmer);
+  const [crops, setCrops] = useState<{ id: string; name: string }[]>([]);
 
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(farmer),
@@ -103,6 +105,17 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
   useEffect(() => {
     if (open) {
       reset(getDefaultValues(farmer));
+      axios
+        .get('/api/v1/crops')
+        .then(({ data }) =>
+          setCrops(
+            (data.records || []).map((c: any) => ({
+              id: c.id,
+              name: String(c.fields['Crop Name'] ?? c.id),
+            }))
+          )
+        )
+        .catch(() => setCrops([]));
     }
   }, [open, farmer, reset]);
 
@@ -112,9 +125,11 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
     // Not persisted to Airtable without a public file URL.
     delete payload['Farmer Picture'];
 
-    // Convert free-text crop to a linked-record id via typecast on the server.
-    if (payload['Main crop sold to Cooperative']) {
-      payload['Main crop sold to Cooperative'] = [payload['Main crop sold to Cooperative']];
+    // Link fields expect an array of record ids.
+    if (payload['Main product sold to Partner']) {
+      payload['Main product sold to Partner'] = [payload['Main product sold to Partner']];
+    } else {
+      delete payload['Main product sold to Partner'];
     }
 
     try {
@@ -210,9 +225,25 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
+              <Field.Select
+                name="Main product sold to Partner"
+                label="Main produce sold to Partner"
+                helperText="Mandatory for PayLater (loan)"
+              >
+                <MenuItem value="">None</MenuItem>
+                {crops.map((crop) => (
+                  <MenuItem key={crop.id} value={crop.id}>
+                    {crop.name}
+                  </MenuItem>
+                ))}
+              </Field.Select>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
-                name="Main crop sold to Cooperative"
-                label="Main crop sold to Cooperative"
+                type="number"
+                name="Quantity sold last season A to Partner (units, kg, liter)"
+                label="Quantity sold last season A to Partner"
                 helperText="Mandatory for PayLater (loan)"
               />
             </Grid>
@@ -220,17 +251,8 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Volume sold last season A to Cooperative (kg)"
-                label="Volume sold last season A to Cooperative (kg)"
-                helperText="Mandatory for PayLater (loan)"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text
-                type="number"
-                name="Volume sold last season B to Cooperative (kg) copy"
-                label="Volume sold last season B to Cooperative (kg)"
+                name="Quantity sold last season B to Partner (units, kg, liter)"
+                label="Quantity sold last season B to Partner"
                 helperText="Mandatory for PayLater (loan)"
               />
             </Grid>

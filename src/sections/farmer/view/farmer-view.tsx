@@ -43,6 +43,7 @@ import { useAuthContext } from 'src/auth/hooks';
 
 import { FarmerFormDialog } from '../components/farmer-form-dialog';
 import { InlineEditField } from '../components/farmer-inline-field';
+import { FarmerAttachmentField } from '../components/farmer-attachment-field';
 
 // ----------------------------------------------------------------------
 
@@ -298,7 +299,14 @@ export function FarmerView() {
     fetchCrops();
   }, [fetchCrops]);
 
-  const cropOptions = useMemo(() => crops.map((c) => String(c.fields['Crop Name'] ?? c.id)), [crops]);
+  const cropSelectOptions = useMemo(
+    () =>
+      crops.map((c) => ({
+        value: c.id,
+        label: String(c.fields['Crop Name'] ?? c.id),
+      })),
+    [crops]
+  );
 
   const fetchLands = useCallback(async () => {
     if (!activeFbo) return;
@@ -604,15 +612,18 @@ export function FarmerView() {
 
     const f = detailFarmer.fields;
     const parsedAddress = parseAddress(f.Address);
-    const cropIdOrName = Array.isArray(f['Main crop sold to Cooperative'])
-      ? f['Main crop sold to Cooperative'][0]
-      : f['Main crop sold to Cooperative'];
-    const cropRecord = crops.find((c) => c.id === cropIdOrName);
-    const cropValue = cropRecord ? cropRecord.fields['Crop Name'] ?? cropIdOrName : cropIdOrName;
+    const cropLink = f['Main product sold to Partner'];
+    const cropId = Array.isArray(cropLink) ? cropLink[0] : cropLink;
+    const cropRecord = crops.find((c) => c.id === cropId);
+    const cropLookup = f['Crop Name (from Main crop sold to Cooperative)'];
+    const cropName =
+      cropRecord?.fields['Crop Name'] ??
+      (Array.isArray(cropLookup) ? cropLookup[0] : cropLookup) ??
+      undefined;
 
     const hasFarmer = (record?: { fields: Record<string, any> }) => {
       if (!record) return false;
-      const farmer = record.fields.Farmer;
+      const farmer = record.fields.Farmer ?? record.fields.Farmers;
       if (Array.isArray(farmer)) return farmer.includes(detailFarmer.id);
       return farmer === detailFarmer.id;
     };
@@ -715,8 +726,14 @@ export function FarmerView() {
                 onSaved={handleFieldSaved}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.farmerIdFrontBack')} value={f['Farmer ID (front back)']} />
+            <Grid size={{ xs: 12 }}>
+              <FarmerAttachmentField
+                farmerId={detailFarmer.id}
+                name="Farmer ID (front back)"
+                label={t('fields.farmerIdFrontBack')}
+                value={f['Farmer ID (front back)']}
+                onSaved={handleFieldSaved}
+              />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
@@ -811,7 +828,7 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
                 label={t('fields.verifiedMobileMoneyNumber')}
-                value={f['Verified mobile money number']}
+                value={f['Verified Mobile Money Number']}
               />
               <Typography variant="caption" sx={{ color: 'text.disabled', px: 1 }}>
                 {t('fields.verifiedMobileMoneyNote')}
@@ -834,41 +851,6 @@ export function FarmerView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
-                name="Main crop sold to Cooperative"
-                label={t('fields.mainCropSold')}
-                value={cropValue}
-                type="select"
-                options={cropOptions}
-                arrayValue
-                onSaved={handleFieldSaved}
-              />
-              <Typography variant="caption" sx={{ color: 'text.disabled', px: 1 }}>
-                {t('fields.mainCropSoldHelper')}
-              </Typography>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Volume sold last season A to Cooperative (kg)"
-                label={t('fields.volumeSeasonA')}
-                value={f['Volume sold last season A to Cooperative (kg)']}
-                type="number"
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Volume sold last season B to Cooperative (kg) copy"
-                label={t('fields.volumeSeasonB')}
-                value={f['Volume sold last season B to Cooperative (kg) copy']}
-                type="number"
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
                 name="Member since (date)"
                 label={t('fields.memberSince')}
                 value={f['Member since (date)']}
@@ -878,6 +860,42 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.memberSinceYear')} value={f['Member since (year)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Main product sold to Partner"
+                label={t('fields.mainCropSold')}
+                value={cropId ?? ''}
+                displayValue={cropName ?? '—'}
+                type="select"
+                options={cropSelectOptions}
+                arrayValue
+                onSaved={handleFieldSaved}
+              />
+              <Typography variant="caption" sx={{ color: 'text.disabled', px: 1 }}>
+                {t('fields.mainCropSoldHelper')}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Quantity sold last season A to Partner (units, kg, liter)"
+                label={t('fields.volumeSeasonA')}
+                value={f['Quantity sold last season A to Partner (units, kg, liter)']}
+                type="number"
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Quantity sold last season B to Partner (units, kg, liter)"
+                label={t('fields.volumeSeasonB')}
+                value={f['Quantity sold last season B to Partner (units, kg, liter)']}
+                type="number"
+                onSaved={handleFieldSaved}
+              />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
@@ -932,7 +950,7 @@ export function FarmerView() {
               }));
               const salesLinks = farmerSales.map((s) => ({
                 id: s.id,
-                label: s.fields['Order #'] || s.fields.Date || s.id,
+                label: s.fields['Order #'] || s.fields.Name || s.fields['Date Received'] || s.id,
                 href: makeLink('sales', s.id, 'salesOrderId'),
               }));
 

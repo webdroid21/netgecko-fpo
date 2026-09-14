@@ -15,13 +15,16 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
+type SelectOption = string | { value: string; label: string };
+
 type InlineEditFieldProps = {
   farmerId: string;
   name: string;
   label: string;
   value?: any;
+  displayValue?: ReactNode;
   type?: 'text' | 'date' | 'number' | 'select';
-  options?: string[];
+  options?: SelectOption[];
   arrayValue?: boolean;
   readOnly?: boolean;
   helperText?: ReactNode;
@@ -33,6 +36,7 @@ export function InlineEditField({
   name,
   label,
   value,
+  displayValue,
   type = 'text',
   options,
   arrayValue,
@@ -47,7 +51,7 @@ export function InlineEditField({
   const [saving, setSaving] = useState(false);
   const previousValue = useRef(value);
 
-  const displayValue = value ?? '—';
+  const shown = displayValue ?? (value ?? '—');
 
   const handleStart = () => {
     if (readOnly) return;
@@ -133,6 +137,9 @@ export function InlineEditField({
     }
 
     if (type === 'select' && options?.length) {
+      const normalized = options.map((option) =>
+        typeof option === 'string' ? { value: option, label: option } : option
+      );
       return (
         <TextField
           select
@@ -147,9 +154,9 @@ export function InlineEditField({
           }}
           disabled={saving}
         >
-          {options.map((option) => (
-            <MenuItem key={option} value={option}>
-              {option}
+          {normalized.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
             </MenuItem>
           ))}
         </TextField>
@@ -204,7 +211,7 @@ export function InlineEditField({
           </Box>
         ) : (
           <Typography variant="body1" sx={{ flexGrow: 1 }}>
-            {displayValue}
+            {shown}
           </Typography>
         )}
 
