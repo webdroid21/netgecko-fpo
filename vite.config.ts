@@ -23,6 +23,9 @@ export default defineConfig({
       },
     }),
   ],
+  // Keep hashed build chunks separate from public/assets so Vercel can mark
+  // only the build output as immutable.
+  build: { assetsDir: '_assets' },
   resolve: {
     alias: [
       {

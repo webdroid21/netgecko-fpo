@@ -6,8 +6,23 @@ import GlobalStyles from '@mui/material/GlobalStyles';
 
 // ----------------------------------------------------------------------
 
+// Chunk-load failures after a new deploy (stale hashed files) heal with a
+// reload — the fresh index.html points at the new chunks.
+const RELOAD_GUARD_KEY = 'chunk-reload-at';
+const CHUNK_ERROR_PATTERN =
+  /dynamically imported module|importing a module script|loading chunk|loading css chunk/i;
+
 export function ErrorBoundary() {
   const error = useRouteError();
+
+  if (error instanceof Error && CHUNK_ERROR_PATTERN.test(`${error.name} ${error.message}`)) {
+    const last = Number(sessionStorage.getItem(RELOAD_GUARD_KEY) ?? 0);
+    if (Date.now() - last > 10_000) {
+      sessionStorage.setItem(RELOAD_GUARD_KEY, String(Date.now()));
+      window.location.reload();
+      return null;
+    }
+  }
 
   return (
     <>
