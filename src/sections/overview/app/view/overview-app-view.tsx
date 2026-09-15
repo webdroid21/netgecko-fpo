@@ -164,10 +164,12 @@ function QuickAccessCard({
               noWrap
               sx={{ lineHeight: 1.1, color: 'text.primary', fontSize: '1.5rem', fontWeight: 600 }}
             >
-              <Box component="span" sx={{ color: `${color}.main`, fontWeight: 700 }}>
+              <Box component="span" sx={{ fontWeight: 700 }}>
                 {fNumber(total)}
               </Box>{' '}
-              {title}
+              <Box component="span" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                {title}
+              </Box>
             </Typography>
             <Typography
               variant="body2"
@@ -526,7 +528,7 @@ export function OverviewAppView() {
             description={t('quickAccessLoansDescription')}
             total={stats.loans}
             icon={svgIcon('ic-banking')}
-            color="secondary"
+            color="primary"
             href={paths.dashboard.fpo.loans}
           />
         </Grid>
@@ -538,7 +540,7 @@ export function OverviewAppView() {
             description={t('quickAccessPaymentsDescription')}
             total={stats.payments}
             icon={svgIcon('ic-dollar')}
-            color="success"
+            color="info"
             href={paths.dashboard.fpo.payments}
           />
         </Grid>
@@ -550,7 +552,7 @@ export function OverviewAppView() {
             description={t('quickAccessSalesDescription')}
             total={stats.sales}
             icon={svgIcon('ic-order')}
-            color="error"
+            color="warning"
             href={paths.dashboard.fpo.sales}
           />
         </Grid>
@@ -579,7 +581,7 @@ export function OverviewAppView() {
             title={t('recentLoans')}
             viewAllHref={paths.dashboard.fpo.loans}
             icon={svgIcon('ic-banking')}
-            color="secondary"
+            color="primary"
             emptyText={t('noRecentLoans')}
             items={stats.recentLoans.map((loan) => ({
               id: loan.id,
@@ -599,7 +601,7 @@ export function OverviewAppView() {
             title={t('recentPayment')}
             viewAllHref={paths.dashboard.fpo.payments}
             icon={svgIcon('ic-dollar')}
-            color="success"
+            color="info"
             emptyText={t('noRecentPayment')}
             items={stats.recentPayments.map((payment) => ({
               id: payment.id,
