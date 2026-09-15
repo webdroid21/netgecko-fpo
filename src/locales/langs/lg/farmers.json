@@ -44,6 +44,7 @@
     "email": "Email",
     "address": "Address",
     "addressNote": "Will appear once verified by NetGecko",
+    "addressHelper": "Londa ekyalo — parish, sub-county, district ne region bijjawo otomatikki",
     "village": "Kyalo",
     "parish": "Parish",
     "subCounty": "Sub-county",
@@ -76,7 +77,11 @@
     "sales": "Sales",
     "sale": "Sale"
   },
-  "address": {
-    "section": "Eddereeva"
+  "sections": {
+    "identity": "Ebikwata ku muntu",
+    "contact": "Okukwatagana",
+    "address": "Eddereeva",
+    "membership": "Obumemba n'ebilimo",
+    "workers": "Abakozi"
   }
 }

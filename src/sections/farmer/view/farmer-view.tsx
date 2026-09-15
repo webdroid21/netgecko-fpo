@@ -299,6 +299,15 @@ export function FarmerView() {
     fetchCrops();
   }, [fetchCrops]);
 
+  const [villages, setVillages] = useState<{ id: string; fields: Record<string, any> }[]>([]);
+
+  useEffect(() => {
+    axios
+      .get('/api/v1/villages')
+      .then(({ data }) => setVillages(data.records || []))
+      .catch(() => setVillages([]));
+  }, []);
+
   const cropSelectOptions = useMemo(
     () =>
       crops.map((c) => ({
@@ -675,6 +684,12 @@ export function FarmerView() {
           </Stack>
 
           <Grid container spacing={3}>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+                {t('sections.identity')}
+              </Typography>
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
                 farmerId={detailFarmer.id}
@@ -690,6 +705,24 @@ export function FarmerView() {
                 name="Surname"
                 label={t('fields.surname')}
                 value={f.Surname}
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="NIN (National Identification Number)"
+                label={t('fields.nin')}
+                value={f['NIN (National Identification Number)']}
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Farmer Code"
+                label={t('fields.farmerCode')}
+                value={f['Farmer Code']}
                 onSaved={handleFieldSaved}
               />
             </Grid>
@@ -717,15 +750,6 @@ export function FarmerView() {
                 onSaved={handleFieldSaved}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="NIN (National Identification Number)"
-                label={t('fields.nin')}
-                value={f['NIN (National Identification Number)']}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
             <Grid size={{ xs: 12 }}>
               <FarmerAttachmentField
                 farmerId={detailFarmer.id}
@@ -741,70 +765,9 @@ export function FarmerView() {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1, pb: 1 }}>
-                {t('address.section')}
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+                {t('sections.contact')}
               </Typography>
-            </Grid>
-
-            {!isRecordIdLike(f.Address) && (
-              <Grid size={{ xs: 12 }}>
-                <DetailRow
-                  label={t('fields.address')}
-                  value={f.Address}
-                  helperText={t('fields.addressNote')}
-                />
-              </Grid>
-            )}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Village"
-                label={t('fields.village')}
-                value={f.Village || parsedAddress.village}
-                helperText={t('fields.addressNote')}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Parish"
-                label={t('fields.parish')}
-                value={f.Parish || parsedAddress.parish}
-                helperText={t('fields.addressNote')}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="Sub-county"
-                label={t('fields.subCounty')}
-                value={f['Sub-county'] || parsedAddress.subCounty}
-                helperText={t('fields.addressNote')}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <InlineEditField
-                farmerId={detailFarmer.id}
-                name="District (form)"
-                label={t('fields.district')}
-                value={f['District (form)'] || parsedAddress.district}
-                helperText={t('fields.addressNote')}
-                onSaved={handleFieldSaved}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('fields.region')}
-                value={f['Region Name']?.[0] ?? f.Region ?? parsedAddress.region}
-                helperText={t('fields.addressNote')}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Divider sx={{ my: 1 }} />
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -846,6 +809,83 @@ export function FarmerView() {
 
             <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 1 }} />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+                {t('sections.address')}
+              </Typography>
+            </Grid>
+
+            {!isRecordIdLike(f.Address) && (
+              <Grid size={{ xs: 12 }}>
+                <DetailRow
+                  label={t('fields.address')}
+                  value={f.Address}
+                  helperText={t('fields.addressNote')}
+                />
+              </Grid>
+            )}
+            <Grid size={{ xs: 12 }}>
+              <InlineEditField
+                farmerId={detailFarmer.id}
+                name="Address"
+                label={t('fields.village')}
+                value={Array.isArray(f.Address) ? f.Address[0] : ''}
+                displayValue={
+                  f['Village Name']?.[0] ??
+                  f['Summary (from Address)']?.[0] ??
+                  f.Village ??
+                  parsedAddress.village ??
+                  '—'
+                }
+                type="select"
+                options={villages.map((v) => ({
+                  value: v.id,
+                  label: String(v.fields.Summary ?? v.fields['Village Name'] ?? v.id),
+                }))}
+                arrayValue
+                helperText={t('fields.addressHelper')}
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.parish')}
+                value={f['Parish Name']?.[0] ?? f.Parish ?? parsedAddress.parish}
+                helperText={t('fields.addressNote')}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.subCounty')}
+                value={f['Sub-County Name']?.[0] ?? f['Sub-county'] ?? parsedAddress.subCounty}
+                helperText={t('fields.addressNote')}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.district')}
+                value={f['District Name']?.[0] ?? f['District (form)'] ?? parsedAddress.district}
+                helperText={t('fields.addressNote')}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.region')}
+                value={f['Region Name']?.[0] ?? f.Region ?? parsedAddress.region}
+                helperText={t('fields.addressNote')}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider sx={{ my: 1 }} />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+                {t('sections.membership')}
+              </Typography>
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -900,6 +940,12 @@ export function FarmerView() {
 
             <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 1 }} />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+                {t('sections.workers')}
+              </Typography>
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>

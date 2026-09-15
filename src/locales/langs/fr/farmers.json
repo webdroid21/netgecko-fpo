@@ -44,6 +44,7 @@
     "email": "E-mail",
     "address": "Adresse",
     "addressNote": "Sera affiché une fois vérifié par NetGecko",
+    "addressHelper": "Sélectionnez le village — paroisse, sous-comté, district et région sont remplis automatiquement",
     "village": "Village",
     "parish": "Paroisse",
     "subCounty": "Sous-comté",
@@ -76,7 +77,11 @@
     "sales": "Ventes",
     "sale": "Vente"
   },
-  "address": {
-    "section": "Adresse"
+  "sections": {
+    "identity": "Identité",
+    "contact": "Contact",
+    "address": "Adresse",
+    "membership": "Adhésion & produits",
+    "workers": "Travailleurs"
   }
 }

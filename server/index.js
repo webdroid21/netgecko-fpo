@@ -605,6 +605,27 @@ app.get('/api/v1/crops', requireAuth, async (req, res) => {
 
 // ----------------------------------------------------------------------
 
+const AIRTABLE_VILLAGES_TABLE_ID = process.env.AIRTABLE_VILLAGES_TABLE_ID || 'tbl3PjHhXWSOeCVVv';
+
+app.get('/api/v1/villages', requireAuth, async (req, res) => {
+  try {
+    const { data } = await airtableApi.post(`/${AIRTABLE_VILLAGES_TABLE_ID}/listRecords`, {
+      maxRecords: 1000,
+    });
+
+    return res.json({ records: data.records || [] });
+  } catch (error) {
+    console.error('/api/v1/villages error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch villages.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+
 app.get('/api/v1/lands', requireAuth, async (req, res) => {
   try {
     const { fpoId, fpoName } = req.query;
