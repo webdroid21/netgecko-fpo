@@ -995,24 +995,31 @@ export function FarmerView() {
                 label: l.fields.Land || t('unnamedLand'),
                 href: makeLink('lands', l.id, 'landId'),
               }));
+              // Airtable formula ids embed " - <name> - <nin>"; show the short ref.
+              const shortRef = (value: any, fallback: string) =>
+                String(value || '').split(' - ')[0] || fallback;
+
               const orderLinks = farmerInputOrders.map((o) => ({
                 id: o.id,
-                label: o.fields['Order number'] || o.id,
+                label: shortRef(o.fields['Order number'], o.id),
                 href: makeLink('input-orders', o.id, 'inputOrderId'),
               }));
               const loanLinks = farmerLoans.map((l) => ({
                 id: l.id,
-                label: l.fields['Loan ID'] || l.id,
+                label: shortRef(l.fields['Loan ID'], l.id),
                 href: makeLink('loans', l.id, 'loanId'),
               }));
               const paymentLinks = farmerPayments.map((p) => ({
                 id: p.id,
-                label: p.fields['Payment ID'] || p.id,
+                label: shortRef(p.fields['Payment ID'], p.id),
                 href: makeLink('payments', p.id, 'paymentId'),
               }));
               const salesLinks = farmerSales.map((s) => ({
                 id: s.id,
-                label: s.fields['Order #'] || s.fields.Name || s.fields['Date Received'] || s.id,
+                label: shortRef(
+                  s.fields['Order #'] || s.fields.Name || s.fields['Date Received'],
+                  s.id
+                ),
                 href: makeLink('sales', s.id, 'salesOrderId'),
               }));
 

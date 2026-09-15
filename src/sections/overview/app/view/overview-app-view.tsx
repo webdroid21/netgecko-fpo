@@ -37,7 +37,7 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-type PaletteColor = 'primary' | 'success' | 'info' | 'warning' | 'error';
+type PaletteColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error';
 
 type DashboardStats = {
   farmers: number;
@@ -99,7 +99,7 @@ function IconBadge({ icon, color }: { icon: React.ReactNode; color: PaletteColor
         alignItems: 'center',
         justifyContent: 'center',
         color: `${color}.dark`,
-        bgcolor: (theme) => `${theme.vars.palette[color].lighter}`,
+        bgcolor: `${color}.lighter`,
       }}
     >
       {typeof icon === 'string' ? <Iconify icon={icon as any} width={24} /> : icon}
@@ -441,13 +441,14 @@ export function OverviewAppView() {
         <Grid size={{ xs: 12 }}>
           <Box
             sx={{
-              p: 2.5,
+              py: 4,
+              px: { xs: 3, md: 5 },
               borderRadius: 2,
               color: 'common.white',
               bgcolor: 'primary.main',
             }}
           >
-            <Typography variant="subtitle1" fontWeight={600}>
+            <Typography variant="h5" fontWeight={600} sx={{ lineHeight: 1.6, maxWidth: 960 }}>
               Welcome to NetGecko App - Boost farm productivity, grow your business and increase
               farmers&rsquo; incomes by using{' '}
               <MuiLink
@@ -456,6 +457,7 @@ export function OverviewAppView() {
                 rel="noopener"
                 color="inherit"
                 underline="always"
+                sx={{ fontWeight: 700 }}
               >
                 NetGecko service
               </MuiLink>{' '}
@@ -500,7 +502,7 @@ export function OverviewAppView() {
             description={t('quickAccessLandsDescription')}
             total={stats.lands}
             icon={svgIcon('ic-land')}
-            color="primary"
+            color="info"
             href={paths.dashboard.fpo.lands}
           />
         </Grid>
@@ -512,7 +514,7 @@ export function OverviewAppView() {
             description={t('quickAccessInputOrdersDescription')}
             total={stats.inputOrders}
             icon={svgIcon('ic-order')}
-            color="primary"
+            color="warning"
             href={paths.dashboard.fpo.inputOrders}
           />
         </Grid>
@@ -524,7 +526,7 @@ export function OverviewAppView() {
             description={t('quickAccessLoansDescription')}
             total={stats.loans}
             icon={svgIcon('ic-banking')}
-            color="primary"
+            color="secondary"
             href={paths.dashboard.fpo.loans}
           />
         </Grid>
@@ -536,7 +538,7 @@ export function OverviewAppView() {
             description={t('quickAccessPaymentsDescription')}
             total={stats.payments}
             icon={svgIcon('ic-dollar')}
-            color="primary"
+            color="success"
             href={paths.dashboard.fpo.payments}
           />
         </Grid>
@@ -548,7 +550,7 @@ export function OverviewAppView() {
             description={t('quickAccessSalesDescription')}
             total={stats.sales}
             icon={svgIcon('ic-order')}
-            color="primary"
+            color="error"
             href={paths.dashboard.fpo.sales}
           />
         </Grid>
@@ -559,12 +561,12 @@ export function OverviewAppView() {
             title={t('recentOrders')}
             viewAllHref={paths.dashboard.fpo.inputOrders}
             icon={svgIcon('ic-order')}
-            color="primary"
+            color="warning"
             emptyText={t('noRecentOrders')}
             items={stats.recentInputOrders.map((order) => ({
               id: order.id,
-              primary: order.fields['Order number'] || 'Unnamed',
-              secondary: (order.fields['Name (from Farmer)'] || []).join(', '),
+              primary: String(order.fields['Order number'] || '').split(' - ')[0] || 'Unnamed',
+              secondary: (order.fields['Name (from Farmers)'] || []).join(', '),
               amount: `${fNumber(order.fields['Total Order Value (UGX)'])} UGX`,
               href: `${paths.dashboard.fpo.inputOrders}?farmerId=${order.fields.Farmer?.[0] ?? ''}`,
             }))}
@@ -577,11 +579,13 @@ export function OverviewAppView() {
             title={t('recentLoans')}
             viewAllHref={paths.dashboard.fpo.loans}
             icon={svgIcon('ic-banking')}
-            color="primary"
+            color="secondary"
             emptyText={t('noRecentLoans')}
             items={stats.recentLoans.map((loan) => ({
               id: loan.id,
-              primary: `Loan #${loan.fields['Loan ID'] ?? '-'}`,
+              primary:
+                String(loan.fields['Loan ID'] || '').split(' - ')[0] ||
+                `Loan #${loan.fields.ID ?? '-'}`,
               secondary: (loan.fields['Name (from Farmer)'] || []).join(', '),
               amount: `${fNumber(loan.fields['Total amount'])} UGX`,
               href: `${paths.dashboard.fpo.loans}?farmerId=${loan.fields.Farmer?.[0] ?? ''}`,
@@ -595,11 +599,11 @@ export function OverviewAppView() {
             title={t('recentPayment')}
             viewAllHref={paths.dashboard.fpo.payments}
             icon={svgIcon('ic-dollar')}
-            color="primary"
+            color="success"
             emptyText={t('noRecentPayment')}
             items={stats.recentPayments.map((payment) => ({
               id: payment.id,
-              primary: `Payment #${payment.fields['Payment ID'] ?? '-'}`,
+              primary: `${payment.fields['Payment ID'] ?? '-'}`,
               secondary: payment.fields['Payment Date'],
               amount: `${fNumber(payment.fields['Payment Amount (UGX)'])} UGX`,
               href: paths.dashboard.fpo.payments,

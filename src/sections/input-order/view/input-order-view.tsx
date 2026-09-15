@@ -51,6 +51,19 @@ const STATUS_CARDS = [
   { key: 'Closed', label: 'Closed', color: 'success' as const },
 ];
 
+// Formula ids like "Input Order #633 - RICHARD SENGENDO - CM60047107K9FG"
+// embed " - <name> - <nin>"; the short ref is just the part before it.
+function shortRef(value: unknown): string {
+  return String(value ?? '').split(' - ')[0];
+}
+
+function farmerName(value: unknown): string {
+  return (Array.isArray(value) ? value : [value])
+    .map((v) => String(v ?? '').split(' - ')[0])
+    .filter(Boolean)
+    .join(', ');
+}
+
 function SummaryCard({
   title,
   total,
@@ -435,7 +448,7 @@ export function InputOrderView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={order.fields['Order number'] || t('unnamedOrder')}
+                      primary={shortRef(order.fields['Order number']) || t('unnamedOrder')}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     {order.fields['Order Status'] && (
@@ -447,9 +460,10 @@ export function InputOrderView() {
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {(order.fields['Name (from Season)'] || []).join(', ')}
+                    {farmerName(order.fields['Name (from Farmers)'])}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                    {(order.fields['Name (from Season)'] || []).join(', ')} ·{' '}
                     {fNumber(order.fields['Total Order Value (UGX)'])} UGX · {order.fields['PayNow PayLater']}
                   </Typography>
                 </ListItemButton>
@@ -498,7 +512,7 @@ export function InputOrderView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{f['Order number'] || t('unnamedOrder')}</Typography>
+              <Typography variant="h5">{shortRef(f['Order number']) || t('unnamedOrder')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {formattedDate}
               </Typography>
