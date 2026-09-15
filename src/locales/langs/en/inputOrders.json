@@ -5,7 +5,7 @@
     "newOrder": "Add input order"
   },
   "summary": {
-    "trendLabel": "vs previous year",
+    "trendLabel": "vs last year",
     "totalOrders": {
       "title": "Total orders",
       "subtext": "{{value}} UGX total value"
