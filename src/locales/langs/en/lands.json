@@ -14,8 +14,8 @@
       "subtext": "Combined land size"
     },
     "landOwned": {
-      "title": "Land owned",
-      "subtext": "{{count}} land rented"
+      "title": "Lands owned",
+      "subtext": "{{count}} lands rented"
     },
     "mainProduct": {
       "title": "Main product",
