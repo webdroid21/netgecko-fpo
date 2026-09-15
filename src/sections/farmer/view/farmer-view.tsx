@@ -692,7 +692,8 @@ export function FarmerView() {
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Given Name"
                 label={t('fields.givenName')}
                 value={f['Given Name']}
@@ -701,7 +702,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Surname"
                 label={t('fields.surname')}
                 value={f.Surname}
@@ -710,7 +712,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="NIN (National Identification Number)"
                 label={t('fields.nin')}
                 value={f['NIN (National Identification Number)']}
@@ -719,7 +722,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Farmer Code"
                 label={t('fields.farmerCode')}
                 value={f['Farmer Code']}
@@ -728,7 +732,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Birth date"
                 label={t('fields.birthDate')}
                 value={f['Birth date']}
@@ -741,7 +746,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Gender"
                 label={t('fields.gender')}
                 value={f.Gender}
@@ -772,7 +778,8 @@ export function FarmerView() {
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Phone Number"
                 label={t('fields.phoneNumber')}
                 value={f['Phone Number']}
@@ -781,7 +788,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Mobile Money Number"
                 label={t('fields.mobileMoneyNumber')}
                 value={f['Mobile Money Number']}
@@ -799,7 +807,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Email"
                 label={t('fields.email')}
                 value={f.Email}
@@ -828,7 +837,8 @@ export function FarmerView() {
             )}
             <Grid size={{ xs: 12 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Address"
                 label={t('fields.village')}
                 value={Array.isArray(f.Address) ? f.Address[0] : ''}
@@ -890,7 +900,8 @@ export function FarmerView() {
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Member since (date)"
                 label={t('fields.memberSince')}
                 value={f['Member since (date)']}
@@ -903,7 +914,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Main product sold to Partner"
                 label={t('fields.mainCropSold')}
                 value={cropId ?? ''}
@@ -919,7 +931,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Quantity sold last season A to Partner (units, kg, liter)"
                 label={t('fields.volumeSeasonA')}
                 value={f['Quantity sold last season A to Partner (units, kg, liter)']}
@@ -929,7 +942,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="Quantity sold last season B to Partner (units, kg, liter)"
                 label={t('fields.volumeSeasonB')}
                 value={f['Quantity sold last season B to Partner (units, kg, liter)']}
@@ -950,7 +964,8 @@ export function FarmerView() {
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="# seasonal/temporary workers hired & paid by farmer"
                 label={t('fields.seasonalWorkers')}
                 value={f['# seasonal/temporary workers hired & paid by farmer']}
@@ -960,7 +975,8 @@ export function FarmerView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <InlineEditField
-                farmerId={detailFarmer.id}
+                resource="farmers"
+                recordId={detailFarmer.id}
                 name="# permanent workers hired & paid by farmer"
                 label={t('fields.permanentWorkers')}
                 value={f['# permanent workers hired & paid by farmer']}

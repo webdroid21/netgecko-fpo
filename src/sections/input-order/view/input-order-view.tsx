@@ -1,7 +1,7 @@
 import type { Farmer } from 'src/sections/farmer/types';
 import type { Season, InputOrder, InputProduct } from '../types';
 
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, Fragment, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -10,10 +10,10 @@ import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
 import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import ToggleButton from '@mui/material/ToggleButton';
 import ListItemText from '@mui/material/ListItemText';
@@ -32,9 +32,16 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
+import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
+
 import { useAuthContext } from 'src/auth/hooks';
 
-import { InputOrderFormDialog } from '../components/input-order-form-dialog';
+import {
+  PAY_OPTIONS,
+  firstInputValue,
+  InputOrderFormDialog,
+  getInputProductOptions,
+} from '../components/input-order-form-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -242,14 +249,16 @@ export function InputOrderView() {
   }, []);
 
   const fetchProducts = useCallback(async () => {
+    if (!activeFbo) return;
     try {
-      const { data } = await axios.get('/api/v1/input-products');
+      const query = new URLSearchParams({ fpoId: activeFbo.id }).toString();
+      const { data } = await axios.get(`/api/v1/input-products?${query}`);
       setProducts(data.records || []);
     } catch (error: any) {
       console.error('Fetch products error:', error?.message);
       setProducts([]);
     }
-  }, []);
+  }, [activeFbo]);
 
   useEffect(() => {
     fetchOrders();
@@ -319,17 +328,6 @@ export function InputOrderView() {
   const handleEdit = (order: InputOrder) => {
     setEditingOrder(order);
     setFormOpen(true);
-  };
-
-  const handleDelete = async (order: InputOrder) => {
-    const reference = order.fields['Order number'] ?? t('unnamedOrder');
-    if (!confirm(t('confirmDeleteOrder', { reference }))) return;
-    try {
-      await axios.delete(`/api/v1/input-orders/${order.id}`);
-      fetchOrders();
-    } catch (error: any) {
-      console.error('Delete order error:', error?.message);
-    }
   };
 
   const handleStatusChange = async (order: InputOrder, newStatus: string) => {
@@ -449,7 +447,6 @@ export function InputOrderView() {
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {(order.fields['Name (from Farmers)'] || []).join(', ')} ·{' '}
                     {(order.fields['Name (from Season)'] || []).join(', ')}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
@@ -487,9 +484,8 @@ export function InputOrderView() {
         })
       : '—';
 
-    const farmerHref = f.Farmer?.[0]
-      ? `/dashboard/farmers?farmerId=${f.Farmer[0]}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`
-      : undefined;
+    const editable = f['Order Status'] === 'Open';
+    const productOptions = getInputProductOptions(products, selectedOrder);
 
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
@@ -524,9 +520,6 @@ export function InputOrderView() {
                   </Button>
                 </span>
               </Tooltip>
-              <IconButton color="error" onClick={() => handleDelete(selectedOrder)}>
-                <Iconify icon={'solar:trash-bin-trash-bold' as any} />
-              </IconButton>
             </Stack>
           </Stack>
 
@@ -554,22 +547,64 @@ export function InputOrderView() {
             </Typography>
           </Box>
 
-          <Grid container spacing={3}>
+          <Grid container spacing={3} key={selectedOrder.id}>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+                {t('sections.order')}
+              </Typography>
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
+              <InlineEditField
+                resource="input-orders"
+                recordId={selectedOrder.id}
+                name="Farmer"
                 label={t('fields.farmer')}
-                value={(f['Name (from Farmers)'] || []).join(', ')}
-                href={farmerHref}
+                required
+                type="select"
+                options={farmers.map((farmer) => ({
+                  value: farmer.id,
+                  label: farmer.fields.Name || 'Unnamed',
+                }))}
+                value={f.Farmer?.[0]}
+                displayValue={(f['Name (from Farmers)'] || []).join(', ') || '—'}
+                arrayValue
+                readOnly={!editable}
+                onSaved={fetchOrders}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
+              <InlineEditField
+                resource="input-orders"
+                recordId={selectedOrder.id}
+                name="Season"
                 label={t('fields.season')}
-                value={(f['Name (from Season)'] || []).join(', ')}
+                required
+                type="select"
+                options={seasons.map((s) => ({
+                  value: s.id,
+                  label: s.fields.Name || 'Unnamed',
+                }))}
+                value={f.Season?.[0]}
+                displayValue={(f['Name (from Season)'] || []).join(', ') || '—'}
+                arrayValue
+                readOnly={!editable}
+                onSaved={fetchOrders}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.payNowPayLater')} value={f['PayNow PayLater']} />
+              <InlineEditField
+                resource="input-orders"
+                recordId={selectedOrder.id}
+                name="PayNow PayLater"
+                label={t('fields.payNowPayLater')}
+                required
+                type="select"
+                options={PAY_OPTIONS}
+                value={f['PayNow PayLater']}
+                readOnly={!editable}
+                onSaved={fetchOrders}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.orderDate')} value={formattedDate} />
@@ -603,74 +638,96 @@ export function InputOrderView() {
               if ((!inputIds?.length && !productName) || !qty) return null;
 
               return (
-                <Grid size={{ xs: 12 }} key={idx}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      mb: 2,
-                      borderRadius: 1,
-                      border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                    }}
-                  >
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                <Fragment key={idx}>
+                  <Grid size={{ xs: 12 }}>
+                    <Divider sx={{ my: 1 }} />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
                       {t('fields.input', { index: idx })}
                     </Typography>
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <Box
-                          sx={{
-                            width: 60,
-                            height: 60,
-                            borderRadius: 1,
-                            overflow: 'hidden',
-                            bgcolor: 'action.hover',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 1,
-                          }}
-                        >
-                          {image?.url ? (
-                            <Box
-                              component="img"
-                              src={image.url}
-                              alt={productName}
-                              sx={{ width: 1, height: 1, objectFit: 'cover' }}
-                            />
-                          ) : (
-                            <Iconify icon={'solar:gallery-wide-bold-duotone' as any} width={24} />
-                          )}
-                        </Box>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          {t('fields.imageInput', { index: idx })}
-                        </Typography>
-                      </Grid>
+                  </Grid>
 
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailRow label={t('fields.input', { index: idx })} value={productName} />
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailRow label={t('fields.quantityInput', { index: idx })} value={qty} />
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailRow
-                          label={t('fields.retailPriceInput', { index: idx })}
-                          value={f[`Retail Price Input ${idx}`]}
-                          helper={t('fields.willBeUpdatedByNetGecko')}
-                          numberOptions={{ minimumFractionDigits: 2 }}
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Box
+                      sx={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        bgcolor: 'action.hover',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mb: 1,
+                      }}
+                    >
+                      {image?.url ? (
+                        <Box
+                          component="img"
+                          src={image.url}
+                          alt={productName}
+                          sx={{ width: 1, height: 1, objectFit: 'cover' }}
                         />
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <DetailRow
-                          label={t('fields.totalValueInput', { index: idx })}
-                          value={f[`Total Value Input ${idx}`]}
-                          helper={t('fields.willBeUpdatedByNetGecko')}
-                          numberOptions={{ minimumFractionDigits: 2 }}
-                        />
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
+                      ) : (
+                        <Iconify icon={'solar:gallery-wide-bold-duotone' as any} width={24} />
+                      )}
+                    </Box>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {t('fields.imageInput', { index: idx })}
+                    </Typography>
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <InlineEditField
+                      resource="input-orders"
+                      recordId={selectedOrder.id}
+                      name={`Input ${idx}`}
+                      label={t('fields.input', { index: idx })}
+                      required={idx === 1}
+                      type="select"
+                      options={
+                        idx === 1
+                          ? productOptions
+                          : [{ value: '', label: t('form.noneOption') }, ...productOptions]
+                      }
+                      value={firstInputValue(f[`Input ${idx}`])}
+                      displayValue={productName || '—'}
+                      arrayValue
+                      readOnly={!editable}
+                      onSaved={fetchOrders}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <InlineEditField
+                      resource="input-orders"
+                      recordId={selectedOrder.id}
+                      name={`Quantity Input ${idx}`}
+                      label={t('fields.quantityInput', { index: idx })}
+                      required={idx === 1}
+                      type="number"
+                      value={qty}
+                      readOnly={!editable}
+                      onSaved={fetchOrders}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailRow
+                      label={t('fields.retailPriceInput', { index: idx })}
+                      value={f[`Retail Price Input ${idx}`]}
+                      helper={t('fields.willBeUpdatedByNetGecko')}
+                      numberOptions={{ minimumFractionDigits: 2 }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailRow
+                      label={t('fields.totalValueInput', { index: idx })}
+                      value={f[`Total Value Input ${idx}`]}
+                      helper={t('fields.willBeUpdatedByNetGecko')}
+                      numberOptions={{ minimumFractionDigits: 2 }}
+                    />
+                  </Grid>
+                </Fragment>
               );
             })}
           </Grid>

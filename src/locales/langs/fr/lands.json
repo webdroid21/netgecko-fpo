@@ -30,16 +30,23 @@
   "actions": {
     "edit": "Modifier"
   },
+  "sections": {
+    "land": "Détails de la terre",
+    "product1": "Produit 1",
+    "product2": "Produit 2",
+    "estimated": "Production estimée"
+  },
   "fields": {
     "farmer": "Agriculteur",
     "landOwnership": "Type de propriété de la terre",
     "landSize": "Superficie de la terre (acres)",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainProduct": "Produit principal",
+    "mainProduct": "Produit principal (1)",
+    "numberOfPlants": "Nombre de plants",
     "product1ProductionSeasonA": "Production estimée produit 1 saison A",
     "product1ProductionSeasonB": "Production estimée produit 1 saison B",
-    "otherProduct": "Autre produit",
+    "otherProduct": "Autre produit (2)",
     "product2ProductionSeasonA": "Production estimée produit 2 saison A",
     "product2ProductionSeasonB": "Production estimée produit 2 saison B",
     "estimatedProductionSeasonA": "Production estimée saison A",
@@ -57,6 +64,7 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Produit principal (1)",
+    "numberOfPlants": "Nombre de plants",
     "product1ProductionSeasonA": "Production estimée produit 1 saison A",
     "product1ProductionSeasonB": "Production estimée produit 1 saison B",
     "otherProduct": "Autre produit (2)",

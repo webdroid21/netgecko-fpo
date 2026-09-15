@@ -18,7 +18,8 @@ import { Iconify } from 'src/components/iconify';
 type SelectOption = string | { value: string; label: string };
 
 type InlineEditFieldProps = {
-  farmerId: string;
+  recordId: string;
+  resource: string;
   name: string;
   label: string;
   value?: any;
@@ -27,12 +28,14 @@ type InlineEditFieldProps = {
   options?: SelectOption[];
   arrayValue?: boolean;
   readOnly?: boolean;
+  required?: boolean;
   helperText?: ReactNode;
   onSaved: () => void;
 };
 
 export function InlineEditField({
-  farmerId,
+  recordId,
+  resource,
   name,
   label,
   value,
@@ -41,6 +44,7 @@ export function InlineEditField({
   options,
   arrayValue,
   readOnly,
+  required,
   helperText,
   onSaved,
 }: InlineEditFieldProps) {
@@ -75,6 +79,11 @@ export function InlineEditField({
   const save = async (nextValue: any) => {
     if (saving) return;
 
+    if (required && (nextValue === '' || nextValue === null || nextValue === undefined)) {
+      toast.error(`${label} is required`);
+      return;
+    }
+
     // Don't save if nothing changed.
     if (nextValue === value) {
       setEditing(false);
@@ -94,7 +103,7 @@ export function InlineEditField({
         fields[name] = nextValue ? [nextValue] : [];
       }
 
-      await axios.patch(`/api/v1/farmers/${farmerId}`, { fields });
+      await axios.patch(`/api/v1/${resource}/${recordId}`, { fields });
 
       toast.success(`${label} updated successfully`, {
         action: {
@@ -202,6 +211,11 @@ export function InlineEditField({
     >
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
+        {required && (
+          <Box component="span" sx={{ color: 'error.main' }}>
+            {' *'}
+          </Box>
+        )}
       </Typography>
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

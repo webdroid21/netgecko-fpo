@@ -5,6 +5,7 @@
   },
   "summary": {
     "womenSubtext": "{{count}} abakyala",
+    "loansSubtext": "Loans {{count}}",
     "activeLoans": "Loans ezikolamu zonna",
     "approvedLoans": "Loans ezikkiriziddwa zonna",
     "openLoans": "Loans ezigulu zonna",

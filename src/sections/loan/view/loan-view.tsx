@@ -50,6 +50,32 @@ const REPAYMENT_SUMMARY_CARDS = [
   { key: 'Green', titleKey: 'summary.repaymentGreen', color: 'success' as const, icon: 'solar:check-circle-bold-duotone' },
 ];
 
+// Airtable fields can return arrays or objects (e.g. { specialValue: 'NaN' },
+// { error: '#ERROR!' }) — normalize them before rendering or aggregating.
+function fieldText(value: unknown): string {
+  if (value == null) return '';
+  if (Array.isArray(value)) return value.map(fieldText).filter(Boolean).join(', ');
+  if (typeof value === 'object') return '';
+  return String(value);
+}
+
+function fieldNumber(value: unknown): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fieldArray(value: unknown): any[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function repaymentBucket(value: unknown): 'Red' | 'Orange' | 'Green' | null {
+  const rep = fieldText(value).toLowerCase();
+  if (rep.includes('red') || rep.includes('🔴')) return 'Red';
+  if (rep.includes('orange') || rep.includes('🟠') || rep.includes('🟡')) return 'Orange';
+  if (rep.includes('green') || rep.includes('🟢')) return 'Green';
+  return null;
+}
+
 function SummaryCard({
   title,
   total,
@@ -59,7 +85,7 @@ function SummaryCard({
 }: {
   title: string;
   total: number;
-  subtext: string;
+  subtext?: string;
   color: 'primary' | 'success' | 'info' | 'warning' | 'error';
   icon: string;
 }) {
@@ -77,9 +103,11 @@ function SummaryCard({
           <Typography variant="h4" sx={{ my: 0.5 }}>
             {fNumber(total)}
           </Typography>
-          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            {subtext}
-          </Typography>
+          {subtext ? (
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+              {subtext}
+            </Typography>
+          ) : null}
         </Box>
       </Stack>
     </Card>
@@ -106,6 +134,8 @@ function DetailRow({
     display = fNumber(value, numberOptions);
   } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
     display = fNumber(Number(value), numberOptions);
+  } else if (typeof value === 'object' && value !== null) {
+    display = fieldText(value) || '—';
   }
 
   const content = (
@@ -211,13 +241,13 @@ export function LoanView() {
     let list = loans;
 
     if (farmerFilter) {
-      list = list.filter((l) => (l.fields.Farmer ?? []).includes(farmerFilter));
+      list = list.filter((l) => fieldArray(l.fields.Farmer).includes(farmerFilter));
     }
 
     if (!term) return list;
 
     return list.filter((l) => {
-      const text = `${l.fields['Loan ID'] ?? ''} ${(l.fields['Name (from Farmer)'] || []).join(' ')} ${l.fields['Loan Status'] ?? ''}`.toLowerCase();
+      const text = `${fieldText(l.fields['Loan ID'])} ${fieldText(l.fields['Name (from Farmer)'])} ${fieldText(l.fields['Loan Status'])}`.toLowerCase();
       return text.includes(term);
     });
   }, [loans, search, farmerFilter]);
@@ -249,26 +279,19 @@ export function LoanView() {
     };
 
     filteredLoans.forEach((l) => {
-      const status = l.fields['Loan Status'];
-      const statusBucket = statuses[status ?? ''];
+      const status = fieldText(l.fields['Loan Status']);
+      const statusBucket = statuses[status];
       if (statusBucket) {
         statusBucket.count += 1;
-        statusBucket.amount += Number(l.fields['Total amount']) || 0;
-        const farmer = farmers.find((f) => f.id === l.fields.Farmer?.[0]);
+        statusBucket.amount += fieldNumber(l.fields['Total amount']);
+        const farmer = farmers.find((f) => f.id === fieldArray(l.fields.Farmer)[0]);
         if (farmer?.fields.Gender === 'Female') statusBucket.women += 1;
       }
 
-      const rep = String(l.fields['Repayment Status'] ?? '').toLowerCase();
-      const repKey = rep.includes('red')
-        ? 'Red'
-        : rep.includes('orange')
-          ? 'Orange'
-          : rep.includes('green')
-            ? 'Green'
-            : null;
+      const repKey = repaymentBucket(l.fields['Repayment Status']);
       if (repKey) {
         repayments[repKey].count += 1;
-        repayments[repKey].pending += Number(l.fields['Total Amount Pending']) || 0;
+        repayments[repKey].pending += fieldNumber(l.fields['Total Amount Pending']);
       }
     });
 
@@ -304,9 +327,8 @@ export function LoanView() {
         {AMOUNT_SUMMARY_CARDS.map((s) => (
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
             <SummaryCard
-              title={t(s.titleKey)}
+              title={`${t(s.titleKey)} (UGX)`}
               total={statusStats[s.key]?.amount ?? 0}
-              subtext="UGX"
               color={s.color}
               icon="solar:tag-price-bold-duotone"
             />
@@ -318,9 +340,9 @@ export function LoanView() {
         {REPAYMENT_SUMMARY_CARDS.map((s) => (
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
             <SummaryCard
-              title={t(s.titleKey)}
-              total={repaymentStats[s.key]?.count ?? 0}
-              subtext={`${fNumber(repaymentStats[s.key]?.pending ?? 0)} UGX`}
+              title={`${t(s.titleKey)} (UGX)`}
+              total={repaymentStats[s.key]?.pending ?? 0}
+              subtext={t('summary.loansSubtext', { count: repaymentStats[s.key]?.count ?? 0 })}
               color={s.color}
               icon={s.icon}
             />
@@ -352,6 +374,7 @@ export function LoanView() {
           <List disablePadding>
             {filteredLoans.map((loan) => {
               const isSelected = loan.id === selectedLoan?.id;
+              const status = fieldText(loan.fields['Loan Status']);
 
               return (
                 <ListItemButton
@@ -362,22 +385,22 @@ export function LoanView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={loan.fields['Loan ID'] || t('unnamedLoan')}
+                      primary={fieldText(loan.fields['Loan ID']) || t('unnamedLoan')}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
-                    {loan.fields['Loan Status'] && (
-                      <Label color={statusColor(loan.fields['Loan Status'])}>
-                        {loan.fields['Loan Status']}
+                    {status && (
+                      <Label color={statusColor(status)}>
+                        {status}
                       </Label>
                     )}
                     <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {(loan.fields['Loan Object'] || []).join(', ')}
+                    {fieldText(loan.fields['Loan Object'])}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {fNumber(loan.fields['Total amount'])} UGX · {fNumber(loan.fields['Total Amount Pending'])} pending
+                    {fNumber(fieldNumber(loan.fields['Total amount']))} UGX · {fNumber(fieldNumber(loan.fields['Total Amount Pending']))} pending
                   </Typography>
                 </ListItemButton>
               );
@@ -400,8 +423,9 @@ export function LoanView() {
     }
 
     const f = selectedLoan.fields;
-    const farmerHref = f.Farmer?.[0]
-      ? `/dashboard/farmers?farmerId=${f.Farmer[0]}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`
+    const farmerId = fieldArray(f.Farmer)[0];
+    const farmerHref = farmerId
+      ? `/dashboard/farmers?farmerId=${farmerId}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`
       : undefined;
 
     const netgeckoHelper = t('fields.willBeUpdatedByNetGecko');
@@ -410,9 +434,9 @@ export function LoanView() {
       <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
           <Box sx={{ mb: 3 }}>
-            <Typography variant="h5">{f['Loan ID'] || t('unnamedLoan')}</Typography>
+            <Typography variant="h5">{fieldText(f['Loan ID']) || t('unnamedLoan')}</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {(f['Loan Object'] || []).join(', ')} · {(f['Name (from Season)'] || []).join(', ')}
+              {[fieldText(f['Loan Object']), fieldText(f['Name (from Season)'])].filter(Boolean).join(' · ')}
             </Typography>
           </Box>
 
@@ -428,12 +452,12 @@ export function LoanView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
                 label={t('fields.farmer')}
-                value={(f['Name (from Farmer)'] || []).join(', ')}
+                value={fieldText(f['Name (from Farmer)'])}
                 href={farmerHref}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.loanType')} value={(f['Loan Object'] || []).join(', ')} />
+              <DetailRow label={t('fields.loanType')} value={fieldText(f['Loan Object'])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.issueDate')} value={f['Issue Date']} />
@@ -441,12 +465,12 @@ export function LoanView() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.repaymentDueDate')} value={f['Repayment Due Date']} />
             </Grid>
-            {f['Orders (Input)']?.[0] && (
+            {fieldArray(f['Orders (Input)'])[0] && (
               <Grid size={{ xs: 12, sm: 6 }}>
                 <DetailRow
                   label={t('fields.inputOrder')}
-                  value={(f['Order number (from Orders (Input))'] || []).join(', ')}
-                  href={`/dashboard/input-orders?farmerId=${f.Farmer?.[0] ?? ''}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`}
+                  value={fieldText(f['Order number (from Orders (Input))'])}
+                  href={`/dashboard/input-orders?farmerId=${farmerId ?? ''}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`}
                 />
               </Grid>
             )}
@@ -527,15 +551,15 @@ export function LoanView() {
               />
             </Grid>
 
-            {f['Payments Received Link']?.length ? (
+            {fieldArray(f['Payments Received Link']).length ? (
               <Grid size={{ xs: 12 }}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
                   {t('fields.paymentsReceived')}
                 </Typography>
-                {f['Payment ID (from Payments Link)'].map((pid: any, idx: number) => (
+                {fieldArray(f['Payment ID (from Payments Link)']).map((pid: any, idx: number) => (
                   <Typography key={idx} variant="body2" sx={{ color: 'text.secondary' }}>
-                    Payment #{pid} · {fNumber((f['Payments received'] || [])[idx])} UGX ·{' '}
-                    {(f['Dates payment received'] || [])[idx]}
+                    Payment #{fieldText(pid)} · {fNumber(fieldNumber(fieldArray(f['Payments received'])[idx]))} UGX ·{' '}
+                    {fieldText(fieldArray(f['Dates payment received'])[idx])}
                   </Typography>
                 ))}
               </Grid>

@@ -30,16 +30,23 @@
   "actions": {
     "edit": "Kyusa"
   },
+  "sections": {
+    "land": "Ebikwata ku ttaka",
+    "product1": "Eky’obugagga 1",
+    "product2": "Eky’obugagga 2",
+    "estimated": "Eby’obugagga ebisubirwa"
+  },
   "fields": {
     "farmer": "Mulimi",
     "landOwnership": "Engeri y’okusika ettaka",
     "landSize": "Obugazi bw’ettaka (acres)",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainProduct": "Eky’obugagga ekikulu",
+    "mainProduct": "Eky’obugagga ekikulu (1)",
+    "numberOfPlants": "Omuwendo gw’ebimera",
     "product1ProductionSeasonA": "Eby’obugagga 1 ebisubirwa sizoni A",
     "product1ProductionSeasonB": "Eby’obugagga 1 ebisubirwa sizoni B",
-    "otherProduct": "Eky’obugagga ekirala",
+    "otherProduct": "Eky’obugagga ekirala (2)",
     "product2ProductionSeasonA": "Eby’obugagga 2 ebisubirwa sizoni A",
     "product2ProductionSeasonB": "Eby’obugagga 2 ebisubirwa sizoni B",
     "estimatedProductionSeasonA": "Eby’obugagga ebisubirwa sizoni A",
@@ -57,6 +64,7 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Eky’obugagga ekikulu (1)",
+    "numberOfPlants": "Omuwendo gw’ebimera",
     "product1ProductionSeasonA": "Eby’obugagga 1 ebisubirwa sizoni A",
     "product1ProductionSeasonB": "Eby’obugagga 1 ebisubirwa sizoni B",
     "otherProduct": "Eky’obugagga ekirala (2)",

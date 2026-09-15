@@ -30,16 +30,23 @@
   "actions": {
     "edit": "Edit"
   },
+  "sections": {
+    "land": "Land details",
+    "product1": "Product 1",
+    "product2": "Product 2",
+    "estimated": "Estimated production"
+  },
   "fields": {
     "farmer": "Farmer",
     "landOwnership": "Land ownership",
     "landSize": "Land size (acres)",
     "latitude": "Latitude",
     "longitude": "Longitude",
-    "mainProduct": "Main product",
+    "mainProduct": "Main product (1)",
+    "numberOfPlants": "Number of plants",
     "product1ProductionSeasonA": "Product 1 estimated production Season A",
     "product1ProductionSeasonB": "Product 1 estimated production Season B",
-    "otherProduct": "Other product",
+    "otherProduct": "Other product (2)",
     "product2ProductionSeasonA": "Product 2 estimated production Season A",
     "product2ProductionSeasonB": "Product 2 estimated production Season B",
     "estimatedProductionSeasonA": "Estimated production Season A",
@@ -57,6 +64,7 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "mainProduct": "Main product (1)",
+    "numberOfPlants": "Number of plants",
     "product1ProductionSeasonA": "Product 1 estimated production Season A",
     "product1ProductionSeasonB": "Product 1 estimated production Season B",
     "otherProduct": "Other product (2)",

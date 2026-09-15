@@ -5,7 +5,7 @@
     "newOrder": "Ajouter une commande"
   },
   "summary": {
-    "trendLabel": "vs l’année en cours",
+    "trendLabel": "vs l’année précédente",
     "totalOrders": {
       "title": "Nombre total de commandes",
       "subtext": "{{value}} UGX de valeur totale"
@@ -27,10 +27,13 @@
   "searchPlaceholder": "Rechercher des commandes...",
   "emptyDetail": "Sélectionnez une commande pour voir les détails",
   "unnamedOrder": "Commande sans nom",
-  "confirmDeleteOrder": "Supprimer {{reference}} ?",
   "statusUpdateFailed": "Échec de la mise à jour du statut de la commande",
   "actions": {
     "edit": "Modifier"
+  },
+  "sections": {
+    "order": "Détails de la commande",
+    "inputs": "Intrants"
   },
   "fields": {
     "orderStatus": "Statut de la commande",
@@ -57,6 +60,7 @@
     "farmer": "Agriculteur",
     "season": "Saison",
     "payOption": "PayNow / PayLater",
+    "noneOption": "Aucune",
     "selectPlaceholder": "Sélectionner..."
   }
 }

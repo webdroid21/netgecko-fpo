@@ -2,7 +2,7 @@ import type { Farmer } from 'src/sections/farmer/types';
 import type { Season, InputOrder, InputProduct } from '../types';
 
 import { z } from 'zod';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useMemo, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -11,7 +11,9 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -26,7 +28,7 @@ import { FarmerFormDialog } from 'src/sections/farmer/components/farmer-form-dia
 
 // ----------------------------------------------------------------------
 
-const PAY_OPTIONS = ['PayNow (cash)', 'PayLater (loan)', 'vPayNow (cash)'];
+export const PAY_OPTIONS = ['PayNow (cash)', 'PayLater (loan)', 'vPayNow (cash)'];
 
 const INPUT_KEYS = ['Input 1', 'Input 2', 'Input 3', 'Input 4', 'Input 5'] as const;
 const QUANTITY_KEYS = [
@@ -43,6 +45,17 @@ const RETAIL_KEYS = [
   'Retail Price Input 4',
   'Retail Price Input 5',
 ] as const;
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Grid size={{ xs: 12 }}>
+      <Typography variant="subtitle2" sx={{ pt: 1 }}>
+        {title}
+      </Typography>
+      <Divider sx={{ mt: 0.5 }} />
+    </Grid>
+  );
+}
 
 const schema = z.object({
   Farmer: z.string().min(1, { message: 'Required' }),
@@ -69,7 +82,7 @@ type FormValues = z.infer<typeof schema>;
 
 // ----------------------------------------------------------------------
 
-function getInputProductOptions(products: InputProduct[], order?: InputOrder | null) {
+export function getInputProductOptions(products: InputProduct[], order?: InputOrder | null) {
   const baseOptions = products.map((p) => ({ value: p.id, label: productLabel(p) }));
   const seen = new Set(baseOptions.map((o) => o.value));
 
@@ -102,15 +115,11 @@ type InputOrderFormDialogProps = {
   onFarmerCreated?: (farmer: Farmer) => void;
 };
 
-function productPrice(product?: InputProduct | null) {
-  return product?.fields['Price Retail (proposed)'] ?? product?.fields['NetGecko price (factory)'] ?? product?.fields['Retail Price'] ?? product?.fields['Price'] ?? undefined;
-}
-
 function productLabel(product?: InputProduct | null) {
   return product?.fields['Product ID'] || product?.fields['Product Name'] || product?.fields.Name || product?.fields['Crop Name'] || 'Unnamed';
 }
 
-function firstInputValue(value?: any) {
+export function firstInputValue(value?: any) {
   if (Array.isArray(value)) return value[0] ?? '';
   if (typeof value === 'string') return value;
   return '';
@@ -164,35 +173,14 @@ export function InputOrderFormDialog({
     resolver: zodResolver(schema),
   });
 
-  const { reset, setValue, getValues, handleSubmit, formState } = methods;
+  const { reset, setValue, handleSubmit, formState } = methods;
   const { isSubmitting } = formState;
-
-  const watchedInputs = useWatch({ control: methods.control, name: INPUT_KEYS });
 
   useEffect(() => {
     if (open) {
       reset(getDefaultValues(order));
     }
   }, [open, order, reset]);
-
-  useEffect(() => {
-    INPUT_KEYS.forEach((inputKey, idx) => {
-      const retailKey = RETAIL_KEYS[idx];
-      const productId = watchedInputs[idx];
-      const current = getValues(retailKey);
-
-      if (!productId) {
-        if (current !== undefined) setValue(retailKey, undefined, { shouldValidate: false });
-        return;
-      }
-
-      const product = products.find((p) => p.id === productId);
-      const price = productPrice(product);
-      if (price !== undefined && price !== current) {
-        setValue(retailKey, price, { shouldValidate: true });
-      }
-    });
-  }, [watchedInputs, products, getValues, setValue]);
 
   const onSubmit = handleSubmit(async (data) => {
     const payload: Record<string, any> = { ...data };
@@ -258,6 +246,8 @@ export function InputOrderFormDialog({
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent dividers>
           <Grid container spacing={2}>
+            <SectionHeader title={t('sections.order')} />
+
             <Grid size={{ xs: 12 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box sx={{ flexGrow: 1 }}>
@@ -300,6 +290,8 @@ export function InputOrderFormDialog({
                 true
               )}
             </Grid>
+
+            <SectionHeader title={t('sections.inputs')} />
 
             {[0, 1, 2, 3, 4].map((idx) => (
               <Grid size={{ xs: 12 }} key={INPUT_KEYS[idx]}>

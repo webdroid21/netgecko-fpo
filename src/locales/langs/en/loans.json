@@ -5,6 +5,7 @@
   },
   "summary": {
     "womenSubtext": "{{count}} women",
+    "loansSubtext": "{{count}} loans",
     "activeLoans": "Total active loans",
     "approvedLoans": "Total approved loans",
     "openLoans": "Total open loans",

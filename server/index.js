@@ -20,6 +20,8 @@ const AIRTABLE_ORDERS_TABLE_ID =
   process.env.AIRTABLE_ORDERS_TABLE_ID || 'tblq9p8G9oreglq2l';
 const AIRTABLE_PRODUCTS_TABLE_ID =
   process.env.AIRTABLE_PRODUCTS_TABLE_ID || 'tblupJLRoF4OZsi8Q';
+const AIRTABLE_FPOS_TABLE_ID =
+  process.env.AIRTABLE_FPOS_TABLE_ID || 'tbltHO7Xh51FTx0dn';
 const AIRTABLE_SEASONS_TABLE_ID = process.env.AIRTABLE_SEASONS_TABLE_ID || 'Seasons';
 const AIRTABLE_LOANS_TABLE_ID =
   process.env.AIRTABLE_LOANS_TABLE_ID || 'tblXqXRcHSoRC94vA';
@@ -322,8 +324,8 @@ function toLandsFields(input) {
 
   [
     'Farmer',
-    'Main Crop (1)',
-    'Other crop (2)',
+    'Main Product (1)',
+    'Other product (2)',
   ].forEach((key) => {
     if (fields[key] && typeof fields[key] === 'string') {
       fields[key] = [fields[key]];
@@ -753,10 +755,31 @@ app.get('/api/v1/seasons', requireAuth, async (req, res) => {
 
 app.get('/api/v1/input-products', requireAuth, async (req, res) => {
   try {
+    const { fpoId } = req.query;
+
+    let cropIds = [];
+    if (fpoId) {
+      try {
+        const { data: fpo } = await airtableApi.get(`/${AIRTABLE_FPOS_TABLE_ID}/${fpoId}`);
+        cropIds = Array.isArray(fpo?.fields?.Crops) ? fpo.fields.Crops : [];
+      } catch (error) {
+        console.warn('/api/v1/input-products FPO lookup failed:', error?.message);
+      }
+    }
+
     const { data } = await airtableApi.post(`/${AIRTABLE_PRODUCTS_TABLE_ID}/listRecords`, {
       maxRecords: 1000,
     });
-    return res.json({ records: data.records || [] });
+
+    let records = data.records || [];
+    if (cropIds.length) {
+      const allowed = new Set(cropIds);
+      records = records.filter((record) =>
+        (Array.isArray(record.fields?.Crop) ? record.fields.Crop : []).some((id) => allowed.has(id))
+      );
+    }
+
+    return res.json({ records });
   } catch (error) {
     console.error('/api/v1/input-products error:', error?.response?.data || error.message);
     const status = error?.response?.status || 500;

@@ -8,15 +8,14 @@ import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
-import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
 
-import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
 import { fNumber } from 'src/utils/format-number';
@@ -28,9 +27,18 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
+import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
+
 import { useAuthContext } from 'src/auth/hooks';
 
-import { LandFormDialog } from '../components/land-form-dialog';
+import {
+  PROD_A,
+  PROD_B,
+  PROD2_A,
+  PROD2_B,
+  LandFormDialog,
+  OWNERSHIP_OPTIONS,
+} from '../components/land-form-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -74,13 +82,11 @@ function SummaryCard({
 
 function getProductNames(land?: Land, allCrops?: Crop[]): string[] {
   if (!land) return [];
-  const names =
-    land.fields['Product Name (from Crop)'] ||
-    land.fields['Crop Name (from Crop)'];
+  const names = land.fields['Product Name (from Crop)'];
   if (names && Array.isArray(names) && names.length) {
     return names.filter((n) => typeof n === 'string') as string[];
   }
-  const ids = (land.fields['Main Product (1)'] || land.fields['Main Crop (1)'] || []) as string[];
+  const ids = (land.fields['Main Product (1)'] || []) as string[];
   return ids
     .map((id) => {
       const crop = allCrops?.find((c) => c.id === id);
@@ -89,52 +95,15 @@ function getProductNames(land?: Land, allCrops?: Crop[]): string[] {
     .filter(Boolean);
 }
 
-function DetailRow({
-  label,
-  value,
-  href,
-}: {
-  label: string;
-  value?: any;
-  href?: string;
-}) {
-  const content = (
-    <>
+function DetailRow({ label, value }: { label: string; value?: any }) {
+  return (
+    <Box sx={{ p: 1 }}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {label}
       </Typography>
-      <Typography
-        variant="body1"
-        sx={href ? { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}
-      >
-        {value ?? '—'}
-      </Typography>
-    </>
+      <Typography variant="body1">{value ?? '—'}</Typography>
+    </Box>
   );
-
-  if (href) {
-    return (
-      <MuiLink
-        component={RouterLink}
-        href={href}
-        underline="none"
-        color="text.primary"
-        sx={{
-          p: 1,
-          display: 'block',
-          borderRadius: 1,
-          '&:hover': { bgcolor: 'action.hover' },
-        }}
-      >
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-          <Box sx={{ minWidth: 0, flex: 1 }}>{content}</Box>
-          <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ flexShrink: 0 }} />
-        </Stack>
-      </MuiLink>
-    );
-  }
-
-  return <Box sx={{ p: 1 }}>{content}</Box>;
 }
 
 // ----------------------------------------------------------------------
@@ -361,9 +330,6 @@ export function LandView() {
                     <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {(land.fields['Name (from Owner)'] || []).join(', ')}
-                  </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {getProductNames(land, crops).join(', ') || t('noProduct')} · {land.fields['Land Size (Acres)']} acres
                   </Typography>
@@ -389,6 +355,26 @@ export function LandView() {
 
     const f = selectedLand.fields;
 
+    const cropOptions = crops.map((c) => ({
+      value: c.id,
+      label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id,
+    }));
+    const cropLabel = (id?: string) => cropOptions.find((o) => o.value === id)?.label || '';
+
+    const sectionTitle = (title: string) => (
+      <Grid size={{ xs: 12 }}>
+        <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+          {title}
+        </Typography>
+      </Grid>
+    );
+
+    const sectionDivider = (
+      <Grid size={{ xs: 12 }}>
+        <Divider sx={{ my: 1 }} />
+      </Grid>
+    );
+
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
@@ -399,88 +385,201 @@ export function LandView() {
             spacing={2}
             sx={{ mb: 3 }}
           >
-            <Box>
-              <Typography variant="h5">{f.Land || t('unnamedLand')}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {(f['Name (from Owner)'] || []).join(', ')}
-              </Typography>
-            </Box>
+            <Typography variant="h5">{f.Land || t('unnamedLand')}</Typography>
 
             <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
               {t('actions.edit')}
             </Button>
           </Stack>
 
-          <Grid container spacing={3}>
+          <Grid container spacing={3} key={selectedLand.id}>
+            {sectionTitle(t('sections.land'))}
+
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('lands:fields.farmer')}
-                value={(f['Name (from Owner)'] || []).join(', ')}
-                href={
-                  f.Farmer?.[0]
-                    ? `/dashboard/farmers?farmerId=${f.Farmer[0]}&fpoName=${encodeURIComponent(activeFbo?.name ?? '')}`
-                    : undefined
-                }
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Farmer"
+                label={t('fields.farmer')}
+                required
+                type="select"
+                options={farmers.map((farmer) => ({
+                  value: farmer.id,
+                  label: farmer.fields.Name || 'Unnamed',
+                }))}
+                value={f.Farmer?.[0]}
+                displayValue={(f['Name (from Owner)'] || []).join(', ') || '—'}
+                arrayValue
+                onSaved={fetchLands}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.landOwnership')} value={f['Land Ownership']} />
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Land Ownership"
+                label={t('fields.landOwnership')}
+                required
+                type="select"
+                options={OWNERSHIP_OPTIONS}
+                value={f['Land Ownership']}
+                onSaved={fetchLands}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.landSize')} value={f['Land Size (Acres)']} />
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Land Size (Acres)"
+                label={t('fields.landSize')}
+                required
+                type="number"
+                value={f['Land Size (Acres)']}
+                onSaved={fetchLands}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.latitude')} value={f.Latitude} />
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Latitude"
+                label={t('fields.latitude')}
+                type="number"
+                value={f.Latitude}
+                onSaved={fetchLands}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.longitude')} value={f.Longitude} />
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Longitude"
+                label={t('fields.longitude')}
+                type="number"
+                value={f.Longitude}
+                onSaved={fetchLands}
+              />
+            </Grid>
+
+            {sectionDivider}
+            {sectionTitle(t('sections.product1'))}
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Main Product (1)"
+                label={t('fields.mainProduct')}
+                required
+                type="select"
+                options={cropOptions}
+                value={f['Main Product (1)']?.[0]}
+                displayValue={getProductNames(selectedLand, crops).join(', ') || '—'}
+                arrayValue
+                onSaved={fetchLands}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.mainProduct')} value={getProductNames(selectedLand, crops).join(', ')} />
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Number of plants (Product 1)"
+                label={t('fields.numberOfPlants')}
+                type="number"
+                value={f['Number of plants (Product 1)']}
+                onSaved={fetchLands}
+              />
             </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name={PROD_A}
+                label={t('fields.product1ProductionSeasonA')}
+                required
+                type="number"
+                value={f[PROD_A]}
+                onSaved={fetchLands}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name={PROD_B}
+                label={t('fields.product1ProductionSeasonB')}
+                required
+                type="number"
+                value={f[PROD_B]}
+                onSaved={fetchLands}
+              />
+            </Grid>
+
+            {sectionDivider}
+            {sectionTitle(t('sections.product2'))}
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Other product (2)"
+                label={t('fields.otherProduct')}
+                type="select"
+                options={[{ value: '', label: t('form.noneOption') }, ...cropOptions]}
+                value={f['Other product (2)']?.[0]}
+                displayValue={cropLabel(f['Other product (2)']?.[0]) || '—'}
+                arrayValue
+                onSaved={fetchLands}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name="Number of plants (Product 2)"
+                label={t('fields.numberOfPlants')}
+                type="number"
+                value={f['Number of plants (Product 2)']}
+                onSaved={fetchLands}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name={PROD2_A}
+                label={t('fields.product2ProductionSeasonA')}
+                type="number"
+                value={f[PROD2_A]}
+                onSaved={fetchLands}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <InlineEditField
+                resource="lands"
+                recordId={selectedLand.id}
+                name={PROD2_B}
+                label={t('fields.product2ProductionSeasonB')}
+                type="number"
+                value={f[PROD2_B]}
+                onSaved={fetchLands}
+              />
+            </Grid>
+
+            {sectionDivider}
+            {sectionTitle(t('sections.estimated'))}
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.product1ProductionSeasonA')}
-                value={f['Product 1 Estimated Production Season A (kg, heads, litres, units)']}
+                label={t('fields.estimatedProductionSeasonA')}
+                value={f['Estimated production Season A']}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('lands:fields.product1ProductionSeasonB')}
-                value={f['Product 1 Estimated Production Season B (kg, heads, litres, units)']}
+                label={t('fields.estimatedProductionSeasonB')}
+                value={f['Estimated production Season B']}
               />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('lands:fields.otherProduct')}
-                value={(() => {
-                  const ids = (f['Other product (2)'] || []) as string[];
-                  return ids
-                    .map((id) => {
-                      const crop = crops.find((c) => c.id === id);
-                      return crop?.fields['Crop Name'] || crop?.fields['Product Name'] || id;
-                    })
-                    .join(', ');
-                })()}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('lands:fields.product2ProductionSeasonA')}
-                value={f['Product 2 Estimated Production Season A (kg, heads, litres, units)']}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('lands:fields.product2ProductionSeasonB')}
-                value={f['Product 2 Estimated Production Season B (kg, heads, litres, units)']}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.estimatedProductionSeasonA')} value={f['Estimated production Season A']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('lands:fields.estimatedProductionSeasonB')} value={f['Estimated production Season B']} />
             </Grid>
           </Grid>
         </CardContent>

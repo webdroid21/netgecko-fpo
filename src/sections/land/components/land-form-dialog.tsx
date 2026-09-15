@@ -11,6 +11,7 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -27,12 +28,12 @@ import { FarmerFormDialog } from 'src/sections/farmer/components/farmer-form-dia
 
 // ----------------------------------------------------------------------
 
-const OWNERSHIP_OPTIONS = ['Owned', 'Rented'];
+export const OWNERSHIP_OPTIONS = ['Owned', 'Rented'];
 
-const PROD_A = 'Product 1 Estimated Production Season A (kg, heads, litres, units)';
-const PROD_B = 'Product 1 Estimated Production Season B (kg, heads, litres, units)';
-const PROD2_A = 'Product 2 Estimated Production Season A (kg, heads, litres, units)';
-const PROD2_B = 'Product 2 Estimated Production Season B (kg, heads, litres, units)';
+export const PROD_A = 'Product 1 Estimated Production Season A (kg, heads, litres, units)';
+export const PROD_B = 'Product 1 Estimated Production Season B (kg, heads, litres, units)';
+export const PROD2_A = 'Product 2 Estimated Production Season A (kg, heads, litres, units)';
+export const PROD2_B = 'Product 2 Estimated Production Season B (kg, heads, litres, units)';
 
 const schema = z.object({
   Farmer: z.string().min(1, { message: 'Required' }),
@@ -41,9 +42,11 @@ const schema = z.object({
   Latitude: z.number().optional(),
   Longitude: z.number().optional(),
   'Main Product (1)': z.string().min(1, { message: 'Required' }),
+  'Number of plants (Product 1)': z.number().optional(),
   [PROD_A]: z.number().min(0, { message: 'Required' }),
   [PROD_B]: z.number().min(0, { message: 'Required' }),
   'Other product (2)': z.string().optional(),
+  'Number of plants (Product 2)': z.number().optional(),
   [PROD2_A]: z.number().optional(),
   [PROD2_B]: z.number().optional(),
 });
@@ -71,13 +74,26 @@ function getDefaultValues(land?: Land | null): FormValues {
     'Land Ownership': f?.['Land Ownership'] ?? '',
     Latitude: f?.Latitude ?? undefined,
     Longitude: f?.Longitude ?? undefined,
-    'Main Product (1)': f?.['Main Product (1)']?.[0] ?? f?.['Main Crop (1)']?.[0] ?? '',
-    [PROD_A]: f?.[PROD_A] ?? f?.['Product 1 Estimated Harvest (KG) Season A'] ?? f?.['Crop 1 Estimated Harvest (KG) Season A'] ?? undefined,
-    [PROD_B]: f?.[PROD_B] ?? f?.['Product 1 Estimated Harvest (KG) Season B'] ?? f?.['Crop 1 Estimated Harvest (KG) Season B'] ?? undefined,
-    'Other product (2)': f?.['Other product (2)']?.[0] ?? f?.['Other crop (2)']?.[0] ?? '',
-    [PROD2_A]: f?.[PROD2_A] ?? f?.['Product 2 Estimated Harvest (KG) Season A'] ?? f?.['Crop 2 Estimated Harvest (KG) Season A'] ?? undefined,
-    [PROD2_B]: f?.[PROD2_B] ?? f?.['Product 2 Estimated Harvest (KG) Season B'] ?? f?.['Crop 2 Estimated Harvest (KG) Season B'] ?? undefined,
+    'Main Product (1)': f?.['Main Product (1)']?.[0] ?? '',
+    'Number of plants (Product 1)': f?.['Number of plants (Product 1)'] ?? undefined,
+    [PROD_A]: f?.[PROD_A] ?? undefined,
+    [PROD_B]: f?.[PROD_B] ?? undefined,
+    'Other product (2)': f?.['Other product (2)']?.[0] ?? '',
+    'Number of plants (Product 2)': f?.['Number of plants (Product 2)'] ?? undefined,
+    [PROD2_A]: f?.[PROD2_A] ?? undefined,
+    [PROD2_B]: f?.[PROD2_B] ?? undefined,
   };
+}
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Grid size={{ xs: 12 }}>
+      <Typography variant="subtitle2" sx={{ pt: 1 }}>
+        {title}
+      </Typography>
+      <Divider sx={{ mt: 0.5 }} />
+    </Grid>
+  );
 }
 
 export function LandFormDialog({
@@ -127,11 +143,20 @@ export function LandFormDialog({
       if (payload[key] === undefined) delete payload[key];
     });
 
-    // Omit empty optional product 2 production fields.
+    // Product 2 is optional: omit it entirely when creating, but send explicit
+    // empty values when editing so a previously set product 2 gets cleared.
     if (!payload['Other product (2)']?.length) {
-      delete payload['Other product (2)'];
-      delete payload[PROD2_A];
-      delete payload[PROD2_B];
+      if (isEdit) {
+        payload['Other product (2)'] = [];
+        payload['Number of plants (Product 2)'] = null;
+        payload[PROD2_A] = null;
+        payload[PROD2_B] = null;
+      } else {
+        delete payload['Other product (2)'];
+        delete payload['Number of plants (Product 2)'];
+        delete payload[PROD2_A];
+        delete payload[PROD2_B];
+      }
     }
 
     try {
@@ -182,6 +207,8 @@ export function LandFormDialog({
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent dividers>
           <Grid container spacing={2}>
+            <SectionHeader title={t('sections.land')} />
+
             <Grid size={{ xs: 12 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box sx={{ flexGrow: 1 }}>
@@ -208,21 +235,21 @@ export function LandFormDialog({
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text
-                required
-                type="number"
-                name="Land Size (Acres)"
-                label={t('form.landSize')}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
               {renderSelectField(
                 'Land Ownership',
                 t('form.landOwnership'),
                 OWNERSHIP_OPTIONS.map((o) => ({ value: o, label: o })),
                 true
               )}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Field.Text
+                required
+                type="number"
+                name="Land Size (Acres)"
+                label={t('form.landSize')}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
@@ -233,6 +260,8 @@ export function LandFormDialog({
               <Field.Text type="number" name="Longitude" label={t('form.longitude')} />
             </Grid>
 
+            <SectionHeader title={t('sections.product1')} />
+
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelectField(
                 'Main Product (1)',
@@ -240,6 +269,14 @@ export function LandFormDialog({
                 crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id })),
                 true
               )}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Field.Text
+                type="number"
+                name="Number of plants (Product 1)"
+                label={t('form.numberOfPlants')}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
@@ -260,6 +297,8 @@ export function LandFormDialog({
               />
             </Grid>
 
+            <SectionHeader title={t('sections.product2')} />
+
             <Grid size={{ xs: 12, md: 6 }}>
               {renderSelectField(
                 'Other product (2)',
@@ -269,6 +308,14 @@ export function LandFormDialog({
                   ...crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id })),
                 ]
               )}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Field.Text
+                type="number"
+                name="Number of plants (Product 2)"
+                label={t('form.numberOfPlants')}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
