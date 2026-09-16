@@ -583,9 +583,9 @@ export function InputOrderView() {
                       textAlign: 'center',
                       borderRadius: 0.75,
                       typography: 'subtitle2',
-                      color: selected ? 'primary.main' : 'text.secondary',
+                      color: selected ? `${s.color}.main` : 'text.secondary',
                       bgcolor: selected
-                        ? varAlpha(theme.vars.palette.primary.mainChannel, 0.16)
+                        ? varAlpha(theme.vars.palette[s.color].mainChannel, 0.16)
                         : 'transparent',
                     })}
                   >
