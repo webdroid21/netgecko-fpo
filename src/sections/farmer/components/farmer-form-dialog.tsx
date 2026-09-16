@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from 'react';
 import type { Farmer } from '../types';
 
 import { z } from 'zod';
@@ -41,7 +42,7 @@ const schema = z.object({
   'Phone Number': z.string().min(1, { message: 'Required' }),
   'Mobile Money Number': z.string().min(1, { message: 'Required' }),
   Email: z.string().optional(),
-  Address: z.string().optional(),
+  Address: z.string().min(1, { message: 'Required' }),
   'Member since (date)': z.string().min(1, { message: 'Required' }),
   'Main product sold to Partner': z.string().optional(),
   'Quantity sold last season A to Partner (units, kg, liter)': z.number().optional(),
@@ -116,6 +117,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
   const [crops, setCrops] = useState<{ id: string; name: string }[]>([]);
   const [villages, setVillages] = useState<VillageRecord[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingReceipts, setPendingReceipts] = useState<File[]>([]);
 
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(farmer),
@@ -167,10 +169,15 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
     ? lf['Farmer ID (front back)']
     : [];
 
+  const existingReceipts: Attachment[] = Array.isArray(lf?.['Receipts of these sales to Coop'])
+    ? lf['Receipts of these sales to Coop']
+    : [];
+
   useEffect(() => {
     if (!open) return;
     reset(getDefaultValues(farmer));
     setPendingFiles([]);
+    setPendingReceipts([]);
 
     axios
       .get('/api/v1/crops')
@@ -202,20 +209,25 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
       .catch(() => setVillages([]));
   }, [open, farmer, reset]);
 
-  const uploadPendingFiles = async (farmerId: string, existing: Attachment[]) => {
-    if (!pendingFiles.length) return;
+  const uploadPendingFiles = async (
+    farmerId: string,
+    fieldName: string,
+    files: File[],
+    existing: Attachment[]
+  ) => {
+    if (!files.length) return;
     const storage = getStorage(firebaseApp);
     const uploaded = [];
-    for (const file of pendingFiles) {
+    for (const file of files) {
       const fileRef = ref(storage, `farmer-ids/${farmerId}/${Date.now()}-${file.name}`);
-       
+
       await uploadBytes(fileRef, file);
-       
+
       uploaded.push({ url: await getDownloadURL(fileRef), filename: file.name });
     }
     await axios.patch(`/api/v1/farmers/${farmerId}`, {
       fields: {
-        'Farmer ID (front back)': [...existing.map((a) => ({ id: a.id })), ...uploaded],
+        [fieldName]: [...existing.map((a) => ({ id: a.id })), ...uploaded],
       },
     });
   };
@@ -253,7 +265,13 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
       }
       const savedId = farmer?.id ?? response?.data?.record?.id;
       if (savedId) {
-        await uploadPendingFiles(savedId, existingAttachments);
+        await uploadPendingFiles(savedId, 'Farmer ID (front back)', pendingFiles, existingAttachments);
+        await uploadPendingFiles(
+          savedId,
+          'Receipts of these sales to Coop',
+          pendingReceipts,
+          existingReceipts
+        );
       }
       onSaved?.(response?.data?.record);
       onClose();
@@ -261,6 +279,74 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
       console.error('Farmer save error:', error?.message);
     }
   });
+
+  const renderAttachmentBlock = (
+    label: string,
+    existing: Attachment[],
+    files: File[],
+    setFiles: Dispatch<SetStateAction<File[]>>,
+    useCamera?: boolean
+  ) => (
+    <>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {label}
+      </Typography>
+      {existing.length > 0 && (
+        <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+          {existing.map((a) => (
+            <MuiLink
+              key={a.id}
+              href={a.url}
+              target="_blank"
+              rel="noopener"
+              variant="body2"
+              sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >
+              {a.filename || 'Attachment'}
+            </MuiLink>
+          ))}
+        </Stack>
+      )}
+      {files.map((file, index) => (
+        <Stack key={`${file.name}-${index}`} direction="row" alignItems="center" spacing={1}>
+          <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {file.name}
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
+          >
+            <Iconify icon={'solar:close-circle-bold' as any} width={16} />
+          </IconButton>
+        </Stack>
+      ))}
+      <Button
+        size="small"
+        component="label"
+        startIcon={
+          <Iconify icon={useCamera ? ('solar:camera-bold' as any) : ('solar:upload-bold' as any)} width={16} />
+        }
+        sx={{ mt: 0.5 }}
+      >
+        {useCamera ? 'Take photo' : 'Attach file'}
+        <input
+          type="file"
+          accept={useCamera ? 'image/*' : 'image/*,application/pdf'}
+          capture={useCamera ? 'environment' : undefined}
+          multiple
+          hidden
+          onChange={(e) => {
+            const picked = Array.from(e.target.files || []);
+            if (picked.length) setFiles((prev) => [...prev, ...picked]);
+            e.target.value = '';
+          }}
+        />
+      </Button>
+      <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block' }}>
+        Files are uploaded when the farmer is saved
+      </Typography>
+    </>
+  );
 
   const form = (
     <Form
@@ -311,60 +397,13 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Farmer ID (front back)
-              </Typography>
-              {existingAttachments.length > 0 && (
-                <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-                  {existingAttachments.map((a) => (
-                    <MuiLink
-                      key={a.id}
-                      href={a.url}
-                      target="_blank"
-                      rel="noopener"
-                      variant="body2"
-                      sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >
-                      {a.filename || 'Attachment'}
-                    </MuiLink>
-                  ))}
-                </Stack>
+              {renderAttachmentBlock(
+                'Farmer ID (front back)',
+                existingAttachments,
+                pendingFiles,
+                setPendingFiles,
+                true
               )}
-              {pendingFiles.map((file, index) => (
-                <Stack key={`${file.name}-${index}`} direction="row" alignItems="center" spacing={1}>
-                  <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {file.name}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => setPendingFiles((prev) => prev.filter((_, i) => i !== index))}
-                  >
-                    <Iconify icon={'solar:close-circle-bold' as any} width={16} />
-                  </IconButton>
-                </Stack>
-              ))}
-              <Button
-                size="small"
-                component="label"
-                startIcon={<Iconify icon={'solar:upload-bold' as any} width={16} />}
-                sx={{ mt: 0.5 }}
-              >
-                Attach ID photo or file
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  multiple
-                  hidden
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    if (files.length) setPendingFiles((prev) => [...prev, ...files]);
-                    e.target.value = '';
-                  }}
-                />
-              </Button>
-              <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block' }}>
-                Files are uploaded when the farmer is saved
-              </Typography>
             </Grid>
 
             <SectionHeader title="Contact" />
@@ -393,7 +432,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
                 'Address',
                 'Village',
                 villages.map((v) => ({ value: v.id, label: v.summary || v.village || v.id })),
-                false,
+                true,
                 'Parish, sub-county, district and region are filled in automatically'
               )}
             </Grid>
@@ -414,7 +453,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
               <TextField fullWidth size="small" label="Region" value={derived.region} disabled />
             </Grid>
 
-            <SectionHeader title="Membership & produce" />
+            <SectionHeader title="Membership and Product" />
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.DatePicker
@@ -427,7 +466,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
             <Grid size={{ xs: 12, md: 6 }}>
               {renderAutocomplete(
                 'Main product sold to Partner',
-                'Main produce sold to Partner',
+                'Main product sold to partner',
                 crops.map((crop) => ({ value: crop.id, label: crop.name })),
                 false,
                 'Mandatory for PayLater (loan)'
@@ -450,6 +489,15 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
                 label="Quantity sold last season B to Partner"
                 helperText="Mandatory for PayLater (loan)"
               />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              {renderAttachmentBlock(
+                'Receipts of these sales to Partner',
+                existingReceipts,
+                pendingReceipts,
+                setPendingReceipts
+              )}
             </Grid>
 
             <SectionHeader title="Workers" />

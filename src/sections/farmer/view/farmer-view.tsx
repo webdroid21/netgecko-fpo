@@ -885,6 +885,7 @@ export function FarmerView() {
                 name="Farmer ID (front back)"
                 label={t('fields.farmerIdFrontBack')}
                 value={f['Farmer ID (front back)']}
+                camera
                 onSaved={handleFieldSaved}
               />
             </Grid>
@@ -953,11 +954,7 @@ export function FarmerView() {
 
             {!isRecordIdLike(f.Address) && (
               <Grid size={{ xs: 12 }}>
-                <DetailRow
-                  label={t('fields.address')}
-                  value={f.Address}
-                  helperText={t('fields.addressNote')}
-                />
+                <DetailRow label={t('fields.address')} value={f.Address} />
               </Grid>
             )}
             <Grid size={{ xs: 12 }}>
@@ -976,6 +973,7 @@ export function FarmerView() {
                 }
                 type="select"
                 searchable
+                required
                 options={villages.map((v) => ({
                   value: v.id,
                   label: String(v.fields.Summary ?? v.fields['Village Name'] ?? v.id),
@@ -989,28 +987,24 @@ export function FarmerView() {
               <DetailRow
                 label={t('fields.parish')}
                 value={f['Parish Name']?.[0] ?? f.Parish ?? parsedAddress.parish}
-                helperText={t('fields.addressNote')}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
                 label={t('fields.subCounty')}
                 value={f['Sub-County Name']?.[0] ?? f['Sub-county'] ?? parsedAddress.subCounty}
-                helperText={t('fields.addressNote')}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
                 label={t('fields.district')}
                 value={f['District Name']?.[0] ?? f['District (form)'] ?? parsedAddress.district}
-                helperText={t('fields.addressNote')}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
                 label={t('fields.region')}
                 value={f['Region Name']?.[0] ?? f.Region ?? parsedAddress.region}
-                helperText={t('fields.addressNote')}
               />
             </Grid>
 
@@ -1076,6 +1070,15 @@ export function FarmerView() {
                 label={t('fields.volumeSeasonB')}
                 value={f['Quantity sold last season B to Partner (units, kg, liter)']}
                 type="number"
+                onSaved={handleFieldSaved}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <FarmerAttachmentField
+                farmerId={detailFarmer.id}
+                name="Receipts of these sales to Coop"
+                label={t('fields.salesReceipts')}
+                value={f['Receipts of these sales to Coop']}
                 onSaved={handleFieldSaved}
               />
             </Grid>

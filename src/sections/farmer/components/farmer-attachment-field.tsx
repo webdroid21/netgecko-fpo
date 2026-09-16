@@ -31,6 +31,8 @@ type FarmerAttachmentFieldProps = {
   name: string;
   label: string;
   value?: Attachment[];
+  /** Open the device camera instead of the file picker (mobile). */
+  camera?: boolean;
   onSaved: () => void;
 };
 
@@ -39,6 +41,7 @@ export function FarmerAttachmentField({
   name,
   label,
   value,
+  camera,
   onSaved,
 }: FarmerAttachmentFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -158,7 +161,10 @@ export function FarmerAttachmentField({
           uploading ? (
             <CircularProgress size={14} />
           ) : (
-            <Iconify icon={'solar:upload-bold' as any} width={16} />
+            <Iconify
+              icon={camera ? ('solar:camera-bold' as any) : ('solar:upload-bold' as any)}
+              width={16}
+            />
           )
         }
         onClick={() => inputRef.current?.click()}
@@ -167,14 +173,17 @@ export function FarmerAttachmentField({
       >
         {uploading
           ? t('fields.uploading')
-          : attachments.length
-            ? t('fields.addFile')
-            : t('fields.attachFile')}
+          : camera
+            ? t('fields.takePhoto')
+            : attachments.length
+              ? t('fields.addFile')
+              : t('fields.attachFile')}
       </Button>
       <input
         ref={inputRef}
         type="file"
-        accept="image/*,application/pdf"
+        accept={camera ? 'image/*' : 'image/*,application/pdf'}
+        capture={camera ? 'environment' : undefined}
         hidden
         onChange={(e) => {
           const file = e.target.files?.[0];

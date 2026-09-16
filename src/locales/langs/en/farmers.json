@@ -52,12 +52,14 @@
     "region": "Region",
     "memberSince": "Member since (date)",
     "memberSinceYear": "Member since (year)",
-    "mainCropSold": "Main produce sold to Partner",
+    "mainCropSold": "Main product sold to partner",
     "mainCropSoldHelper": "Mandatory for PayLater (loan)",
     "volumeSeasonA": "Quantity sold last season A",
     "volumeSeasonB": "Quantity sold last season B",
+    "salesReceipts": "Receipts of these sales to Partner",
     "attachFile": "Attach file",
     "addFile": "Add file",
+    "takePhoto": "Take photo",
     "uploading": "Uploading…",
     "seasonalWorkers": "# seasonal/temporary workers",
     "permanentWorkers": "# permanent workers",
@@ -82,7 +84,7 @@
     "identity": "Identity",
     "contact": "Contact",
     "address": "Address",
-    "membership": "Membership & produce",
+    "membership": "Membership and Product",
     "workers": "Workers"
   }
 }
