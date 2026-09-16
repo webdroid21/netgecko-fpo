@@ -96,17 +96,6 @@ function getProductNames(land?: Land, allCrops?: Crop[]): string[] {
     .filter(Boolean);
 }
 
-function DetailRow({ label, value }: { label: string; value?: any }) {
-  return (
-    <Box sx={{ p: 1 }}>
-      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        {label}
-      </Typography>
-      <Typography variant="body1">{value ?? '—'}</Typography>
-    </Box>
-  );
-}
-
 // ----------------------------------------------------------------------
 
 export function LandView() {
@@ -659,21 +648,6 @@ export function LandView() {
               />
             </Grid>
 
-            {sectionDivider}
-            {sectionTitle(t('sections.estimated'))}
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('fields.estimatedProductionSeasonA')}
-                value={f['Estimated production Season A']}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('fields.estimatedProductionSeasonB')}
-                value={f['Estimated production Season B']}
-              />
-            </Grid>
           </Grid>
         </CardContent>
       </Card>

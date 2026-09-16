@@ -18,8 +18,8 @@
       "subtext": "{{count}} lands rented"
     },
     "mainProduct": {
-      "title": "Main product",
-      "subtext": "Most common produce"
+      "title": "Most common product",
+      "subtext": "Most grown across lands"
     }
   },
   "searchPlaceholder": "Search lands or products",
