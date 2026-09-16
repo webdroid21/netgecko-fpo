@@ -23,7 +23,6 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components/router-link';
 
-import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -586,7 +585,6 @@ export function OverviewAppView() {
             items={stats.recentInputOrders.map((order) => ({
               id: order.id,
               primary: String(order.fields['Order number'] || '').split(' - ')[0] || 'Unnamed',
-              secondary: (order.fields['Name (from Farmers)'] || []).join(', '),
               amount: `${fNumber(order.fields['Total Order Value (UGX)'])} UGX`,
               href: `${paths.dashboard.fpo.inputOrders}?farmerId=${order.fields.Farmer?.[0] ?? ''}`,
             }))}
@@ -606,7 +604,6 @@ export function OverviewAppView() {
               primary:
                 String(loan.fields['Loan ID'] || '').split(' - ')[0] ||
                 `Loan #${loan.fields.ID ?? '-'}`,
-              secondary: (loan.fields['Name (from Farmer)'] || []).join(', '),
               amount: `${fNumber(loan.fields['Total amount'])} UGX`,
               href: `${paths.dashboard.fpo.loans}?farmerId=${loan.fields.Farmer?.[0] ?? ''}`,
             }))}
@@ -624,7 +621,6 @@ export function OverviewAppView() {
             items={stats.recentPayments.map((payment) => ({
               id: payment.id,
               primary: `${payment.fields['Payment ID'] ?? '-'}`,
-              secondary: fDate(payment.fields['Payment Date']),
               amount: `${fNumber(payment.fields['Payment Amount (UGX)'])} UGX`,
               href: paths.dashboard.fpo.payments,
             }))}
