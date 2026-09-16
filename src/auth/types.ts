@@ -28,6 +28,8 @@ export type AuthContextValue = {
   error: string | null;
   authenticated: boolean;
   unauthenticated: boolean;
+  /** True for roles allowed to create/edit (Partner User, NetGecko Admin). */
+  canEdit: boolean;
   selectFbo: (fbo: FboType) => void;
   checkUserSession: () => Promise<void>;
 };

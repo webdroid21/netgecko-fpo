@@ -244,7 +244,7 @@ function RecordList({ label, records, color = 'primary' }: RecordListProps) {
 // ----------------------------------------------------------------------
 
 export function FarmerView() {
-  const { activeFbo } = useAuthContext();
+  const { activeFbo, canEdit } = useAuthContext();
   const { t } = useTranslate('farmers');
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
@@ -791,14 +791,16 @@ export function FarmerView() {
               </Typography>
             </Box>
 
-            <Button
-              color="primary"
-              variant="contained"
-              size="small"
-              onClick={() => handleEdit(detailFarmer)}
-            >
-              {t('actions.edit')}
-            </Button>
+            {canEdit && (
+              <Button
+                color="primary"
+                variant="contained"
+                size="small"
+                onClick={() => handleEdit(detailFarmer)}
+              >
+                {t('actions.edit')}
+              </Button>
+            )}
           </Stack>
 
           <Grid container spacing={3}>
@@ -1233,9 +1235,11 @@ export function FarmerView() {
             {t('page.subtitle')}
           </Typography>
         </Box>
-        <Button color="primary" variant="contained" startIcon={<Iconify icon={'solar:add-circle-bold' as any} />} onClick={handleAdd}>
-          {t('page.addFarmer')}
-        </Button>
+        {canEdit && (
+          <Button color="primary" variant="contained" startIcon={<Iconify icon={'solar:add-circle-bold' as any} />} onClick={handleAdd}>
+            {t('page.addFarmer')}
+          </Button>
+        )}
       </Stack>
 
       {renderSummary()}

@@ -108,18 +108,24 @@ export function AuthProvider({ children }: Props) {
   const authenticated = !!state.user && !!state.activeFbo;
   const status = state.loading ? 'loading' : authenticated ? 'authenticated' : 'unauthenticated';
 
+  // "Partner User" and "NetGecko Admin" can create/edit; every other role
+  // (Cluster Developer, Partner Viewer, …) is view-only.
+  const canEdit =
+    state.user?.role === 'Partner User' || state.user?.role === 'NetGecko Admin';
+
   const memoizedValue = useMemo(
     () => ({
       user: state.user,
       activeFbo: state.activeFbo,
       error: state.error,
+      canEdit,
       selectFbo,
       checkUserSession,
       loading: status === 'loading',
       authenticated: status === 'authenticated',
       unauthenticated: status === 'unauthenticated',
     }),
-    [state.user, state.activeFbo, state.error, selectFbo, checkUserSession, status]
+    [state.user, state.activeFbo, state.error, canEdit, selectFbo, checkUserSession, status]
   );
 
   return <AuthContext value={memoizedValue}>{children}</AuthContext>;

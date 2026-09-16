@@ -99,7 +99,7 @@ function getProductNames(land?: Land, allCrops?: Crop[]): string[] {
 // ----------------------------------------------------------------------
 
 export function LandView() {
-  const { activeFbo } = useAuthContext();
+  const { activeFbo, canEdit } = useAuthContext();
   const { t } = useTranslate('lands');
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
@@ -466,9 +466,11 @@ export function LandView() {
           >
             <Typography variant="h5">{f.Land || t('unnamedLand')}</Typography>
 
-            <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
-              {t('actions.edit')}
-            </Button>
+            {canEdit && (
+              <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
+                {t('actions.edit')}
+              </Button>
+            )}
           </Stack>
 
           <Grid container spacing={3} key={selectedLand.id}>
@@ -663,14 +665,16 @@ export function LandView() {
             {t('page.subtitle')}
           </Typography>
         </Box>
-        <Button
-          color="primary"
-          variant="contained"
-          startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
-          onClick={handleAdd}
-        >
-          {t('page.addParcel')}
-        </Button>
+        {canEdit && (
+          <Button
+            color="primary"
+            variant="contained"
+            startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
+            onClick={handleAdd}
+          >
+            {t('page.addParcel')}
+          </Button>
+        )}
       </Stack>
 
       {renderSummary()}

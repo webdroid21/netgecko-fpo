@@ -174,13 +174,27 @@ app.post('/api/v1/auth/verify', async (req, res) => {
     }
 
     const fields = record.fields;
-    const fpoIds = Array.isArray(fields.FPO) ? fields.FPO : [];
-    const fpoNames = Array.isArray(fields['Name (from FPO)']) ? fields['Name (from FPO)'] : [];
+    const role = fields.Role || '';
 
-    const fbos = fpoIds.map((id, index) => ({
-      id,
-      name: fpoNames[index] || id,
-    }));
+    let fbos;
+    if (role === 'NetGecko Admin') {
+      // Admins can access every partner.
+      const { data: fpoData } = await airtableApi.post(
+        `/${AIRTABLE_FPOS_TABLE_ID}/listRecords`,
+        { fields: ['Name'] }
+      );
+      fbos = (fpoData.records || []).map((fpo) => ({
+        id: fpo.id,
+        name: fpo.fields?.Name || fpo.id,
+      }));
+    } else {
+      const fpoIds = Array.isArray(fields.FPO) ? fields.FPO : [];
+      const fpoNames = Array.isArray(fields['Name (from FPO)']) ? fields['Name (from FPO)'] : [];
+      fbos = fpoIds.map((id, index) => ({
+        id,
+        name: fpoNames[index] || id,
+      }));
+    }
 
     await updateLoginMeta(record.id, decoded.uid);
 
@@ -190,7 +204,7 @@ app.post('/api/v1/auth/verify', async (req, res) => {
         name: fields.Name || '',
         email: fields.email || email || '',
         phone: fields.Phone || phone || '',
-        role: fields.Role || '',
+        role,
         fbos,
       },
     });
@@ -278,6 +292,53 @@ async function requireAuth(req, res, next) {
   } catch (error) {
     console.error('Token verification failed:', error.message);
     return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid or expired token.' });
+  }
+}
+
+// ----------------------------------------------------------------------
+// Roles: "Partner User" and "NetGecko Admin" can create/edit; every other
+// role (Cluster Developer, Partner Viewer, …) is view-only.
+
+const EDITOR_ROLES = new Set(['Partner User', 'NetGecko Admin']);
+const ROLE_CACHE_TTL_MS = 5 * 60 * 1000;
+const roleCache = new Map(); // firebase uid -> { role, ts }
+
+async function resolveUserRole(decoded) {
+  const cached = roleCache.get(decoded.uid);
+  if (cached && Date.now() - cached.ts < ROLE_CACHE_TTL_MS) return cached.role;
+
+  const email = decoded.email || null;
+  const phone = decoded.phone_number ? toE164(decoded.phone_number) : null;
+  const escapedUid = String(decoded.uid).replace(/'/g, "''");
+
+  const parts = [`{FirebaseUID}='${escapedUid}'`];
+  if (email || phone) parts.push(buildFilterFormula(email, phone));
+  const formula = parts.length > 1 ? `OR(${parts.join(',')})` : parts[0];
+
+  const { data } = await airtableApi.post(`/${AIRTABLE_USERS_TABLE_ID}/listRecords`, {
+    filterByFormula: formula,
+    maxRecords: 1,
+    fields: ['Role'],
+  });
+
+  const role = data.records?.[0]?.fields?.Role || '';
+  roleCache.set(decoded.uid, { role, ts: Date.now() });
+  return role;
+}
+
+async function requireEditor(req, res, next) {
+  try {
+    const role = await resolveUserRole(req.user);
+    if (!EDITOR_ROLES.has(role)) {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        message: 'Your account is view-only. Contact NetGecko for edit access.',
+      });
+    }
+    return next();
+  } catch (error) {
+    console.error('Role resolution failed:', error.message);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Unable to verify permissions.' });
   }
 }
 
@@ -522,7 +583,7 @@ app.get('/api/v1/farmers/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/v1/farmers', requireAuth, async (req, res) => {
+app.post('/api/v1/farmers', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fpoId, fields } = req.body;
 
@@ -547,7 +608,7 @@ app.post('/api/v1/farmers', requireAuth, async (req, res) => {
   }
 });
 
-app.patch('/api/v1/farmers/:id', requireAuth, async (req, res) => {
+app.patch('/api/v1/farmers/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -572,7 +633,7 @@ app.patch('/api/v1/farmers/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.delete('/api/v1/farmers/:id', requireAuth, async (req, res) => {
+app.delete('/api/v1/farmers/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { data } = await airtableApi.delete(`/${AIRTABLE_FARMERS_TABLE_ID}?records[]=${req.params.id}`);
     return res.json({ record: data });
@@ -669,7 +730,7 @@ app.get('/api/v1/lands/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/v1/lands', requireAuth, async (req, res) => {
+app.post('/api/v1/lands', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -694,7 +755,7 @@ app.post('/api/v1/lands', requireAuth, async (req, res) => {
   }
 });
 
-app.patch('/api/v1/lands/:id', requireAuth, async (req, res) => {
+app.patch('/api/v1/lands/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -719,7 +780,7 @@ app.patch('/api/v1/lands/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.delete('/api/v1/lands/:id', requireAuth, async (req, res) => {
+app.delete('/api/v1/lands/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { data } = await airtableApi.delete(`/${AIRTABLE_LANDS_TABLE_ID}?records[]=${req.params.id}`);
     return res.json({ record: data });
@@ -831,7 +892,7 @@ app.get('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/v1/input-orders', requireAuth, async (req, res) => {
+app.post('/api/v1/input-orders', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -856,7 +917,7 @@ app.post('/api/v1/input-orders', requireAuth, async (req, res) => {
   }
 });
 
-app.patch('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
+app.patch('/api/v1/input-orders/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -881,7 +942,7 @@ app.patch('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.delete('/api/v1/input-orders/:id', requireAuth, async (req, res) => {
+app.delete('/api/v1/input-orders/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { data } = await airtableApi.delete(
       `/${AIRTABLE_ORDERS_TABLE_ID}?records[]=${req.params.id}`
@@ -956,7 +1017,7 @@ app.get('/api/v1/loans/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/v1/loans', requireAuth, async (req, res) => {
+app.post('/api/v1/loans', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -981,7 +1042,7 @@ app.post('/api/v1/loans', requireAuth, async (req, res) => {
   }
 });
 
-app.patch('/api/v1/loans/:id', requireAuth, async (req, res) => {
+app.patch('/api/v1/loans/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -1006,7 +1067,7 @@ app.patch('/api/v1/loans/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.delete('/api/v1/loans/:id', requireAuth, async (req, res) => {
+app.delete('/api/v1/loans/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { data } = await airtableApi.delete(
       `/${AIRTABLE_LOANS_TABLE_ID}?records[]=${req.params.id}`
@@ -1063,7 +1124,7 @@ app.get('/api/v1/payments/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/v1/payments', requireAuth, async (req, res) => {
+app.post('/api/v1/payments', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -1088,7 +1149,7 @@ app.post('/api/v1/payments', requireAuth, async (req, res) => {
   }
 });
 
-app.patch('/api/v1/payments/:id', requireAuth, async (req, res) => {
+app.patch('/api/v1/payments/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -1113,7 +1174,7 @@ app.patch('/api/v1/payments/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.delete('/api/v1/payments/:id', requireAuth, async (req, res) => {
+app.delete('/api/v1/payments/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { data } = await airtableApi.delete(
       `/${AIRTABLE_PAYMENTS_TABLE_ID}?records[]=${req.params.id}`
@@ -1147,7 +1208,7 @@ app.get('/api/v1/buyers', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/v1/buyers', requireAuth, async (req, res) => {
+app.post('/api/v1/buyers', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -1231,7 +1292,7 @@ app.get('/api/v1/sales-orders/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/v1/sales-orders', requireAuth, async (req, res) => {
+app.post('/api/v1/sales-orders', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -1256,7 +1317,7 @@ app.post('/api/v1/sales-orders', requireAuth, async (req, res) => {
   }
 });
 
-app.patch('/api/v1/sales-orders/:id', requireAuth, async (req, res) => {
+app.patch('/api/v1/sales-orders/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { fields } = req.body;
 
@@ -1281,7 +1342,7 @@ app.patch('/api/v1/sales-orders/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.delete('/api/v1/sales-orders/:id', requireAuth, async (req, res) => {
+app.delete('/api/v1/sales-orders/:id', requireAuth, requireEditor, async (req, res) => {
   try {
     const { data } = await airtableApi.delete(
       `/${AIRTABLE_SALES_ORDERS_TABLE_ID}?records[]=${req.params.id}`

@@ -152,7 +152,7 @@ const yearTrend = (current: number, previous: number) =>
 // ----------------------------------------------------------------------
 
 export function SalesView() {
-  const { activeFbo } = useAuthContext();
+  const { activeFbo, canEdit } = useAuthContext();
   const { t } = useTranslate('sales');
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
@@ -562,9 +562,11 @@ export function SalesView() {
             </Box>
 
             <Stack direction="row" spacing={1}>
-              <Button variant="outlined" size="small" onClick={() => handleEdit(selectedOrder)}>
-                {t('actions.edit')}
-              </Button>
+              {canEdit && (
+                <Button variant="outlined" size="small" onClick={() => handleEdit(selectedOrder)}>
+                  {t('actions.edit')}
+                </Button>
+              )}
             </Stack>
           </Stack>
 
@@ -639,14 +641,16 @@ export function SalesView() {
             {t('page.subtitle')}
           </Typography>
         </Box>
-        <Button
-          color="primary"
-          variant="contained"
-          startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
-          onClick={handleAdd}
-        >
-          {t('page.newOrder')}
-        </Button>
+        {canEdit && (
+          <Button
+            color="primary"
+            variant="contained"
+            startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
+            onClick={handleAdd}
+          >
+            {t('page.newOrder')}
+          </Button>
+        )}
       </Stack>
 
       {renderSummary()}

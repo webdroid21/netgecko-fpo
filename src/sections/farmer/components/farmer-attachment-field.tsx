@@ -16,6 +16,8 @@ import { firebaseApp } from 'src/lib/firebase';
 
 import { Iconify } from 'src/components/iconify';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 // ----------------------------------------------------------------------
 
 type Attachment = {
@@ -44,6 +46,7 @@ export function FarmerAttachmentField({
   camera,
   onSaved,
 }: FarmerAttachmentFieldProps) {
+  const { canEdit } = useAuthContext();
   const inputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslate('farmers');
   const [uploading, setUploading] = useState(false);
@@ -138,23 +141,26 @@ export function FarmerAttachmentField({
                 >
                   {filename}
                 </MuiLink>
-                <IconButton
-                  size="small"
-                  onClick={() => handleRemove(attachment)}
-                  disabled={Boolean(removingId)}
-                >
-                  {removingId === attachment.id ? (
-                    <CircularProgress size={16} />
-                  ) : (
-                    <Iconify icon={'solar:trash-bin-trash-bold' as any} width={16} />
-                  )}
-                </IconButton>
+                {canEdit && (
+                  <IconButton
+                    size="small"
+                    onClick={() => handleRemove(attachment)}
+                    disabled={Boolean(removingId)}
+                  >
+                    {removingId === attachment.id ? (
+                      <CircularProgress size={16} />
+                    ) : (
+                      <Iconify icon={'solar:trash-bin-trash-bold' as any} width={16} />
+                    )}
+                  </IconButton>
+                )}
               </Stack>
             );
           })}
         </Stack>
       )}
 
+      {canEdit && (
       <Button
         size="small"
         startIcon={
@@ -179,6 +185,7 @@ export function FarmerAttachmentField({
               ? t('fields.addFile')
               : t('fields.attachFile')}
       </Button>
+      )}
       <input
         ref={inputRef}
         type="file"

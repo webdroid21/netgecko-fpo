@@ -17,6 +17,8 @@ import axios from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 // ----------------------------------------------------------------------
 
 type SelectOption = string | { value: string; label: string };
@@ -55,6 +57,9 @@ export function InlineEditField({
   helperText,
   onSaved,
 }: InlineEditFieldProps) {
+  const { canEdit } = useAuthContext();
+  const isReadOnly = readOnly || !canEdit;
+
   const [editing, setEditing] = useState(false);
   const [hover, setHover] = useState(false);
   const [draft, setDraft] = useState<any>(value ?? '');
@@ -71,7 +76,7 @@ export function InlineEditField({
         : (value ?? '—'));
 
   const handleStart = () => {
-    if (readOnly) return;
+    if (isReadOnly) return;
     previousValue.current = value;
     setDraft(value ?? '');
     setDirty(false);
@@ -235,7 +240,7 @@ export function InlineEditField({
       sx={{
         p: 1,
         borderRadius: 1,
-        cursor: readOnly ? 'default' : 'pointer',
+        cursor: isReadOnly ? 'default' : 'pointer',
         '&:hover': readOnly
           ? undefined
           : {
@@ -289,7 +294,7 @@ export function InlineEditField({
           </IconButton>
         )}
 
-        {!editing && hover && !readOnly && (
+        {!editing && hover && !isReadOnly && (
           <Iconify
             icon={'solar:pen-bold' as any}
             width={18}

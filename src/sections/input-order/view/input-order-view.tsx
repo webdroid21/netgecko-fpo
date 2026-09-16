@@ -189,7 +189,7 @@ function getInputProductImage(inputIds: string[], allProducts: InputProduct[]) {
 // ----------------------------------------------------------------------
 
 export function InputOrderView() {
-  const { activeFbo } = useAuthContext();
+  const { activeFbo, canEdit } = useAuthContext();
   const { t } = useTranslate('inputOrders');
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
@@ -522,23 +522,25 @@ export function InputOrderView() {
           >
             <Typography variant="h5">{String(f['Order number'] ?? '') || t('unnamedOrder')}</Typography>
 
-            <Stack direction="row" spacing={1}>
-              <Tooltip
-                title={f['Order Status'] !== 'Open' ? t('fields.orderStatusHelper') : ''}
-                disableHoverListener={f['Order Status'] === 'Open'}
-              >
-                <span>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    disabled={f['Order Status'] !== 'Open'}
-                    onClick={() => handleEdit(selectedOrder)}
-                  >
-                    {t('actions.edit')}
-                  </Button>
-                </span>
-              </Tooltip>
-            </Stack>
+            {canEdit && (
+              <Stack direction="row" spacing={1}>
+                <Tooltip
+                  title={f['Order Status'] !== 'Open' ? t('fields.orderStatusHelper') : ''}
+                  disableHoverListener={f['Order Status'] === 'Open'}
+                >
+                  <span>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      disabled={f['Order Status'] !== 'Open'}
+                      onClick={() => handleEdit(selectedOrder)}
+                    >
+                      {t('actions.edit')}
+                    </Button>
+                  </span>
+                </Tooltip>
+              </Stack>
+            )}
           </Stack>
 
           <Box sx={{ mb: 3 }}>
@@ -783,14 +785,16 @@ export function InputOrderView() {
             {t('page.subtitle')}
           </Typography>
         </Box>
-        <Button
-          color="primary"
-          variant="contained"
-          startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
-          onClick={handleAdd}
-        >
-          {t('page.newOrder')}
-        </Button>
+        {canEdit && (
+          <Button
+            color="primary"
+            variant="contained"
+            startIcon={<Iconify icon={'solar:add-circle-bold' as any} />}
+            onClick={handleAdd}
+          >
+            {t('page.newOrder')}
+          </Button>
+        )}
       </Stack>
 
       {renderSummary()}
