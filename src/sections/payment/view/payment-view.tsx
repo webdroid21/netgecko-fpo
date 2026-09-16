@@ -323,14 +323,14 @@ export function PaymentView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={`${t('unnamedPayment')} #${payment.fields['Payment ID'] ?? '-'}`}
+                      primary={String(payment.fields['Payment ID'] ?? '-')}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {loanLabel(payment.fields.Loans?.[0])} · {payment.fields.Source}
+                    {loanLabel(payment.fields.Loans?.[0])}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {fNumber(payment.fields['Payment Amount (UGX)'])} UGX · {fDate(payment.fields['Payment Date'])}
@@ -361,7 +361,7 @@ export function PaymentView() {
       <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
           <Box sx={{ mb: 3 }}>
-            <Typography variant="h5">{`${t('unnamedPayment')} #${f['Payment ID'] ?? '-'}`}</Typography>
+            <Typography variant="h5">{String(f['Payment ID'] ?? '-')}</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {fDate(f['Payment Date'])} · {f.Source}
             </Typography>
@@ -417,7 +417,6 @@ export function PaymentView() {
           <SummaryCard
             title={t('summary.totalPayments.title')}
             total={stats.count}
-            subtext={t('summary.totalPayments.subtext')}
             color="primary"
             icon="solar:wallet-money-bold-duotone"
           />
@@ -426,7 +425,6 @@ export function PaymentView() {
           <SummaryCard
             title={t('summary.totalReceived.title')}
             total={stats.total}
-            subtext={t('summary.totalReceived.subtext')}
             color="success"
             icon="solar:tag-price-bold-duotone"
           />

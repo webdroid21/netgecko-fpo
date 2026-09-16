@@ -5,15 +5,13 @@
   },
   "summary": {
     "totalPayments": {
-      "title": "Total payments",
-      "subtext": "Transactions"
+      "title": "Total payments"
     },
     "totalReceived": {
-      "title": "Total received",
-      "subtext": "UGX"
+      "title": "Total amount received (UGX)"
     },
     "paymentsThisYear": "Total payment this year",
-    "amountThisYear": "Total payment amount this year",
+    "amountThisYear": "Total payment amount this year (UGX)",
     "vsLastYear": "vs last year"
   },
   "searchPlaceholder": "Search payments...",
