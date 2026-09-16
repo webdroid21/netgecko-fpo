@@ -15,7 +15,6 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -400,17 +399,6 @@ export function SalesView() {
     setFormOpen(true);
   };
 
-  const handleDelete = async (order: SalesOrder) => {
-    const date = order.fields['Date Received'] ?? order.fields.Name ?? '';
-    if (!confirm(t('confirmDeleteOrder', { date }))) return;
-    try {
-      await axios.delete(`/api/v1/sales-orders/${order.id}`);
-      fetchOrders();
-    } catch (error: any) {
-      console.error('Delete sales order error:', error?.message);
-    }
-  };
-
   const handleFarmerCreated = (farmer: Farmer) => {
     setFarmers((prev) => [...prev, farmer]);
   };
@@ -503,7 +491,6 @@ export function SalesView() {
                   </Stack>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     {[
-                      farmerName(order.fields.Farmers?.[0]),
                       productName(order.fields.Product?.[0]),
                       (order.fields['Name (from Season)'] || []).join(', '),
                     ]
@@ -578,9 +565,6 @@ export function SalesView() {
               <Button variant="outlined" size="small" onClick={() => handleEdit(selectedOrder)}>
                 {t('actions.edit')}
               </Button>
-              <IconButton color="error" onClick={() => handleDelete(selectedOrder)}>
-                <Iconify icon={'solar:trash-bin-trash-bold' as any} />
-              </IconButton>
             </Stack>
           </Stack>
 
