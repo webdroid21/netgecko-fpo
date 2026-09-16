@@ -52,15 +52,6 @@ const STATUS_CARDS = [
   { key: 'Closed', label: 'Closed', color: 'success' as const },
 ];
 
-// Formula ids like "Input Order #633 - RICHARD SENGENDO - CM60047107K9FG"
-// are displayed verbatim — the client wants the column value as it is.
-function farmerName(value: unknown): string {
-  return (Array.isArray(value) ? value : [value])
-    .map((v) => String(v ?? ''))
-    .filter(Boolean)
-    .join(', ');
-}
-
 function SummaryCard({
   title,
   total,
@@ -469,9 +460,6 @@ export function InputOrderView() {
                     <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {farmerName(order.fields['Name (from Farmers)'])}
-                  </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {(order.fields['Name (from Season)'] || []).join(', ')} ·{' '}
                     {fNumber(order.fields['Total Order Value (UGX)'])} UGX · {order.fields['PayNow PayLater']}
@@ -532,12 +520,7 @@ export function InputOrderView() {
             spacing={2}
             sx={{ mb: 3 }}
           >
-            <Box>
-              <Typography variant="h5">{String(f['Order number'] ?? '') || t('unnamedOrder')}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {formattedDate}
-              </Typography>
-            </Box>
+            <Typography variant="h5">{String(f['Order number'] ?? '') || t('unnamedOrder')}</Typography>
 
             <Stack direction="row" spacing={1}>
               <Tooltip
