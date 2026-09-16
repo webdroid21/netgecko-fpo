@@ -1,6 +1,7 @@
 import type { Farmer } from 'src/sections/farmer/types';
 import type { Season, InputOrder, InputProduct } from '../types';
 
+import { varAlpha } from 'minimal-shared/utils';
 import { useMemo, Fragment, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -15,10 +16,8 @@ import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
-import ToggleButton from '@mui/material/ToggleButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
@@ -560,28 +559,41 @@ export function InputOrderView() {
           </Stack>
 
           <Box sx={{ mb: 3 }}>
-            {/* Status is managed by NetGecko in Airtable — shown as the same
-                segmented control but rendered non-interactive. */}
-            <ToggleButtonGroup
-              value={f['Order Status']}
-              exclusive
-              fullWidth
+            {/* Status is managed by NetGecko in Airtable — read-only
+                segmented display, same look as the previous control. */}
+            <Box
+              role="group"
               aria-label={t('fields.orderStatus')}
-              aria-readonly
-              sx={{ pointerEvents: 'none' }}
+              sx={{
+                display: 'flex',
+                p: 0.5,
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
             >
-              {STATUS_CARDS.map((s) => (
-                <ToggleButton
-                  key={s.key}
-                  value={s.key}
-                  color="primary"
-                  aria-label={s.label}
-                  tabIndex={-1}
-                >
-                  {t(`summary.statusCards.${s.key}`)}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
+              {STATUS_CARDS.map((s) => {
+                const selected = f['Order Status'] === s.key;
+                return (
+                  <Box
+                    key={s.key}
+                    sx={(theme) => ({
+                      flex: 1,
+                      py: 1,
+                      textAlign: 'center',
+                      borderRadius: 0.75,
+                      typography: 'subtitle2',
+                      color: selected ? 'primary.main' : 'text.secondary',
+                      bgcolor: selected
+                        ? varAlpha(theme.vars.palette.primary.mainChannel, 0.16)
+                        : 'transparent',
+                    })}
+                  >
+                    {t(`summary.statusCards.${s.key}`)}
+                  </Box>
+                );
+              })}
+            </Box>
             <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, display: 'block' }}>
               {t('fields.statusManagedByNetGecko')}
             </Typography>
