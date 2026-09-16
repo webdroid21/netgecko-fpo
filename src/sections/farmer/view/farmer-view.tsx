@@ -10,7 +10,7 @@ type Crop = {
   fields: Record<string, any>;
 };
 
-import { useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -450,6 +450,26 @@ export function FarmerView() {
     setFullFarmer(null);
     fetchFullFarmer(selectedId);
   }, [selectedId, fetchFullFarmer]);
+
+  // Refetch when the user returns to an idle/open window.
+  const lastFetchAt = useRef(0);
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - lastFetchAt.current < 30_000) return;
+      lastFetchAt.current = Date.now();
+      fetchFarmers();
+      fetchLands();
+      fetchTransactions();
+      if (selectedId) fetchFullFarmer(selectedId);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
+  }, [fetchFarmers, fetchLands, fetchTransactions, fetchFullFarmer, selectedId]);
 
   const isWoman = (f: Farmer) => f.fields.Gender === 'Female';
   const roundPercent = (count: number, total: number) =>

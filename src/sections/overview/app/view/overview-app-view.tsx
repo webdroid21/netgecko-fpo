@@ -4,7 +4,7 @@ import type { Payment } from 'src/sections/payment/types';
 import type { SalesOrder } from 'src/sections/sales/types';
 import type { InputOrder } from 'src/sections/input-order/types';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -433,6 +433,23 @@ export function OverviewAppView() {
 
   useEffect(() => {
     fetchStats();
+  }, [fetchStats]);
+
+  // Refetch when the user returns to an idle/open window.
+  const lastFetchAt = useRef(0);
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - lastFetchAt.current < 30_000) return;
+      lastFetchAt.current = Date.now();
+      fetchStats();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, [fetchStats]);
 
   const firstName = user?.displayName?.split(' ')[0] ?? '';
