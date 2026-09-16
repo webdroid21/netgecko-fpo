@@ -54,7 +54,9 @@
     "input": "Input {{index}}",
     "quantityInput": "Quantity input {{index}}",
     "retailPriceInput": "Retail price input {{index}}",
-    "totalValueInput": "Total value input {{index}}"
+    "totalValueInput": "Total value input {{index}}",
+    "orderNumber": "Order number",
+    "orderDelivery": "Order delivery"
   },
   "form": {
     "title": {

@@ -32,6 +32,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { ListFilters } from 'src/components/list-filters';
 
 import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
 
@@ -216,6 +217,7 @@ export function InputOrderView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<InputOrder | null>(null);
 
@@ -281,6 +283,59 @@ export function InputOrderView() {
     fetchProducts();
   }, [fetchOrders, fetchFarmers, fetchSeasons, fetchProducts]);
 
+  const orderFilterFields = useMemo(
+    () => [
+      { key: 'orderNumber', label: t('fields.orderNumber') },
+      {
+        key: 'payNowPayLater',
+        label: t('fields.payNowPayLater'),
+        options: PAY_OPTIONS.map((o) => ({ value: o, label: o })),
+      },
+      { key: 'orderDate', label: t('fields.orderDate') },
+      { key: 'orderDelivery', label: t('fields.orderDelivery') },
+      {
+        key: 'orderStatus',
+        label: t('fields.orderStatus'),
+        options: STATUS_CARDS.map((s) => ({ value: s.key, label: s.label })),
+      },
+      {
+        key: 'season',
+        label: t('fields.season'),
+        options: seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' })),
+      },
+      {
+        key: 'farmer',
+        label: t('fields.farmer'),
+        options: farmers.map((farmer) => ({
+          value: farmer.id,
+          label: farmer.fields.Name || 'Unnamed',
+        })),
+      },
+    ],
+    [t, seasons, farmers]
+  );
+
+  const orderFilterValue = (o: InputOrder, key: string): any => {
+    switch (key) {
+      case 'orderNumber':
+        return o.fields['Order number'];
+      case 'payNowPayLater':
+        return o.fields['PayNow PayLater'];
+      case 'orderDate':
+        return o.fields['Order date'];
+      case 'orderDelivery':
+        return `${o.fields['Order Delivery'] ?? ''} ${o.fields.Delivered ?? ''} ${o.fields['Delivery date'] ?? ''}`;
+      case 'orderStatus':
+        return o.fields['Order Status'];
+      case 'season':
+        return o.fields.Season;
+      case 'farmer':
+        return o.fields.Farmer;
+      default:
+        return '';
+    }
+  };
+
   const filteredOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
     let list = orders;
@@ -289,13 +344,22 @@ export function InputOrderView() {
       list = list.filter((o) => (o.fields.Farmer ?? []).includes(farmerFilter));
     }
 
-    if (!term) return list;
-
     return list.filter((o) => {
-      const text = `${o.fields['Order number'] ?? ''} ${(o.fields['Name (from Farmers)'] || []).join(' ')} ${(o.fields['Name (from Season)'] || []).join(' ')}`.toLowerCase();
-      return text.includes(term);
+      if (term) {
+        const text = `${o.fields['Order number'] ?? ''} ${o.fields['PayNow PayLater'] ?? ''} ${o.fields['Order date'] ?? ''} ${o.fields['Order Status'] ?? ''} ${(o.fields['Name (from Farmers)'] || []).join(' ')} ${(o.fields['Name (from Season)'] || []).join(' ')} ${o.fields['Total Order Value (UGX)'] ?? ''}`.toLowerCase();
+        if (!text.includes(term)) return false;
+      }
+      return orderFilterFields.every(({ key, options }) => {
+        const value = filters[key];
+        if (!value) return true;
+        const fieldValue = orderFilterValue(o, key);
+        if (options) {
+          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
+        }
+        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
+      });
     });
-  }, [orders, search, farmerFilter]);
+  }, [orders, search, filters, farmerFilter, orderFilterFields]);
 
   const selectedOrder = useMemo(
     () => filteredOrders.find((o) => o.id === selectedId) || filteredOrders[0] || null,
@@ -419,16 +483,24 @@ export function InputOrderView() {
   const renderList = () => (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}` }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
-          }}
-        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
+            }}
+          />
+          <ListFilters
+            fields={orderFilterFields}
+            values={filters}
+            onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+            onClear={() => setFilters({})}
+          />
+        </Stack>
       </Box>
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
@@ -587,6 +659,7 @@ export function InputOrderView() {
                 label={t('fields.farmer')}
                 required
                 type="select"
+                      searchable
                 options={farmers.map((farmer) => ({
                   value: farmer.id,
                   label: farmer.fields.Name || 'Unnamed',
@@ -606,6 +679,7 @@ export function InputOrderView() {
                 label={t('fields.season')}
                 required
                 type="select"
+                      searchable
                 options={seasons.map((s) => ({
                   value: s.id,
                   label: s.fields.Name || 'Unnamed',
@@ -711,6 +785,7 @@ export function InputOrderView() {
                       label={t('fields.input', { index: idx })}
                       required={idx === 1}
                       type="select"
+                      searchable
                       options={
                         idx === 1
                           ? productOptions

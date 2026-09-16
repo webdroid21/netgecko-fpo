@@ -44,7 +44,11 @@
     "repaymentStatus": "Repayment status",
     "sumPaymentReceived": "Sum payment received",
     "inputOrder": "Input order",
-    "paymentsReceived": "Payments received"
+    "paymentsReceived": "Payments received",
+    "loanId": "Loan ID",
+    "verifiedMobileMoneyNumber": "Verified mobile money number",
+    "season": "Season",
+    "loanObject": "Loan object"
   },
   "form": {
     "title": {

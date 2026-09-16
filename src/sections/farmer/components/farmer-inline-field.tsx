@@ -7,6 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import Autocomplete from '@mui/material/Autocomplete';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { fDate } from 'src/utils/format-time';
@@ -29,6 +30,8 @@ type InlineEditFieldProps = {
   displayValue?: ReactNode;
   type?: 'text' | 'date' | 'number' | 'select';
   options?: SelectOption[];
+  /** Render the select as a searchable autocomplete for long option lists. */
+  searchable?: boolean;
   arrayValue?: boolean;
   readOnly?: boolean;
   required?: boolean;
@@ -45,6 +48,7 @@ export function InlineEditField({
   displayValue,
   type = 'text',
   options,
+  searchable,
   arrayValue,
   readOnly,
   required,
@@ -159,6 +163,26 @@ export function InlineEditField({
       const normalized = options.map((option) =>
         typeof option === 'string' ? { value: option, label: option } : option
       );
+      if (searchable) {
+        return (
+          <Autocomplete
+            size="small"
+            fullWidth
+            options={normalized}
+            value={normalized.find((o) => o.value === draft) ?? null}
+            getOptionLabel={(option) => option.label}
+            isOptionEqualToValue={(a, b) => a.value === b.value}
+            onChange={(_e, option) => {
+              const next = option?.value ?? '';
+              setDraft(next);
+              setDirty(true);
+              save(next);
+            }}
+            disabled={saving}
+            renderInput={(params) => <TextField {...params} size="small" />}
+          />
+        );
+      }
       return (
         <TextField
           select

@@ -39,6 +39,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { ListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -253,6 +254,7 @@ export function FarmerView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingFarmer, setEditingFarmer] = useState<Farmer | null>(null);
   const [fullFarmer, setFullFarmer] = useState<Farmer | null>(null);
@@ -412,16 +414,88 @@ export function FarmerView() {
     fetchTransactions();
   }, [fetchTransactions]);
 
+  const farmerFilterFields = useMemo(
+    () => [
+      { key: 'name', label: t('fields.givenName') },
+      { key: 'nin', label: t('fields.nin') },
+      { key: 'farmerCode', label: t('fields.farmerCode') },
+      { key: 'birthDate', label: t('fields.birthDate') },
+      { key: 'age', label: t('fields.age') },
+      {
+        key: 'gender',
+        label: t('fields.gender'),
+        options: ['Male', 'Female'].map((g) => ({ value: g, label: g })),
+      },
+      { key: 'village', label: t('fields.village') },
+      { key: 'parish', label: t('fields.parish') },
+      { key: 'subCounty', label: t('fields.subCounty') },
+      { key: 'district', label: t('fields.district') },
+      { key: 'region', label: t('fields.region') },
+      { key: 'email', label: t('fields.email') },
+      { key: 'phone', label: t('fields.phoneNumber') },
+      { key: 'mobileMoney', label: t('fields.mobileMoneyNumber') },
+      { key: 'mmNameCheck', label: t('fields.mmNameCheck') },
+    ],
+    [t]
+  );
+
+  const farmerFilterValue = (f: Farmer, key: string): any => {
+    const fields = f.fields;
+    const first = (v: any) => (Array.isArray(v) ? v[0] : v);
+    switch (key) {
+      case 'name':
+        return `${fields['Given Name'] ?? ''} ${fields.Surname ?? ''} ${fields.Name ?? ''}`;
+      case 'nin':
+        return fields['NIN (National Identification Number)'];
+      case 'farmerCode':
+        return fields['Farmer Code'];
+      case 'birthDate':
+        return fields['Birth date'];
+      case 'age':
+        return fields.Age;
+      case 'gender':
+        return fields.Gender;
+      case 'village':
+        return `${fields.Village ?? ''} ${fields['Village Name'] ?? ''}`;
+      case 'parish':
+        return `${fields.Parish ?? ''} ${fields['Parish Name'] ?? ''}`;
+      case 'subCounty':
+        return `${fields['Sub-county'] ?? ''} ${fields['Sub-County Name'] ?? ''}`;
+      case 'district':
+        return `${fields['District (form)'] ?? ''} ${fields['District Name'] ?? ''}`;
+      case 'region':
+        return `${fields.Region ?? ''} ${fields['Region Name'] ?? ''}`;
+      case 'email':
+        return fields.Email;
+      case 'phone':
+        return fields['Phone Number'];
+      case 'mobileMoney':
+        return `${fields['Mobile Money Number'] ?? ''} ${fields['Verified Mobile Money Number'] ?? ''}`;
+      case 'mmNameCheck':
+        return first(fields['MM Name Check']);
+      default:
+        return '';
+    }
+  };
+
   const filteredFarmers = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return farmers;
     return farmers.filter((f) => {
-      const name = String(f.fields.Name || '').toLowerCase();
-      const phone = String(f.fields['Phone Number'] || '').toLowerCase();
-      const nin = String(f.fields['NIN (National Identification Number)'] || '').toLowerCase();
-      return name.includes(term) || phone.includes(term) || nin.includes(term);
+      if (term) {
+        const text = farmerFilterFields.map((field) => farmerFilterValue(f, field.key)).join(' ').toLowerCase();
+        if (!text.includes(term)) return false;
+      }
+      return farmerFilterFields.every(({ key, options }) => {
+        const value = filters[key];
+        if (!value) return true;
+        const fieldValue = farmerFilterValue(f, key);
+        if (options) {
+          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
+        }
+        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
+      });
     });
-  }, [farmers, search]);
+  }, [farmers, search, filters, farmerFilterFields]);
 
   const selectedFarmer = useMemo(
     () => farmers.find((f) => f.id === selectedId) || filteredFarmers[0] || null,
@@ -568,16 +642,24 @@ export function FarmerView() {
   const renderList = () => (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}` }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
-          }}
-        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
+            }}
+          />
+          <ListFilters
+            fields={farmerFilterFields}
+            values={filters}
+            onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+            onClear={() => setFilters({})}
+          />
+        </Stack>
       </Box>
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
@@ -893,6 +975,7 @@ export function FarmerView() {
                   '—'
                 }
                 type="select"
+                searchable
                 options={villages.map((v) => ({
                   value: v.id,
                   label: String(v.fields.Summary ?? v.fields['Village Name'] ?? v.id),
@@ -965,6 +1048,7 @@ export function FarmerView() {
                 value={cropId ?? ''}
                 displayValue={cropName ?? '—'}
                 type="select"
+                searchable
                 options={cropSelectOptions}
                 arrayValue
                 onSaved={handleFieldSaved}

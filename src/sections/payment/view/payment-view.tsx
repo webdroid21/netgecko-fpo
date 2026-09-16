@@ -25,6 +25,7 @@ import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
+import { ListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -125,6 +126,7 @@ export function PaymentView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
 
   const fetchPayments = useCallback(async () => {
     if (!activeFbo) return;
@@ -164,6 +166,52 @@ export function PaymentView() {
     fetchLoans();
   }, [fetchPayments, fetchLoans]);
 
+  const loanLabel = useCallback(
+    (id?: string) => {
+      const loan = loans.find((l) => l.id === id);
+      return loan ? loan.fields['Loan ID'] || t('unnamedLoan') : '—';
+    },
+    [loans, t]
+  );
+
+  const paymentFilterFields = useMemo(
+    () => [
+      {
+        key: 'source',
+        label: t('fields.source'),
+        options: Array.from(
+          new Set(payments.map((p) => String(p.fields.Source ?? '')).filter(Boolean))
+        ).map((v) => ({ value: v, label: v })),
+      },
+      { key: 'paymentAmount', label: t('fields.paymentAmount') },
+      { key: 'paymentDate', label: t('fields.paymentDate') },
+      { key: 'mobileMoneyNumber', label: t('fields.mobileMoneyNumberUsed') },
+      {
+        key: 'loan',
+        label: t('fields.loan'),
+        options: loans.map((l) => ({ value: l.id, label: loanLabel(l.id) })),
+      },
+    ],
+    [t, payments, loans, loanLabel]
+  );
+
+  const paymentFilterValue = (p: Payment, key: string): any => {
+    switch (key) {
+      case 'source':
+        return p.fields.Source;
+      case 'paymentAmount':
+        return p.fields['Payment Amount (UGX)'];
+      case 'paymentDate':
+        return p.fields['Payment Date'];
+      case 'mobileMoneyNumber':
+        return p.fields['Mobile Money Number Used'];
+      case 'loan':
+        return p.fields.Loans;
+      default:
+        return '';
+    }
+  };
+
   const filteredPayments = useMemo(() => {
     const term = search.trim().toLowerCase();
     let list = payments;
@@ -176,13 +224,22 @@ export function PaymentView() {
       });
     }
 
-    if (!term) return list;
-
     return list.filter((p) => {
-      const text = `${p.fields['Payment ID'] ?? ''} ${(p.fields['FPO (from Loans)'] || []).join(' ')} ${p.fields.Source ?? ''} ${p.fields['Payment reference'] ?? ''}`.toLowerCase();
-      return text.includes(term);
+      if (term) {
+        const text = `${p.fields['Payment ID'] ?? ''} ${(p.fields['FPO (from Loans)'] || []).join(' ')} ${p.fields.Source ?? ''} ${p.fields['Payment reference'] ?? ''} ${p.fields['Payment Amount (UGX)'] ?? ''} ${p.fields['Payment Date'] ?? ''} ${p.fields['Mobile Money Number Used'] ?? ''} ${loanLabel(p.fields.Loans?.[0])}`.toLowerCase();
+        if (!text.includes(term)) return false;
+      }
+      return paymentFilterFields.every(({ key, options }) => {
+        const value = filters[key];
+        if (!value) return true;
+        const fieldValue = paymentFilterValue(p, key);
+        if (options) {
+          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
+        }
+        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
+      });
     });
-  }, [payments, search, farmerFilter, loans]);
+  }, [payments, search, filters, farmerFilter, loans, loanLabel, paymentFilterFields]);
 
   const selectedPayment = useMemo(
     () => filteredPayments.find((p) => p.id === selectedId) || filteredPayments[0] || null,
@@ -226,24 +283,27 @@ export function PaymentView() {
     return s;
   }, [filteredPayments]);
 
-  const loanLabel = (id?: string) => {
-    const loan = loans.find((l) => l.id === id);
-    return loan ? loan.fields['Loan ID'] || t('unnamedLoan') : '—';
-  };
-
   const renderList = () => (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}` }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
-          }}
-        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
+            }}
+          />
+          <ListFilters
+            fields={paymentFilterFields}
+            values={filters}
+            onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+            onClear={() => setFilters({})}
+          />
+        </Stack>
       </Box>
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>

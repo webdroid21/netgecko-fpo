@@ -15,7 +15,6 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Divider from '@mui/material/Divider';
-import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -103,7 +102,7 @@ export function SalesFormDialog({
     resolver: zodResolver(schema),
   });
 
-  const { reset, setValue, handleSubmit, formState } = methods;
+  const { reset, watch, setValue, handleSubmit, formState } = methods;
   const { isSubmitting } = formState;
 
   useEffect(() => {
@@ -144,22 +143,22 @@ export function SalesFormDialog({
     }
   };
 
-  const renderSelect = (
+  const renderAutocomplete = (
     name: keyof FormValues,
     label: string,
     options: { value: string; label: string }[],
-    required = false
+    required?: boolean
   ) => (
-    <Field.Select name={name} label={label} required={required}>
-      <MenuItem value="">
-        <em>{t('form.selectPlaceholder')}</em>
-      </MenuItem>
-      {options.map((opt) => (
-        <MenuItem key={opt.value} value={opt.value}>
-          {opt.label}
-        </MenuItem>
-      ))}
-    </Field.Select>
+    <Field.Autocomplete
+      name={name}
+      label={label}
+      options={options}
+      getOptionLabel={(opt: any) => opt?.label ?? ''}
+      isOptionEqualToValue={(a: any, b: any) => a?.value === b?.value}
+      value={options.find((o) => o.value === watch(name)) ?? null}
+      onChange={(_e: any, opt: any) => setValue(name, opt?.value ?? '', { shouldValidate: true })}
+      slotProps={{ textField: { required } }}
+    />
   );
 
   const form = (
@@ -178,7 +177,7 @@ export function SalesFormDialog({
             <Grid size={{ xs: 12 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box sx={{ flexGrow: 1 }}>
-                  {renderSelect(
+                  {renderAutocomplete(
                     'Farmers',
                     t('form.farmer'),
                     farmers.map((f) => ({
@@ -207,7 +206,7 @@ export function SalesFormDialog({
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              {renderSelect(
+              {renderAutocomplete(
                 'Season',
                 t('form.season'),
                 seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' })),
@@ -216,7 +215,7 @@ export function SalesFormDialog({
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              {renderSelect(
+              {renderAutocomplete(
                 'Product',
                 t('form.product'),
                 crops.map((c) => ({

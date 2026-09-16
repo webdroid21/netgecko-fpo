@@ -75,7 +75,8 @@
     "payment": "Payment",
     "salesCount": "# Sales",
     "sales": "Sales",
-    "sale": "Sale"
+    "sale": "Sale",
+    "mmNameCheck": "Mobile money name check"
   },
   "sections": {
     "identity": "Identity",

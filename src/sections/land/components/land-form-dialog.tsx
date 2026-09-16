@@ -121,6 +121,7 @@ export function LandFormDialog({
 
   const {
     reset,
+    watch,
     setValue,
     handleSubmit,
     formState: { isSubmitting },
@@ -202,6 +203,24 @@ export function LandFormDialog({
     </Field.Select>
   );
 
+  const renderAutocomplete = (
+    name: keyof FormValues,
+    label: string,
+    options: { value: string; label: string }[],
+    required?: boolean
+  ) => (
+    <Field.Autocomplete
+      name={name}
+      label={label}
+      options={options}
+      getOptionLabel={(opt: any) => opt?.label ?? ''}
+      isOptionEqualToValue={(a: any, b: any) => a?.value === b?.value}
+      value={options.find((o) => o.value === watch(name)) ?? null}
+      onChange={(_e: any, opt: any) => setValue(name, opt?.value ?? '', { shouldValidate: true })}
+      slotProps={{ textField: { required } }}
+    />
+  );
+
   const form = (
     <Form
       methods={methods}
@@ -218,7 +237,7 @@ export function LandFormDialog({
             <Grid size={{ xs: 12 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box sx={{ flexGrow: 1 }}>
-                  {renderSelectField(
+                  {renderAutocomplete(
                     'Farmer',
                     t('form.farmer'),
                     farmers.map((f) => ({ value: f.id, label: f.fields.Name || 'Unnamed' })),
@@ -269,7 +288,7 @@ export function LandFormDialog({
             <SectionHeader title={t('sections.product1')} />
 
             <Grid size={{ xs: 12, md: 6 }}>
-              {renderSelectField(
+              {renderAutocomplete(
                 'Main Product (1)',
                 t('form.mainProduct'),
                 crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id })),
@@ -306,13 +325,10 @@ export function LandFormDialog({
             <SectionHeader title={t('sections.product2')} />
 
             <Grid size={{ xs: 12, md: 6 }}>
-              {renderSelectField(
+              {renderAutocomplete(
                 'Other product (2)',
                 t('form.otherProduct'),
-                [
-                  { value: '', label: t('form.noneOption') },
-                  ...crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id })),
-                ]
+                crops.map((c) => ({ value: c.id, label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id }))
               )}
             </Grid>
 

@@ -28,6 +28,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { ListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -208,6 +209,7 @@ export function LoanView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
 
   const fetchLoans = useCallback(async () => {
     if (!activeFbo) return;
@@ -247,6 +249,50 @@ export function LoanView() {
     fetchFarmers();
   }, [fetchLoans, fetchFarmers]);
 
+  const loanFilterFields = useMemo(() => {
+    const distinct = (key: string) =>
+      Array.from(new Set(loans.map((l) => fieldText(l.fields[key])).filter(Boolean))).map(
+        (v) => ({ value: v, label: v })
+      );
+    return [
+      { key: 'loanId', label: t('fields.loanId') },
+      { key: 'loanStatus', label: t('fields.loanStatus'), options: distinct('Loan Status') },
+      {
+        key: 'farmer',
+        label: t('fields.farmer'),
+        options: farmers.map((farmer) => ({
+          value: farmer.id,
+          label: farmer.fields.Name || 'Unnamed',
+        })),
+      },
+      { key: 'verifiedMobileMoney', label: t('fields.verifiedMobileMoneyNumber') },
+      { key: 'season', label: t('fields.season') },
+      { key: 'loanObject', label: t('fields.loanObject'), options: distinct('Loan Object') },
+      { key: 'totalAmount', label: t('fields.totalAmount') },
+    ];
+  }, [t, loans, farmers]);
+
+  const loanFilterValue = (l: Loan, key: string): any => {
+    switch (key) {
+      case 'loanId':
+        return fieldText(l.fields['Loan ID']);
+      case 'loanStatus':
+        return fieldText(l.fields['Loan Status']);
+      case 'farmer':
+        return fieldArray(l.fields.Farmer);
+      case 'verifiedMobileMoney':
+        return fieldText(l.fields['Verified Mobile Money Number']);
+      case 'season':
+        return `${fieldText(l.fields['Name (from Seasons)'])} ${fieldText(l.fields.Season)}`;
+      case 'loanObject':
+        return fieldText(l.fields['Loan Object']);
+      case 'totalAmount':
+        return l.fields['Total amount'];
+      default:
+        return '';
+    }
+  };
+
   const filteredLoans = useMemo(() => {
     const term = search.trim().toLowerCase();
     let list = loans;
@@ -255,13 +301,33 @@ export function LoanView() {
       list = list.filter((l) => fieldArray(l.fields.Farmer).includes(farmerFilter));
     }
 
-    if (!term) return list;
-
     return list.filter((l) => {
-      const text = `${fieldText(l.fields['Loan ID'])} ${fieldText(l.fields['Name (from Farmer)'])} ${fieldText(l.fields['Loan Status'])}`.toLowerCase();
-      return text.includes(term);
+      if (term) {
+        const text = [
+          fieldText(l.fields['Loan ID']),
+          fieldText(l.fields['Name (from Farmer)']),
+          fieldText(l.fields['Loan Status']),
+          fieldText(l.fields['Loan Object']),
+          fieldText(l.fields['Name (from Seasons)']),
+          fieldText(l.fields['Verified Mobile Money Number']),
+          fieldText(l.fields['Total amount']),
+          fieldText(l.fields['Issue Date']),
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!text.includes(term)) return false;
+      }
+      return loanFilterFields.every(({ key, options }) => {
+        const value = filters[key];
+        if (!value) return true;
+        const fieldValue = loanFilterValue(l, key);
+        if (options) {
+          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
+        }
+        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
+      });
     });
-  }, [loans, search, farmerFilter]);
+  }, [loans, search, filters, farmerFilter, loanFilterFields]);
 
   const selectedLoan = useMemo(
     () => filteredLoans.find((l) => l.id === selectedId) || filteredLoans[0] || null,
@@ -366,16 +432,24 @@ export function LoanView() {
   const renderList = () => (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}` }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
-          }}
-        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
+            }}
+          />
+          <ListFilters
+            fields={loanFilterFields}
+            values={filters}
+            onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+            onClear={() => setFilters({})}
+          />
+        </Stack>
       </Box>
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>

@@ -50,7 +50,8 @@
     "product2ProductionSeasonA": "Product 2 estimated production Season A",
     "product2ProductionSeasonB": "Product 2 estimated production Season B",
     "estimatedProductionSeasonA": "Estimated production Season A",
-    "estimatedProductionSeasonB": "Estimated production Season B"
+    "estimatedProductionSeasonB": "Estimated production Season B",
+    "name": "Land"
   },
   "form": {
     "title": {

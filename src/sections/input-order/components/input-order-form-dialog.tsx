@@ -175,7 +175,7 @@ export function InputOrderFormDialog({
     resolver: zodResolver(schema),
   });
 
-  const { reset, setValue, handleSubmit, formState } = methods;
+  const { reset, watch, setValue, handleSubmit, formState } = methods;
   const { isSubmitting } = formState;
 
   useEffect(() => {
@@ -239,6 +239,24 @@ export function InputOrderFormDialog({
     </Field.Select>
   );
 
+  const renderAutocomplete = (
+    name: keyof FormValues,
+    label: string,
+    options: { value: string; label: string }[],
+    required?: boolean
+  ) => (
+    <Field.Autocomplete
+      name={name}
+      label={label}
+      options={options}
+      getOptionLabel={(opt: any) => opt?.label ?? ''}
+      isOptionEqualToValue={(a: any, b: any) => a?.value === b?.value}
+      value={options.find((o) => o.value === watch(name)) ?? null}
+      onChange={(_e: any, opt: any) => setValue(name, opt?.value ?? '', { shouldValidate: true })}
+      slotProps={{ textField: { required } }}
+    />
+  );
+
   const form = (
     <Form
       methods={methods}
@@ -255,7 +273,7 @@ export function InputOrderFormDialog({
             <Grid size={{ xs: 12 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box sx={{ flexGrow: 1 }}>
-                  {renderSelect(
+                  {renderAutocomplete(
                     'Farmer',
                     t('form.farmer'),
                     farmers.map((f) => ({ value: f.id, label: f.fields.Name || 'Unnamed' })),
@@ -278,7 +296,7 @@ export function InputOrderFormDialog({
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              {renderSelect(
+              {renderAutocomplete(
                 'Season',
                 t('form.season'),
                 seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' })),
@@ -301,7 +319,7 @@ export function InputOrderFormDialog({
               <Grid size={{ xs: 12 }} key={INPUT_KEYS[idx]}>
                 <Stack direction="row" alignItems="center" spacing={2}>
                   <Box sx={{ flex: 1 }}>
-                    {renderSelect(
+                    {renderAutocomplete(
                       INPUT_KEYS[idx],
                       t('fields.input', { index: idx + 1 }),
                       productOptions,

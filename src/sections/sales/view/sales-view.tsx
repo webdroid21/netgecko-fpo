@@ -31,6 +31,7 @@ import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
+import { ListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -165,6 +166,7 @@ export function SalesView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<SalesOrder | null>(null);
 
@@ -228,6 +230,78 @@ export function SalesView() {
     fetchSeasons();
   }, [fetchOrders, fetchFarmers, fetchCrops, fetchSeasons]);
 
+  const farmerName = useCallback(
+    (id?: string) => {
+      const farmer = farmers.find((f) => f.id === id);
+      if (!farmer) return '—';
+      return (
+        `${farmer.fields['Given Name'] || ''} ${farmer.fields.Surname || ''}`.trim() ||
+        farmer.fields.Name ||
+        '—'
+      );
+    },
+    [farmers]
+  );
+  const productName = useCallback(
+    (id?: string) =>
+      crops.find((c) => c.id === id)?.fields['Crop Name'] ||
+      crops.find((c) => c.id === id)?.fields['Product Name'] ||
+      '—',
+    [crops]
+  );
+
+  const salesFilterFields = useMemo(
+    () => [
+      { key: 'name', label: t('fields.name') },
+      {
+        key: 'season',
+        label: t('fields.season'),
+        options: seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' })),
+      },
+      { key: 'dateReceived', label: t('fields.dateReceived') },
+      {
+        key: 'farmer',
+        label: t('fields.farmer'),
+        options: farmers.map((farmer) => ({
+          value: farmer.id,
+          label:
+            `${farmer.fields['Given Name'] || ''} ${farmer.fields.Surname || ''}`.trim() ||
+            farmer.fields.Name ||
+            'Unnamed',
+        })),
+      },
+      {
+        key: 'product',
+        label: t('fields.product'),
+        options: crops.map((c) => ({
+          value: c.id,
+          label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id,
+        })),
+      },
+      { key: 'voucherTotal', label: t('fields.voucherTotal') },
+    ],
+    [t, seasons, farmers, crops]
+  );
+
+  const salesFilterValue = (o: SalesOrder, key: string): any => {
+    switch (key) {
+      case 'name':
+        return o.fields.Name;
+      case 'season':
+        return o.fields.Season;
+      case 'dateReceived':
+        return o.fields['Date Received'];
+      case 'farmer':
+        return o.fields.Farmers;
+      case 'product':
+        return o.fields.Product;
+      case 'voucherTotal':
+        return o.fields['Voucher Total (UGX)'];
+      default:
+        return '';
+    }
+  };
+
   const filteredOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
     let list = orders;
@@ -239,13 +313,33 @@ export function SalesView() {
       });
     }
 
-    if (!term) return list;
-
     return list.filter((o) => {
-      const text = `${o.fields.Name ?? ''} ${o.fields['Order #'] ?? ''} ${(o.fields['Name (from Season)'] || []).join(' ')}`.toLowerCase();
-      return text.includes(term);
+      if (term) {
+        const text = [
+          o.fields.Name,
+          o.fields['Order #'],
+          (o.fields['Name (from Season)'] || []).join(' '),
+          o.fields['Date Received'],
+          farmerName(o.fields.Farmers?.[0]),
+          productName(o.fields.Product?.[0]),
+          o.fields['Voucher Total (UGX)'],
+          o.fields['Total Price'],
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!text.includes(term)) return false;
+      }
+      return salesFilterFields.every(({ key, options }) => {
+        const value = filters[key];
+        if (!value) return true;
+        const fieldValue = salesFilterValue(o, key);
+        if (options) {
+          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
+        }
+        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
+      });
     });
-  }, [orders, search, farmerFilter]);
+  }, [orders, search, filters, farmerFilter, salesFilterFields, farmerName, productName]);
 
   const selectedOrder = useMemo(
     () => filteredOrders.find((o) => o.id === selectedId) || filteredOrders[0] || null,
@@ -321,20 +415,6 @@ export function SalesView() {
     setFarmers((prev) => [...prev, farmer]);
   };
 
-  const farmerName = (id?: string) => {
-    const farmer = farmers.find((f) => f.id === id);
-    if (!farmer) return '—';
-    return (
-      `${farmer.fields['Given Name'] || ''} ${farmer.fields.Surname || ''}`.trim() ||
-      farmer.fields.Name ||
-      '—'
-    );
-  };
-  const productName = (id?: string) =>
-    crops.find((c) => c.id === id)?.fields['Crop Name'] ||
-    crops.find((c) => c.id === id)?.fields['Product Name'] ||
-    '—';
-
   const renderSummary = () => (
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -379,16 +459,24 @@ export function SalesView() {
   const renderList = () => (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}` }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
-          }}
-        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
+            }}
+          />
+          <ListFilters
+            fields={salesFilterFields}
+            values={filters}
+            onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+            onClear={() => setFilters({})}
+          />
+        </Stack>
       </Box>
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>

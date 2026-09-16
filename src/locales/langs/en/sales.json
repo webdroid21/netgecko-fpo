@@ -36,7 +36,8 @@
     "voucherTotal": "Voucher total (UGX)",
     "paid": "Paid",
     "paidYes": "Yes",
-    "paidNo": "No"
+    "paidNo": "No",
+    "name": "Name"
   },
   "form": {
     "title": {

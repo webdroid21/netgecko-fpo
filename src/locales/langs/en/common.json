@@ -17,5 +17,8 @@
   "cancelled": "Cancelled",
   "status": "Status",
   "error": "Something went wrong",
-  "close": "Close"
+  "close": "Close",
+  "filters": "Filters",
+  "clearFilters": "Clear",
+  "all": "All"
 }

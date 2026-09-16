@@ -26,6 +26,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { ListFilters } from 'src/components/list-filters';
 
 import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
 
@@ -122,6 +123,7 @@ export function LandView() {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingLand, setEditingLand] = useState<Land | null>(null);
 
@@ -174,6 +176,52 @@ export function LandView() {
     fetchCrops();
   }, [fetchLands, fetchFarmers, fetchCrops]);
 
+  const landFilterFields = useMemo(
+    () => [
+      { key: 'land', label: t('fields.name') },
+      {
+        key: 'farmer',
+        label: t('fields.farmer'),
+        options: farmers.map((farmer) => ({
+          value: farmer.id,
+          label: farmer.fields.Name || 'Unnamed',
+        })),
+      },
+      {
+        key: 'landOwnership',
+        label: t('fields.landOwnership'),
+        options: OWNERSHIP_OPTIONS.map((o) => ({ value: o, label: o })),
+      },
+      { key: 'landSize', label: t('fields.landSize') },
+      {
+        key: 'mainProduct',
+        label: t('fields.mainProduct'),
+        options: crops.map((c) => ({
+          value: c.id,
+          label: c.fields['Crop Name'] ?? c.fields['Product Name'] ?? c.id,
+        })),
+      },
+    ],
+    [t, farmers, crops]
+  );
+
+  const landFilterValue = (l: Land, key: string): any => {
+    switch (key) {
+      case 'land':
+        return l.fields.Land;
+      case 'farmer':
+        return l.fields.Farmer;
+      case 'landOwnership':
+        return l.fields['Land Ownership'];
+      case 'landSize':
+        return l.fields['Land Size (Acres)'];
+      case 'mainProduct':
+        return l.fields['Main Product (1)'];
+      default:
+        return '';
+    }
+  };
+
   const filteredLands = useMemo(() => {
     const term = search.trim().toLowerCase();
     let list = lands;
@@ -185,15 +233,31 @@ export function LandView() {
       });
     }
 
-    if (!term) return list;
-
     return list.filter((l) => {
-      const landName = String(l.fields.Land || '').toLowerCase();
-      const productName = String(getProductNames(l, crops).join(' ')).toLowerCase();
-      const owner = String((l.fields['Name (from Owner)'] || []).join(' ')).toLowerCase();
-      return landName.includes(term) || productName.includes(term) || owner.includes(term);
+      if (term) {
+        const text = [
+          l.fields.Land,
+          (l.fields['Name (from Owner)'] || []).join(' '),
+          l.fields['Land Ownership'],
+          l.fields['Land Size (Acres)'],
+          getProductNames(l, crops).join(' '),
+          (l.fields['Product Name (from Crop)'] || []).join(' '),
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!text.includes(term)) return false;
+      }
+      return landFilterFields.every(({ key, options }) => {
+        const value = filters[key];
+        if (!value) return true;
+        const fieldValue = landFilterValue(l, key);
+        if (options) {
+          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
+        }
+        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
+      });
     });
-  }, [lands, search, farmerFilter, crops]);
+  }, [lands, search, filters, farmerFilter, crops, landFilterFields]);
 
   const selectedLand = useMemo(
     () => filteredLands.find((l) => l.id === selectedId) || filteredLands[0] || null,
@@ -288,16 +352,24 @@ export function LandView() {
   const renderList = () => (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}` }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t('searchPlaceholder')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          InputProps={{
-            startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
-          }}
-        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: <Iconify icon={'solar:magnifer-bold-duotone' as any} sx={{ mr: 1, color: 'text.disabled' }} />,
+            }}
+          />
+          <ListFilters
+            fields={landFilterFields}
+            values={filters}
+            onChange={(key, value) => setFilters((prev) => ({ ...prev, [key]: value }))}
+            onClear={() => setFilters({})}
+          />
+        </Stack>
       </Box>
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
@@ -421,6 +493,7 @@ export function LandView() {
                 label={t('fields.farmer')}
                 required
                 type="select"
+                searchable
                 options={farmers.map((farmer) => ({
                   value: farmer.id,
                   label: farmer.fields.Name || 'Unnamed',
@@ -490,6 +563,7 @@ export function LandView() {
                 label={t('fields.mainProduct')}
                 required
                 type="select"
+                searchable
                 options={cropOptions}
                 value={f['Main Product (1)']?.[0]}
                 displayValue={getProductNames(selectedLand, crops).join(', ') || '—'}
@@ -543,6 +617,7 @@ export function LandView() {
                 name="Other product (2)"
                 label={t('fields.otherProduct')}
                 type="select"
+                searchable
                 options={[{ value: '', label: t('form.noneOption') }, ...cropOptions]}
                 value={f['Other product (2)']?.[0]}
                 displayValue={cropLabel(f['Other product (2)']?.[0]) || '—'}

@@ -125,9 +125,29 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
   const {
     reset,
     watch,
+    setValue,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
+
+  const renderAutocomplete = (
+    name: keyof FormValues,
+    label: string,
+    options: { value: string; label: string }[],
+    required?: boolean,
+    helperText?: string
+  ) => (
+    <Field.Autocomplete
+      name={name}
+      label={label}
+      options={options}
+      getOptionLabel={(opt: any) => opt?.label ?? ''}
+      isOptionEqualToValue={(a: any, b: any) => a?.value === b?.value}
+      value={options.find((o) => o.value === watch(name)) ?? null}
+      onChange={(_e: any, opt: any) => setValue(name, opt?.value ?? '', { shouldValidate: true })}
+      slotProps={{ textField: { required, helperText } }}
+    />
+  );
 
   const selectedAddress = watch('Address');
   const selectedVillage = villages.find((v) => v.id === selectedAddress);
@@ -369,18 +389,13 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
             <SectionHeader title="Address" />
 
             <Grid size={{ xs: 12 }}>
-              <Field.Select
-                name="Address"
-                label="Village"
-                helperText="Parish, sub-county, district and region are filled in automatically"
-              >
-                <MenuItem value="">Select...</MenuItem>
-                {villages.map((v) => (
-                  <MenuItem key={v.id} value={v.id}>
-                    {v.summary || v.village || v.id}
-                  </MenuItem>
-                ))}
-              </Field.Select>
+              {renderAutocomplete(
+                'Address',
+                'Village',
+                villages.map((v) => ({ value: v.id, label: v.summary || v.village || v.id })),
+                false,
+                'Parish, sub-county, district and region are filled in automatically'
+              )}
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
@@ -410,18 +425,13 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Select
-                name="Main product sold to Partner"
-                label="Main produce sold to Partner"
-                helperText="Mandatory for PayLater (loan)"
-              >
-                <MenuItem value="">None</MenuItem>
-                {crops.map((crop) => (
-                  <MenuItem key={crop.id} value={crop.id}>
-                    {crop.name}
-                  </MenuItem>
-                ))}
-              </Field.Select>
+              {renderAutocomplete(
+                'Main product sold to Partner',
+                'Main produce sold to Partner',
+                crops.map((crop) => ({ value: crop.id, label: crop.name })),
+                false,
+                'Mandatory for PayLater (loan)'
+              )}
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
