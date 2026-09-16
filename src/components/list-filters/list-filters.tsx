@@ -3,14 +3,11 @@ import { useRef, useState } from 'react';
 import Badge from '@mui/material/Badge';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Select from '@mui/material/Select';
 import Popover from '@mui/material/Popover';
-import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import InputLabel from '@mui/material/InputLabel';
-import FormControl from '@mui/material/FormControl';
+import Autocomplete from '@mui/material/Autocomplete';
 
 import { useTranslate } from 'src/locales';
 
@@ -79,23 +76,20 @@ export function ListFilters({ fields, values, onChange, onClear }: ListFiltersPr
 
           {fields.map((field) =>
             field.options ? (
-              <FormControl key={field.key} size="small" fullWidth>
-                <InputLabel>{field.label}</InputLabel>
-                <Select
-                  label={field.label}
-                  value={values[field.key] ?? ''}
-                  onChange={(e) => onChange(field.key, String(e.target.value))}
-                >
-                  <MenuItem value="">
-                    <em>{t('all')}</em>
-                  </MenuItem>
-                  {field.options.map((opt) => (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                key={field.key}
+                size="small"
+                fullWidth
+                autoHighlight
+                options={field.options}
+                getOptionLabel={(opt) => opt.label}
+                isOptionEqualToValue={(opt, val) => opt.value === val.value}
+                value={field.options.find((opt) => opt.value === values[field.key]) ?? null}
+                onChange={(_event, opt) => onChange(field.key, opt?.value ?? '')}
+                renderInput={(params) => (
+                  <TextField {...params} label={field.label} placeholder={t('all')} />
+                )}
+              />
             ) : (
               <TextField
                 key={field.key}
