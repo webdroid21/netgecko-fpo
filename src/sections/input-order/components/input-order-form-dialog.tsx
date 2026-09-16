@@ -18,6 +18,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import axios from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
@@ -28,7 +29,7 @@ import { FarmerFormDialog } from 'src/sections/farmer/components/farmer-form-dia
 
 // ----------------------------------------------------------------------
 
-export const PAY_OPTIONS = ['PayNow (cash)', 'PayLater (loan)', 'vPayNow (cash)'];
+export const PAY_OPTIONS = ['PayNow (cash)', 'PayLater (loan)'];
 
 const INPUT_KEYS = ['Input 1', 'Input 2', 'Input 3', 'Input 4', 'Input 5'] as const;
 const QUANTITY_KEYS = [
@@ -107,7 +108,6 @@ type InputOrderFormDialogProps = {
   open: boolean;
   order?: InputOrder | null;
   fpoId?: string;
-  embedded?: boolean;
   farmers: Farmer[];
   seasons: Season[];
   products: InputProduct[];
@@ -154,7 +154,6 @@ export function InputOrderFormDialog({
   open,
   order,
   fpoId,
-  embedded,
   farmers,
   seasons,
   products,
@@ -163,6 +162,7 @@ export function InputOrderFormDialog({
   onFarmerCreated,
 }: InputOrderFormDialogProps) {
   const isEdit = Boolean(order);
+  const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('md'));
   const [farmerFormOpen, setFarmerFormOpen] = useState(false);
 
   const { t } = useTranslate('inputOrders');
@@ -258,15 +258,8 @@ export function InputOrderFormDialog({
   );
 
   const form = (
-    <Form
-      methods={methods}
-      onSubmit={onSubmit}
-      style={embedded ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
-    >
-      {embedded && (
-        <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
-      )}
-      <DialogContent dividers sx={embedded ? { flexGrow: 1, overflow: 'auto' } : undefined}>
+    <Form methods={methods} onSubmit={onSubmit}>
+      <DialogContent dividers>
           <Grid container spacing={2}>
             <SectionHeader title={t('sections.order')} />
 
@@ -360,17 +353,8 @@ export function InputOrderFormDialog({
     />
   );
 
-  if (embedded) {
-    return (
-      <>
-        {form}
-        {nested}
-      </>
-    );
-  }
-
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={fullScreen}>
       <DialogTitle>
         {isEdit ? t('form.title.edit') : t('form.title.new')}
       </DialogTitle>

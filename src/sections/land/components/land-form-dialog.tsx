@@ -18,6 +18,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import axios from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
@@ -59,7 +60,6 @@ type LandFormDialogProps = {
   open: boolean;
   land?: Land | null;
   fpoId?: string;
-  embedded?: boolean;
   farmers: Farmer[];
   crops: Crop[];
   onClose: () => void;
@@ -101,7 +101,6 @@ export function LandFormDialog({
   open,
   land,
   fpoId,
-  embedded,
   farmers,
   crops,
   onClose,
@@ -109,6 +108,7 @@ export function LandFormDialog({
   onFarmerCreated,
 }: LandFormDialogProps) {
   const isEdit = Boolean(land);
+  const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('md'));
   const [farmerFormOpen, setFarmerFormOpen] = useState(false);
 
   const { t } = useTranslate('lands');
@@ -222,15 +222,8 @@ export function LandFormDialog({
   );
 
   const form = (
-    <Form
-      methods={methods}
-      onSubmit={onSubmit}
-      style={embedded ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
-    >
-      {embedded && (
-        <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
-      )}
-      <DialogContent dividers sx={embedded ? { flexGrow: 1, overflow: 'auto' } : undefined}>
+    <Form methods={methods} onSubmit={onSubmit}>
+      <DialogContent dividers>
           <Grid container spacing={2}>
             <SectionHeader title={t('sections.land')} />
 
@@ -378,17 +371,8 @@ export function LandFormDialog({
     />
   );
 
-  if (embedded) {
-    return (
-      <>
-        {form}
-        {nested}
-      </>
-    );
-  }
-
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={fullScreen}>
       <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
       {form}
       {nested}

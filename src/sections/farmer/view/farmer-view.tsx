@@ -21,10 +21,12 @@ import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
 import { alpha, useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { RouterLink } from 'src/routes/components/router-link';
@@ -40,6 +42,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ListFilters } from 'src/components/list-filters';
+import { DetailDialog } from 'src/components/detail-dialog';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -249,10 +252,12 @@ export function FarmerView() {
   const { t: tCommon } = useTranslate('common');
   const searchParams = useSearchParams();
   const farmerId = searchParams.get('farmerId');
+  const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
@@ -508,8 +513,9 @@ export function FarmerView() {
     const first = fromQuery || filteredFarmers[0];
     if (first) {
       setSelectedId(first.id);
+      if (fromQuery && !mdUp) setDetailOpen(true);
     }
-  }, [farmers, filteredFarmers, farmerId, selectedId]);
+  }, [farmers, filteredFarmers, farmerId, selectedId, mdUp]);
 
   const fetchFullFarmer = useCallback(async (id: string) => {
     try {
@@ -582,6 +588,11 @@ export function FarmerView() {
       inactiveWomenPercent: roundPercent(inactiveWomen, inactive),
     };
   }, [farmers, activeFarmerIds]);
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    if (!mdUp) setDetailOpen(true);
+  };
 
   const handleAdd = () => {
     setEditingFarmer(null);
@@ -678,7 +689,7 @@ export function FarmerView() {
                 <ListItemButton
                   key={farmer.id}
                   selected={isSelected}
-                  onClick={() => setSelectedId(farmer.id)}
+                  onClick={() => handleSelect(farmer.id)}
                   sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
@@ -706,22 +717,7 @@ export function FarmerView() {
     </Card>
   );
 
-  const renderDetail = () => {
-    if (formOpen) {
-      return (
-        <Card sx={{ height: '100%', overflow: 'hidden' }}>
-          <FarmerFormDialog
-            embedded
-            open={formOpen}
-            farmer={editingFarmer}
-            fpoId={activeFbo?.id}
-            onClose={() => setFormOpen(false)}
-            onSaved={handleFieldSaved}
-          />
-        </Card>
-      );
-    }
-
+  const renderDetail = (onCloseDetail?: () => void) => {
     if (!selectedFarmer) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -791,16 +787,23 @@ export function FarmerView() {
               </Typography>
             </Box>
 
-            {canEdit && (
-              <Button
-                color="primary"
-                variant="contained"
-                size="small"
-                onClick={() => handleEdit(detailFarmer)}
-              >
-                {t('actions.edit')}
-              </Button>
-            )}
+            <Stack direction="row" alignItems="center" spacing={1}>
+              {canEdit && (
+                <Button
+                  color="primary"
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleEdit(detailFarmer)}
+                >
+                  {t('actions.edit')}
+                </Button>
+              )}
+              {onCloseDetail && (
+                <IconButton onClick={onCloseDetail}>
+                  <Iconify icon={'mingcute:close-line' as any} />
+                </IconButton>
+              )}
+            </Stack>
           </Stack>
 
           <Grid container spacing={3}>
@@ -1249,10 +1252,24 @@ export function FarmerView() {
           {renderList()}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
-          {renderDetail()}
-        </Grid>
+        {mdUp && (
+          <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
+            {renderDetail()}
+          </Grid>
+        )}
       </Grid>
+
+      <FarmerFormDialog
+        open={formOpen}
+        farmer={editingFarmer}
+        fpoId={activeFbo?.id}
+        onClose={() => setFormOpen(false)}
+        onSaved={handleFieldSaved}
+      />
+
+      <DetailDialog open={detailOpen && !mdUp} onClose={() => setDetailOpen(false)}>
+        {renderDetail(() => setDetailOpen(false))}
+      </DetailDialog>
     </DashboardContent>
   );
 }

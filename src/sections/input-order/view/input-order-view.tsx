@@ -14,9 +14,11 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { RouterLink } from 'src/routes/components/router-link';
@@ -32,6 +34,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ListFilters } from 'src/components/list-filters';
+import { DetailDialog } from 'src/components/detail-dialog';
 
 import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
 
@@ -195,6 +198,7 @@ export function InputOrderView() {
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
   const inputOrderId = searchParams.get('inputOrderId');
+  const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
   const [orders, setOrders] = useState<InputOrder[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
@@ -202,6 +206,7 @@ export function InputOrderView() {
   const [products, setProducts] = useState<InputProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
@@ -355,11 +360,12 @@ export function InputOrderView() {
   useEffect(() => {
     if (inputOrderId && filteredOrders.some((o) => o.id === inputOrderId)) {
       setSelectedId(inputOrderId);
+      if (!mdUp) setDetailOpen(true);
       return;
     }
     if (selectedId || !filteredOrders.length) return;
     setSelectedId(filteredOrders[0]?.id);
-  }, [filteredOrders, selectedId, inputOrderId]);
+  }, [filteredOrders, selectedId, inputOrderId, mdUp]);
 
 
   const statusCounts = useMemo(() => {
@@ -371,6 +377,11 @@ export function InputOrderView() {
     });
     return counts;
   }, [orders]);
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    if (!mdUp) setDetailOpen(true);
+  };
 
   const handleAdd = () => {
     setEditingOrder(null);
@@ -444,7 +455,7 @@ export function InputOrderView() {
                 <ListItemButton
                   key={order.id}
                   selected={isSelected}
-                  onClick={() => setSelectedId(order.id)}
+                  onClick={() => handleSelect(order.id)}
                   sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
@@ -473,26 +484,7 @@ export function InputOrderView() {
     </Card>
   );
 
-  const renderDetail = () => {
-    if (formOpen) {
-      return (
-        <Card sx={{ height: '100%', overflow: 'hidden' }}>
-          <InputOrderFormDialog
-            embedded
-            open={formOpen}
-            order={editingOrder}
-            fpoId={activeFbo?.id}
-            farmers={farmers}
-            seasons={seasons}
-            products={products}
-            onClose={() => setFormOpen(false)}
-            onSaved={fetchOrders}
-            onFarmerCreated={handleFarmerCreated}
-          />
-        </Card>
-      );
-    }
-
+  const renderDetail = (onCloseDetail?: () => void) => {
     if (!selectedOrder) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -522,8 +514,8 @@ export function InputOrderView() {
           >
             <Typography variant="h5">{String(f['Order number'] ?? '') || t('unnamedOrder')}</Typography>
 
-            {canEdit && (
-              <Stack direction="row" spacing={1}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              {canEdit && (
                 <Tooltip
                   title={f['Order Status'] !== 'Open' ? t('fields.orderStatusHelper') : ''}
                   disableHoverListener={f['Order Status'] === 'Open'}
@@ -539,8 +531,13 @@ export function InputOrderView() {
                     </Button>
                   </span>
                 </Tooltip>
-              </Stack>
-            )}
+              )}
+              {onCloseDetail && (
+                <IconButton onClick={onCloseDetail}>
+                  <Iconify icon={'mingcute:close-line' as any} />
+                </IconButton>
+              )}
+            </Stack>
           </Stack>
 
           <Box sx={{ mb: 3 }}>
@@ -804,10 +801,28 @@ export function InputOrderView() {
           {renderList()}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
-          {renderDetail()}
-        </Grid>
+        {mdUp && (
+          <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
+            {renderDetail()}
+          </Grid>
+        )}
       </Grid>
+
+      <InputOrderFormDialog
+        open={formOpen}
+        order={editingOrder}
+        fpoId={activeFbo?.id}
+        farmers={farmers}
+        seasons={seasons}
+        products={products}
+        onClose={() => setFormOpen(false)}
+        onSaved={fetchOrders}
+        onFarmerCreated={handleFarmerCreated}
+      />
+
+      <DetailDialog open={detailOpen && !mdUp} onClose={() => setDetailOpen(false)}>
+        {renderDetail(() => setDetailOpen(false))}
+      </DetailDialog>
     </DashboardContent>
   );
 }

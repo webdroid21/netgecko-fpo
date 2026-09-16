@@ -14,9 +14,11 @@ import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { RouterLink } from 'src/routes/components/router-link';
@@ -31,6 +33,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { ListFilters } from 'src/components/list-filters';
+import { DetailDialog } from 'src/components/detail-dialog';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -158,12 +161,14 @@ export function SalesView() {
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
   const salesOrderId = searchParams.get('salesOrderId');
+  const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [crops, setCrops] = useState<Crop[]>([]);
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
@@ -348,11 +353,12 @@ export function SalesView() {
   useEffect(() => {
     if (salesOrderId && filteredOrders.some((o) => o.id === salesOrderId)) {
       setSelectedId(salesOrderId);
+      if (!mdUp) setDetailOpen(true);
       return;
     }
     if (selectedId || !filteredOrders.length) return;
     setSelectedId(filteredOrders[0]?.id);
-  }, [filteredOrders, selectedId, salesOrderId]);
+  }, [filteredOrders, selectedId, salesOrderId, mdUp]);
 
   const stats = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -388,6 +394,11 @@ export function SalesView() {
 
     return s;
   }, [filteredOrders]);
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    if (!mdUp) setDetailOpen(true);
+  };
 
   const handleAdd = () => {
     setEditingOrder(null);
@@ -479,7 +490,7 @@ export function SalesView() {
                 <ListItemButton
                   key={order.id}
                   selected={isSelected}
-                  onClick={() => setSelectedId(order.id)}
+                  onClick={() => handleSelect(order.id)}
                   sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
@@ -509,26 +520,7 @@ export function SalesView() {
     </Card>
   );
 
-  const renderDetail = () => {
-    if (formOpen) {
-      return (
-        <Card sx={{ height: '100%', overflow: 'hidden' }}>
-          <SalesFormDialog
-            embedded
-            open={formOpen}
-            order={editingOrder}
-            fpoId={activeFbo?.id}
-            farmers={farmers}
-            crops={crops}
-            seasons={seasons}
-            onClose={() => setFormOpen(false)}
-            onSaved={fetchOrders}
-            onFarmerCreated={handleFarmerCreated}
-          />
-        </Card>
-      );
-    }
-
+  const renderDetail = (onCloseDetail?: () => void) => {
     if (!selectedOrder) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -561,11 +553,16 @@ export function SalesView() {
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" alignItems="center" spacing={1}>
               {canEdit && (
                 <Button variant="outlined" size="small" onClick={() => handleEdit(selectedOrder)}>
                   {t('actions.edit')}
                 </Button>
+              )}
+              {onCloseDetail && (
+                <IconButton onClick={onCloseDetail}>
+                  <Iconify icon={'mingcute:close-line' as any} />
+                </IconButton>
               )}
             </Stack>
           </Stack>
@@ -660,10 +657,28 @@ export function SalesView() {
           {renderList()}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
-          {renderDetail()}
-        </Grid>
+        {mdUp && (
+          <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
+            {renderDetail()}
+          </Grid>
+        )}
       </Grid>
+
+      <SalesFormDialog
+        open={formOpen}
+        order={editingOrder}
+        fpoId={activeFbo?.id}
+        farmers={farmers}
+        crops={crops}
+        seasons={seasons}
+        onClose={() => setFormOpen(false)}
+        onSaved={fetchOrders}
+        onFarmerCreated={handleFarmerCreated}
+      />
+
+      <DetailDialog open={detailOpen && !mdUp} onClose={() => setDetailOpen(false)}>
+        {renderDetail(() => setDetailOpen(false))}
+      </DetailDialog>
     </DashboardContent>
   );
 }

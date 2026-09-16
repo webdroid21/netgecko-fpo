@@ -10,9 +10,11 @@ import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
@@ -26,6 +28,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { ListFilters } from 'src/components/list-filters';
+import { DetailDialog } from 'src/components/detail-dialog';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -120,11 +123,13 @@ export function PaymentView() {
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
   const paymentId = searchParams.get('paymentId');
+  const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
 
@@ -249,11 +254,12 @@ export function PaymentView() {
   useEffect(() => {
     if (paymentId && filteredPayments.some((p) => p.id === paymentId)) {
       setSelectedId(paymentId);
+      if (!mdUp) setDetailOpen(true);
       return;
     }
     if (selectedId || !filteredPayments.length) return;
     setSelectedId(filteredPayments[0]?.id);
-  }, [filteredPayments, selectedId, paymentId]);
+  }, [filteredPayments, selectedId, paymentId, mdUp]);
 
   const stats = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -282,6 +288,11 @@ export function PaymentView() {
 
     return s;
   }, [filteredPayments]);
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    if (!mdUp) setDetailOpen(true);
+  };
 
   const renderList = () => (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -318,7 +329,7 @@ export function PaymentView() {
                 <ListItemButton
                   key={payment.id}
                   selected={isSelected}
-                  onClick={() => setSelectedId(payment.id)}
+                  onClick={() => handleSelect(payment.id)}
                   sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
@@ -344,7 +355,7 @@ export function PaymentView() {
     </Card>
   );
 
-  const renderDetail = () => {
+  const renderDetail = (onCloseDetail?: () => void) => {
     if (!selectedPayment) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -360,12 +371,25 @@ export function PaymentView() {
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h5">{String(f['Payment ID'] ?? '-')}</Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {fDate(f['Payment Date'])} · {f.Source}
-            </Typography>
-          </Box>
+          <Stack
+            direction="row"
+            alignItems="flex-start"
+            justifyContent="space-between"
+            spacing={2}
+            sx={{ mb: 3 }}
+          >
+            <Box>
+              <Typography variant="h5">{String(f['Payment ID'] ?? '-')}</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {fDate(f['Payment Date'])} · {f.Source}
+              </Typography>
+            </Box>
+            {onCloseDetail && (
+              <IconButton onClick={onCloseDetail}>
+                <Iconify icon={'mingcute:close-line' as any} />
+              </IconButton>
+            )}
+          </Stack>
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
@@ -460,10 +484,16 @@ export function PaymentView() {
           {renderList()}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
-          {renderDetail()}
-        </Grid>
+        {mdUp && (
+          <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
+            {renderDetail()}
+          </Grid>
+        )}
       </Grid>
+
+      <DetailDialog open={detailOpen && !mdUp} onClose={() => setDetailOpen(false)}>
+        {renderDetail(() => setDetailOpen(false))}
+      </DetailDialog>
     </DashboardContent>
   );
 }

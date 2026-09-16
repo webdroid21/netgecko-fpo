@@ -19,6 +19,7 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
@@ -59,7 +60,6 @@ type FarmerFormDialogProps = {
   open: boolean;
   farmer?: Farmer | null;
   fpoId?: string;
-  embedded?: boolean;
   onClose: () => void;
   onSaved?: (farmer?: Farmer) => void;
 };
@@ -112,8 +112,9 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSaved }: FarmerFormDialogProps) {
+export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: FarmerFormDialogProps) {
   const isEdit = Boolean(farmer);
+  const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('md'));
   const [crops, setCrops] = useState<{ id: string; name: string }[]>([]);
   const [villages, setVillages] = useState<VillageRecord[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -349,15 +350,8 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
   );
 
   const form = (
-    <Form
-      methods={methods}
-      onSubmit={onSubmit}
-      style={embedded ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
-    >
-      {embedded && (
-        <DialogTitle>{isEdit ? 'Edit farmer' : 'Enter new farmer data'}</DialogTitle>
-      )}
-      <DialogContent dividers sx={embedded ? { flexGrow: 1, overflow: 'auto' } : undefined}>
+    <Form methods={methods} onSubmit={onSubmit}>
+      <DialogContent dividers>
           <Grid container spacing={2}>
             <SectionHeader title="Identity" />
 
@@ -531,12 +525,8 @@ export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSav
       </Form>
   );
 
-  if (embedded) {
-    return form;
-  }
-
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={fullScreen}>
       <DialogTitle>{isEdit ? 'Edit farmer' : 'Enter new farmer data'}</DialogTitle>
       {form}
     </Dialog>

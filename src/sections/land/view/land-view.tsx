@@ -11,9 +11,11 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
@@ -27,6 +29,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ListFilters } from 'src/components/list-filters';
+import { DetailDialog } from 'src/components/detail-dialog';
 
 import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
 
@@ -105,12 +108,14 @@ export function LandView() {
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
   const landId = searchParams.get('landId');
+  const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
   const [lands, setLands] = useState<Land[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [crops, setCrops] = useState<Crop[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [formOpen, setFormOpen] = useState(false);
@@ -256,11 +261,12 @@ export function LandView() {
   useEffect(() => {
     if (landId && filteredLands.some((l) => l.id === landId)) {
       setSelectedId(landId);
+      if (!mdUp) setDetailOpen(true);
       return;
     }
     if (selectedId || !filteredLands.length) return;
     setSelectedId(filteredLands[0]?.id);
-  }, [filteredLands, selectedId, landId]);
+  }, [filteredLands, selectedId, landId, mdUp]);
 
   const stats = useMemo(() => {
     const total = filteredLands.length;
@@ -282,6 +288,11 @@ export function LandView() {
 
     return { total, acres, owned, rented, mainProduct };
   }, [filteredLands, crops]);
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    if (!mdUp) setDetailOpen(true);
+  };
 
   const handleAdd = () => {
     setEditingLand(null);
@@ -373,7 +384,7 @@ export function LandView() {
                 <ListItemButton
                   key={land.id}
                   selected={isSelected}
-                  onClick={() => setSelectedId(land.id)}
+                  onClick={() => handleSelect(land.id)}
                   sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
@@ -403,25 +414,7 @@ export function LandView() {
     </Card>
   );
 
-  const renderDetail = () => {
-    if (formOpen) {
-      return (
-        <Card sx={{ height: '100%', overflow: 'hidden' }}>
-          <LandFormDialog
-            embedded
-            open={formOpen}
-            land={editingLand}
-            fpoId={activeFbo?.id}
-            farmers={farmers}
-            crops={crops}
-            onClose={() => setFormOpen(false)}
-            onSaved={fetchLands}
-            onFarmerCreated={handleFarmerCreated}
-          />
-        </Card>
-      );
-    }
-
+  const renderDetail = (onCloseDetail?: () => void) => {
     if (!selectedLand) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -466,11 +459,18 @@ export function LandView() {
           >
             <Typography variant="h5">{f.Land || t('unnamedLand')}</Typography>
 
-            {canEdit && (
-              <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
-                {t('actions.edit')}
-              </Button>
-            )}
+            <Stack direction="row" alignItems="center" spacing={1}>
+              {canEdit && (
+                <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
+                  {t('actions.edit')}
+                </Button>
+              )}
+              {onCloseDetail && (
+                <IconButton onClick={onCloseDetail}>
+                  <Iconify icon={'mingcute:close-line' as any} />
+                </IconButton>
+              )}
+            </Stack>
           </Stack>
 
           <Grid container spacing={3} key={selectedLand.id}>
@@ -684,10 +684,27 @@ export function LandView() {
           {renderList()}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
-          {renderDetail()}
-        </Grid>
+        {mdUp && (
+          <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
+            {renderDetail()}
+          </Grid>
+        )}
       </Grid>
+
+      <LandFormDialog
+        open={formOpen}
+        land={editingLand}
+        fpoId={activeFbo?.id}
+        farmers={farmers}
+        crops={crops}
+        onClose={() => setFormOpen(false)}
+        onSaved={fetchLands}
+        onFarmerCreated={handleFarmerCreated}
+      />
+
+      <DetailDialog open={detailOpen && !mdUp} onClose={() => setDetailOpen(false)}>
+        {renderDetail(() => setDetailOpen(false))}
+      </DetailDialog>
     </DashboardContent>
   );
 }

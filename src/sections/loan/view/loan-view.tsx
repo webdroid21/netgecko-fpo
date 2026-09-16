@@ -12,9 +12,11 @@ import Stack from '@mui/material/Stack';
 import MuiLink from '@mui/material/Link';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import ListItemText from '@mui/material/ListItemText';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import ListItemButton from '@mui/material/ListItemButton';
 
 import { RouterLink } from 'src/routes/components/router-link';
@@ -30,6 +32,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ListFilters } from 'src/components/list-filters';
+import { DetailDialog } from 'src/components/detail-dialog';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -196,11 +199,13 @@ export function LoanView() {
   const searchParams = useSearchParams();
   const farmerFilter = searchParams.get('farmerId');
   const loanId = searchParams.get('loanId');
+  const mdUp = useMediaQuery((theme) => theme.breakpoints.up('md'));
 
   const [loans, setLoans] = useState<Loan[]>([]);
   const [farmers, setFarmers] = useState<Farmer[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
 
@@ -330,11 +335,12 @@ export function LoanView() {
   useEffect(() => {
     if (loanId && filteredLoans.some((l) => l.id === loanId)) {
       setSelectedId(loanId);
+      if (!mdUp) setDetailOpen(true);
       return;
     }
     if (selectedId || !filteredLoans.length) return;
     setSelectedId(filteredLoans[0]?.id);
-  }, [filteredLoans, selectedId, loanId]);
+  }, [filteredLoans, selectedId, loanId, mdUp]);
 
   const { statusStats, repaymentStats } = useMemo(() => {
     const statuses: Record<string, { count: number; women: number; amount: number }> = {
@@ -375,6 +381,11 @@ export function LoanView() {
     if (status === 'Closed') return 'success';
     if (status === 'Cancelled') return 'error';
     return 'default';
+  };
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    if (!mdUp) setDetailOpen(true);
   };
 
   const renderSummary = () => (
@@ -457,7 +468,7 @@ export function LoanView() {
                 <ListItemButton
                   key={loan.id}
                   selected={isSelected}
-                  onClick={() => setSelectedId(loan.id)}
+                  onClick={() => handleSelect(loan.id)}
                   sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
@@ -485,7 +496,7 @@ export function LoanView() {
     </Card>
   );
 
-  const renderDetail = () => {
+  const renderDetail = (onCloseDetail?: () => void) => {
     if (!selectedLoan) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -507,12 +518,25 @@ export function LoanView() {
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h5">{fieldText(f['Loan ID']) || t('unnamedLoan')}</Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {[fieldText(f['Loan Object']), fieldText(f['Name (from Season)'])].filter(Boolean).join(' · ')}
-            </Typography>
-          </Box>
+          <Stack
+            direction="row"
+            alignItems="flex-start"
+            justifyContent="space-between"
+            spacing={2}
+            sx={{ mb: 3 }}
+          >
+            <Box>
+              <Typography variant="h5">{fieldText(f['Loan ID']) || t('unnamedLoan')}</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {[fieldText(f['Loan Object']), fieldText(f['Name (from Season)'])].filter(Boolean).join(' · ')}
+              </Typography>
+            </Box>
+            {onCloseDetail && (
+              <IconButton onClick={onCloseDetail}>
+                <Iconify icon={'mingcute:close-line' as any} />
+              </IconButton>
+            )}
+          </Stack>
 
           <Box sx={{ mb: 3 }}>
             {/* Status is managed by NetGecko in Airtable — read-only
@@ -704,10 +728,16 @@ export function LoanView() {
           {renderList()}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
-          {renderDetail()}
-        </Grid>
+        {mdUp && (
+          <Grid size={{ xs: 12, md: 8 }} sx={{ height: 1 }}>
+            {renderDetail()}
+          </Grid>
+        )}
       </Grid>
+
+      <DetailDialog open={detailOpen && !mdUp} onClose={() => setDetailOpen(false)}>
+        {renderDetail(() => setDetailOpen(false))}
+      </DetailDialog>
     </DashboardContent>
   );
 }
