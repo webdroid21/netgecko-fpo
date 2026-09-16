@@ -47,5 +47,8 @@
     "paymentReference": "Payment reference",
     "mobileMoneyNumberUsed": "Mobile money number used",
     "selectPlaceholder": "Select..."
+  },
+  "sections": {
+    "payment": "Payment details"
   }
 }

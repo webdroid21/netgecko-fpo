@@ -23,6 +23,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -102,11 +103,11 @@ function SummaryCard({
                 {trend.value}% {trend.label}
               </Typography>
             </Stack>
-          ) : (
+          ) : subtext ? (
             <Typography variant="caption" sx={{ color: 'text.disabled' }}>
               {subtext}
             </Typography>
-          )}
+          ) : null}
         </Box>
       </Stack>
     </Card>
@@ -404,9 +405,8 @@ export function InputOrderView() {
         {STATUS_CARDS.map((s) => (
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
             <SummaryCard
-              title={t(`summary.statusCards.${s.key}`)}
+              title={t(`summary.statusCardTitles.${s.key}`)}
               total={statusCounts[s.key]}
-              subtext={s.label}
               color={s.color}
               icon="solar:notes-bold-duotone"
             />
@@ -476,6 +476,25 @@ export function InputOrderView() {
   );
 
   const renderDetail = () => {
+    if (formOpen) {
+      return (
+        <Card sx={{ height: '100%', overflow: 'hidden' }}>
+          <InputOrderFormDialog
+            embedded
+            open={formOpen}
+            order={editingOrder}
+            fpoId={activeFbo?.id}
+            farmers={farmers}
+            seasons={seasons}
+            products={products}
+            onClose={() => setFormOpen(false)}
+            onSaved={fetchOrders}
+            onFarmerCreated={handleFarmerCreated}
+          />
+        </Card>
+      );
+    }
+
     if (!selectedOrder) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -488,15 +507,7 @@ export function InputOrderView() {
 
     const f = selectedOrder.fields;
     const orderDate = f['Order date'] || f['Created time'];
-    const formattedDate = orderDate
-      ? new Date(orderDate).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      : '—';
+    const formattedDate = orderDate ? fDate(orderDate) : '—';
 
     const editable = f['Order Status'] === 'Open';
     const productOptions = getInputProductOptions(products, selectedOrder);
@@ -563,7 +574,7 @@ export function InputOrderView() {
 
           <Grid container spacing={3} key={selectedOrder.id}>
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1 }}>
                 {t('sections.order')}
               </Typography>
             </Grid>
@@ -657,7 +668,7 @@ export function InputOrderView() {
                     <Divider sx={{ my: 1 }} />
                   </Grid>
                   <Grid size={{ xs: 12 }}>
-                    <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+                    <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1 }}>
                       {t('fields.input', { index: idx })}
                     </Typography>
                   </Grid>
@@ -780,18 +791,6 @@ export function InputOrderView() {
           {renderDetail()}
         </Grid>
       </Grid>
-
-      <InputOrderFormDialog
-        open={formOpen}
-        order={editingOrder}
-        fpoId={activeFbo?.id}
-        farmers={farmers}
-        seasons={seasons}
-        products={products}
-        onClose={() => setFormOpen(false)}
-        onSaved={fetchOrders}
-        onFarmerCreated={handleFarmerCreated}
-      />
     </DashboardContent>
   );
 }

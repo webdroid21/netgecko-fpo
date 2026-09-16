@@ -343,6 +343,24 @@ export function LandView() {
   );
 
   const renderDetail = () => {
+    if (formOpen) {
+      return (
+        <Card sx={{ height: '100%', overflow: 'hidden' }}>
+          <LandFormDialog
+            embedded
+            open={formOpen}
+            land={editingLand}
+            fpoId={activeFbo?.id}
+            farmers={farmers}
+            crops={crops}
+            onClose={() => setFormOpen(false)}
+            onSaved={fetchLands}
+            onFarmerCreated={handleFarmerCreated}
+          />
+        </Card>
+      );
+    }
+
     if (!selectedLand) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -363,7 +381,7 @@ export function LandView() {
 
     const sectionTitle = (title: string) => (
       <Grid size={{ xs: 12 }}>
-        <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+        <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1 }}>
           {title}
         </Typography>
       </Grid>
@@ -617,17 +635,6 @@ export function LandView() {
           {renderDetail()}
         </Grid>
       </Grid>
-
-      <LandFormDialog
-        open={formOpen}
-        land={editingLand}
-        fpoId={activeFbo?.id}
-        farmers={farmers}
-        crops={crops}
-        onClose={() => setFormOpen(false)}
-        onSaved={fetchLands}
-        onFarmerCreated={handleFarmerCreated}
-      />
     </DashboardContent>
   );
 }

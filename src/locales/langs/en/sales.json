@@ -63,5 +63,9 @@
       "address": "Address",
       "bankAccountNumber": "Bank account number"
     }
+  },
+  "sections": {
+    "order": "Order details",
+    "payment": "Quantity & payment"
   }
 }

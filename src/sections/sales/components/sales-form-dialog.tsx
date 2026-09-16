@@ -14,7 +14,9 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
@@ -46,6 +48,7 @@ type SalesFormDialogProps = {
   open: boolean;
   order?: SalesOrder | null;
   fpoId?: string;
+  embedded?: boolean;
   farmers: Farmer[];
   crops: Crop[];
   seasons: Season[];
@@ -53,6 +56,17 @@ type SalesFormDialogProps = {
   onSaved: () => void;
   onFarmerCreated?: (farmer: Farmer) => void;
 };
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Grid size={{ xs: 12 }}>
+      <Typography variant="subtitle2" sx={{ pt: 1, color: 'primary.main' }}>
+        {title}
+      </Typography>
+      <Divider sx={{ mt: 0.5 }} />
+    </Grid>
+  );
+}
 
 function getDefaultValues(order?: SalesOrder | null): FormValues {
   const f = order?.fields;
@@ -70,6 +84,7 @@ export function SalesFormDialog({
   open,
   order,
   fpoId,
+  embedded,
   farmers,
   crops,
   seasons,
@@ -147,13 +162,19 @@ export function SalesFormDialog({
     </Field.Select>
   );
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
-
-      <Form methods={methods} onSubmit={onSubmit}>
-        <DialogContent dividers>
+  const form = (
+    <Form
+      methods={methods}
+      onSubmit={onSubmit}
+      style={embedded ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
+    >
+      {embedded && (
+        <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
+      )}
+      <DialogContent dividers sx={embedded ? { flexGrow: 1, overflow: 'auto' } : undefined}>
           <Grid container spacing={2}>
+            <SectionHeader title={t('sections.order')} />
+
             <Grid size={{ xs: 12 }}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box sx={{ flexGrow: 1 }}>
@@ -207,8 +228,14 @@ export function SalesFormDialog({
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.DatePicker name="Date Received" label={t('form.dateReceived')} />
+              <Field.DatePicker
+                name="Date Received"
+                label={t('form.dateReceived')}
+                slotProps={{ textField: { required: true } }}
+              />
             </Grid>
+
+            <SectionHeader title={t('sections.payment')} />
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
@@ -239,13 +266,31 @@ export function SalesFormDialog({
           </LoadingButton>
         </DialogActions>
       </Form>
+  );
 
-      <FarmerFormDialog
-        open={farmerFormOpen}
-        fpoId={fpoId}
-        onClose={() => setFarmerFormOpen(false)}
-        onSaved={handleNewFarmer}
-      />
+  const nested = (
+    <FarmerFormDialog
+      open={farmerFormOpen}
+      fpoId={fpoId}
+      onClose={() => setFarmerFormOpen(false)}
+      onSaved={handleNewFarmer}
+    />
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {form}
+        {nested}
+      </>
+    );
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
+      {form}
+      {nested}
     </Dialog>
   );
 }

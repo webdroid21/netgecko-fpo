@@ -22,6 +22,11 @@
       "Open": "Ouvert",
       "Active": "Actif",
       "Closed": "Clôturé"
+    },
+    "statusCardTitles": {
+      "Open": "Commandes ouvertes",
+      "Active": "Commandes actives",
+      "Closed": "Commandes clôturées"
     }
   },
   "searchPlaceholder": "Rechercher des commandes...",

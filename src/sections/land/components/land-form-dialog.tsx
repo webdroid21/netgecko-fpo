@@ -59,6 +59,7 @@ type LandFormDialogProps = {
   open: boolean;
   land?: Land | null;
   fpoId?: string;
+  embedded?: boolean;
   farmers: Farmer[];
   crops: Crop[];
   onClose: () => void;
@@ -88,7 +89,7 @@ function getDefaultValues(land?: Land | null): FormValues {
 function SectionHeader({ title }: { title: string }) {
   return (
     <Grid size={{ xs: 12 }}>
-      <Typography variant="subtitle2" sx={{ pt: 1 }}>
+      <Typography variant="subtitle2" sx={{ pt: 1, color: 'primary.main' }}>
         {title}
       </Typography>
       <Divider sx={{ mt: 0.5 }} />
@@ -100,6 +101,7 @@ export function LandFormDialog({
   open,
   land,
   fpoId,
+  embedded,
   farmers,
   crops,
   onClose,
@@ -200,12 +202,16 @@ export function LandFormDialog({
     </Field.Select>
   );
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
-
-      <Form methods={methods} onSubmit={onSubmit}>
-        <DialogContent dividers>
+  const form = (
+    <Form
+      methods={methods}
+      onSubmit={onSubmit}
+      style={embedded ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
+    >
+      {embedded && (
+        <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
+      )}
+      <DialogContent dividers sx={embedded ? { flexGrow: 1, overflow: 'auto' } : undefined}>
           <Grid container spacing={2}>
             <SectionHeader title={t('sections.land')} />
 
@@ -345,13 +351,31 @@ export function LandFormDialog({
           </LoadingButton>
         </DialogActions>
       </Form>
+  );
 
-      <FarmerFormDialog
-        open={farmerFormOpen}
-        fpoId={fpoId}
-        onClose={() => setFarmerFormOpen(false)}
-        onSaved={handleNewFarmer}
-      />
+  const nested = (
+    <FarmerFormDialog
+      open={farmerFormOpen}
+      fpoId={fpoId}
+      onClose={() => setFarmerFormOpen(false)}
+      onSaved={handleNewFarmer}
+    />
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {form}
+        {nested}
+      </>
+    );
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
+      {form}
+      {nested}
     </Dialog>
   );
 }

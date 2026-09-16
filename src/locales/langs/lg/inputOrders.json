@@ -22,6 +22,11 @@
       "Open": "Ebigazi",
       "Active": "Ebiriko",
       "Closed": "Biggwa"
+    },
+    "statusCardTitles": {
+      "Open": "Ebisabibwa ebigazi",
+      "Active": "Ebisabibwa ebiriko",
+      "Closed": "Ebisabibwa biggwa"
     }
   },
   "searchPlaceholder": "Noonya biragiro by’inputs...",

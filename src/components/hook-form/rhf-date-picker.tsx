@@ -40,6 +40,7 @@ export function RHFDatePicker({ name, slotProps, ...other }: PickerProps<DatePic
       control={control}
       render={({ field, fieldState: { error } }) => (
         <DatePicker
+          format="DD/MM/YYYY"
           {...field}
           value={normalizeDateValue(field.value)}
           onChange={(newValue) => {

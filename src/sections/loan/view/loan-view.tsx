@@ -19,6 +19,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -452,7 +453,7 @@ export function LoanView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1, pb: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1, pb: 1 }}>
                 {t('sections.details')}
               </Typography>
             </Grid>
@@ -470,10 +471,10 @@ export function LoanView() {
               <DetailRow label={t('fields.loanType')} value={fieldText(f['Loan Object'])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.issueDate')} value={f['Issue Date']} />
+              <DetailRow label={t('fields.issueDate')} value={fDate(f['Issue Date'])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.repaymentDueDate')} value={f['Repayment Due Date']} />
+              <DetailRow label={t('fields.repaymentDueDate')} value={fDate(f['Repayment Due Date'])} />
             </Grid>
             {fieldArray(f['Orders (Input)'])[0] && (
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -490,7 +491,7 @@ export function LoanView() {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1, pb: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1, pb: 1 }}>
                 {t('sections.amount')}
               </Typography>
             </Grid>
@@ -535,7 +536,7 @@ export function LoanView() {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1, pb: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1, pb: 1 }}>
                 {t('sections.repayment')}
               </Typography>
             </Grid>
@@ -563,13 +564,13 @@ export function LoanView() {
 
             {fieldArray(f['Payments Received Link']).length ? (
               <Grid size={{ xs: 12 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'primary.main' }}>
                   {t('fields.paymentsReceived')}
                 </Typography>
                 {fieldArray(f['Payment ID (from Payments Link)']).map((pid: any, idx: number) => (
                   <Typography key={idx} variant="body2" sx={{ color: 'text.secondary' }}>
                     Payment #{fieldText(pid)} · {fNumber(fieldNumber(fieldArray(f['Payments received'])[idx]))} UGX ·{' '}
-                    {fieldText(fieldArray(f['Dates payment received'])[idx])}
+                    {fDate(fieldText(fieldArray(f['Dates payment received'])[idx]))}
                   </Typography>
                 ))}
               </Grid>

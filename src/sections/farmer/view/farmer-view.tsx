@@ -30,6 +30,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -624,6 +625,21 @@ export function FarmerView() {
   );
 
   const renderDetail = () => {
+    if (formOpen) {
+      return (
+        <Card sx={{ height: '100%', overflow: 'hidden' }}>
+          <FarmerFormDialog
+            embedded
+            open={formOpen}
+            farmer={editingFarmer}
+            fpoId={activeFbo?.id}
+            onClose={() => setFormOpen(false)}
+            onSaved={handleFieldSaved}
+          />
+        </Card>
+      );
+    }
+
     if (!selectedFarmer) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -705,7 +721,7 @@ export function FarmerView() {
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1 }}>
                 {t('sections.identity')}
               </Typography>
             </Grid>
@@ -715,6 +731,7 @@ export function FarmerView() {
                 resource="farmers"
                 recordId={detailFarmer.id}
                 name="Given Name"
+                required
                 label={t('fields.givenName')}
                 value={f['Given Name']}
                 onSaved={handleFieldSaved}
@@ -725,6 +742,7 @@ export function FarmerView() {
                 resource="farmers"
                 recordId={detailFarmer.id}
                 name="Surname"
+                required
                 label={t('fields.surname')}
                 value={f.Surname}
                 onSaved={handleFieldSaved}
@@ -735,6 +753,7 @@ export function FarmerView() {
                 resource="farmers"
                 recordId={detailFarmer.id}
                 name="NIN (National Identification Number)"
+                required
                 label={t('fields.nin')}
                 value={f['NIN (National Identification Number)']}
                 onSaved={handleFieldSaved}
@@ -755,6 +774,7 @@ export function FarmerView() {
                 resource="farmers"
                 recordId={detailFarmer.id}
                 name="Birth date"
+                required
                 label={t('fields.birthDate')}
                 value={f['Birth date']}
                 type="date"
@@ -769,6 +789,7 @@ export function FarmerView() {
                 resource="farmers"
                 recordId={detailFarmer.id}
                 name="Gender"
+                required
                 label={t('fields.gender')}
                 value={f.Gender}
                 type="select"
@@ -791,7 +812,7 @@ export function FarmerView() {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1 }}>
                 {t('sections.contact')}
               </Typography>
             </Grid>
@@ -801,6 +822,7 @@ export function FarmerView() {
                 resource="farmers"
                 recordId={detailFarmer.id}
                 name="Phone Number"
+                required
                 label={t('fields.phoneNumber')}
                 value={f['Phone Number']}
                 onSaved={handleFieldSaved}
@@ -811,6 +833,7 @@ export function FarmerView() {
                 resource="farmers"
                 recordId={detailFarmer.id}
                 name="Mobile Money Number"
+                required
                 label={t('fields.mobileMoneyNumber')}
                 value={f['Mobile Money Number']}
                 onSaved={handleFieldSaved}
@@ -841,7 +864,7 @@ export function FarmerView() {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1 }}>
                 {t('sections.address')}
               </Typography>
             </Grid>
@@ -913,7 +936,7 @@ export function FarmerView() {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1 }}>
                 {t('sections.membership')}
               </Typography>
             </Grid>
@@ -923,6 +946,7 @@ export function FarmerView() {
                 resource="farmers"
                 recordId={detailFarmer.id}
                 name="Member since (date)"
+                required
                 label={t('fields.memberSince')}
                 value={f['Member since (date)']}
                 type="date"
@@ -977,7 +1001,7 @@ export function FarmerView() {
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.primary', px: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', px: 1 }}>
                 {t('sections.workers')}
               </Typography>
             </Grid>
@@ -1037,7 +1061,7 @@ export function FarmerView() {
               const salesLinks = farmerSales.map((s) => ({
                 id: s.id,
                 label: shortRef(
-                  s.fields['Order #'] || s.fields.Name || s.fields['Date Received'],
+                  s.fields['Order #'] || s.fields.Name || fDate(s.fields['Date Received']),
                   s.id
                 ),
                 href: makeLink('sales', s.id, 'salesOrderId'),
@@ -1138,14 +1162,6 @@ export function FarmerView() {
           {renderDetail()}
         </Grid>
       </Grid>
-
-      <FarmerFormDialog
-        open={formOpen}
-        farmer={editingFarmer}
-        fpoId={activeFbo?.id}
-        onClose={() => setFormOpen(false)}
-        onSaved={handleFieldSaved}
-      />
     </DashboardContent>
   );
 }

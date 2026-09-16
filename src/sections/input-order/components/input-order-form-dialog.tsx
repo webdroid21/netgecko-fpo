@@ -49,7 +49,7 @@ const RETAIL_KEYS = [
 function SectionHeader({ title }: { title: string }) {
   return (
     <Grid size={{ xs: 12 }}>
-      <Typography variant="subtitle2" sx={{ pt: 1 }}>
+      <Typography variant="subtitle2" sx={{ pt: 1, color: 'primary.main' }}>
         {title}
       </Typography>
       <Divider sx={{ mt: 0.5 }} />
@@ -107,6 +107,7 @@ type InputOrderFormDialogProps = {
   open: boolean;
   order?: InputOrder | null;
   fpoId?: string;
+  embedded?: boolean;
   farmers: Farmer[];
   seasons: Season[];
   products: InputProduct[];
@@ -153,6 +154,7 @@ export function InputOrderFormDialog({
   open,
   order,
   fpoId,
+  embedded,
   farmers,
   seasons,
   products,
@@ -237,14 +239,16 @@ export function InputOrderFormDialog({
     </Field.Select>
   );
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        {isEdit ? t('form.title.edit') : t('form.title.new')}
-      </DialogTitle>
-
-      <Form methods={methods} onSubmit={onSubmit}>
-        <DialogContent dividers>
+  const form = (
+    <Form
+      methods={methods}
+      onSubmit={onSubmit}
+      style={embedded ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
+    >
+      {embedded && (
+        <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
+      )}
+      <DialogContent dividers sx={embedded ? { flexGrow: 1, overflow: 'auto' } : undefined}>
           <Grid container spacing={2}>
             <SectionHeader title={t('sections.order')} />
 
@@ -306,6 +310,7 @@ export function InputOrderFormDialog({
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <Field.Text
+                      required={idx === 0}
                       type="number"
                       name={QUANTITY_KEYS[idx]}
                       label={t('fields.quantityInput', { index: idx + 1 })}
@@ -326,13 +331,33 @@ export function InputOrderFormDialog({
           </LoadingButton>
         </DialogActions>
       </Form>
+  );
 
-      <FarmerFormDialog
-        open={farmerFormOpen}
-        fpoId={fpoId}
-        onClose={() => setFarmerFormOpen(false)}
-        onSaved={handleNewFarmer}
-      />
+  const nested = (
+    <FarmerFormDialog
+      open={farmerFormOpen}
+      fpoId={fpoId}
+      onClose={() => setFarmerFormOpen(false)}
+      onSaved={handleNewFarmer}
+    />
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {form}
+        {nested}
+      </>
+    );
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        {isEdit ? t('form.title.edit') : t('form.title.new')}
+      </DialogTitle>
+      {form}
+      {nested}
     </Dialog>
   );
 }

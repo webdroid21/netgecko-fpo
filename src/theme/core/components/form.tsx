@@ -59,6 +59,9 @@ const MuiFormLabel: Components<Theme>['MuiFormLabel'] = {
       [`&.${formLabelClasses.disabled}`]: {
         color: theme.vars.palette.action.disabled,
       },
+      [`& .${formLabelClasses.asterisk}`]: {
+        color: theme.vars.palette.error.main,
+      },
       variants: [
         {
           props: (props) => !props.error,

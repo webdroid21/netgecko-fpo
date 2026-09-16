@@ -9,6 +9,9 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
+import { fDate } from 'src/utils/format-time';
+import { fNumber } from 'src/utils/format-number';
+
 import axios from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
@@ -55,7 +58,13 @@ export function InlineEditField({
   const [saving, setSaving] = useState(false);
   const previousValue = useRef(value);
 
-  const shown = displayValue ?? (value ?? '—');
+  const shown =
+    displayValue ??
+    (type === 'date' && value
+      ? fDate(value)
+      : type === 'number' && value !== '' && value != null
+        ? fNumber(value)
+        : (value ?? '—'));
 
   const handleStart = () => {
     if (readOnly) return;
@@ -132,6 +141,7 @@ export function InlineEditField({
     if (type === 'date') {
       return (
         <DatePicker
+          format="DD/MM/YYYY"
           value={dayjs(draft)}
           onChange={(newValue) => {
             const next = newValue ? dayjs(newValue).format('YYYY-MM-DD') : '';

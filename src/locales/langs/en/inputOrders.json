@@ -22,6 +22,11 @@
       "Open": "Open",
       "Active": "Active",
       "Closed": "Closed"
+    },
+    "statusCardTitles": {
+      "Open": "Open orders",
+      "Active": "Active orders",
+      "Closed": "Closed orders"
     }
   },
   "searchPlaceholder": "Search orders...",

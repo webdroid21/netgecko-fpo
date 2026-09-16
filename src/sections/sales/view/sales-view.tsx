@@ -12,6 +12,7 @@ import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
 import MuiLink from '@mui/material/Link';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -22,6 +23,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -433,6 +435,25 @@ export function SalesView() {
   );
 
   const renderDetail = () => {
+    if (formOpen) {
+      return (
+        <Card sx={{ height: '100%', overflow: 'hidden' }}>
+          <SalesFormDialog
+            embedded
+            open={formOpen}
+            order={editingOrder}
+            fpoId={activeFbo?.id}
+            farmers={farmers}
+            crops={crops}
+            seasons={seasons}
+            onClose={() => setFormOpen(false)}
+            onSaved={fetchOrders}
+            onFarmerCreated={handleFarmerCreated}
+          />
+        </Card>
+      );
+    }
+
     if (!selectedOrder) {
       return (
         <Card sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
@@ -461,7 +482,7 @@ export function SalesView() {
             <Box>
               <Typography variant="h5">{`${t('fields.orderNumber')} ${f['Order #'] ?? ''}`}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {f['Date Received']} · {(f['Name (from Season)'] || []).join(', ')}
+                {fDate(f['Date Received'])} · {(f['Name (from Season)'] || []).join(', ')}
               </Typography>
             </Box>
 
@@ -476,11 +497,17 @@ export function SalesView() {
           </Stack>
 
           <Grid container spacing={3}>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
+                {t('sections.order')}
+              </Typography>
+              <Divider sx={{ mt: 0.5 }} />
+            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.orderNumber')} value={f['Order #']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.dateReceived')} value={f['Date Received']} />
+              <DetailRow label={t('fields.dateReceived')} value={fDate(f['Date Received'])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
@@ -497,6 +524,12 @@ export function SalesView() {
                 label={t('fields.season')}
                 value={(f['Name (from Season)'] || []).join(', ')}
               />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', pt: 1 }}>
+                {t('sections.payment')}
+              </Typography>
+              <Divider sx={{ mt: 0.5 }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.quantityKg')} value={f['Quantity (kg)']} />
@@ -555,18 +588,6 @@ export function SalesView() {
           {renderDetail()}
         </Grid>
       </Grid>
-
-      <SalesFormDialog
-        open={formOpen}
-        order={editingOrder}
-        fpoId={activeFbo?.id}
-        farmers={farmers}
-        crops={crops}
-        seasons={seasons}
-        onClose={() => setFormOpen(false)}
-        onSaved={fetchOrders}
-        onFarmerCreated={handleFarmerCreated}
-      />
     </DashboardContent>
   );
 }

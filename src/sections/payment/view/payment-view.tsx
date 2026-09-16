@@ -8,6 +8,7 @@ import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
@@ -16,6 +17,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -271,7 +273,7 @@ export function PaymentView() {
                     {loanLabel(payment.fields.Loans?.[0])} · {payment.fields.Source}
                   </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {fNumber(payment.fields['Payment Amount (UGX)'])} UGX · {payment.fields['Payment Date']}
+                    {fNumber(payment.fields['Payment Amount (UGX)'])} UGX · {fDate(payment.fields['Payment Date'])}
                   </Typography>
                 </ListItemButton>
               );
@@ -301,11 +303,17 @@ export function PaymentView() {
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5">{`${t('unnamedPayment')} #${f['Payment ID'] ?? '-'}`}</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {f['Payment Date']} · {f.Source}
+              {fDate(f['Payment Date'])} · {f.Source}
             </Typography>
           </Box>
 
           <Grid container spacing={3}>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
+                {t('sections.payment')}
+              </Typography>
+              <Divider sx={{ mt: 0.5 }} />
+            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.loan')} value={loanLabel(f.Loans?.[0])} />
             </Grid>
@@ -316,7 +324,7 @@ export function PaymentView() {
               <DetailRow label={t('fields.paymentAmount')} value={f['Payment Amount (UGX)']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.paymentDate')} value={f['Payment Date']} />
+              <DetailRow label={t('fields.paymentDate')} value={fDate(f['Payment Date'])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.paymentReference')} value={f['Payment reference']} />

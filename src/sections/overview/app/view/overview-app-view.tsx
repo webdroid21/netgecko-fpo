@@ -23,6 +23,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components/router-link';
 
+import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -623,7 +624,7 @@ export function OverviewAppView() {
             items={stats.recentPayments.map((payment) => ({
               id: payment.id,
               primary: `${payment.fields['Payment ID'] ?? '-'}`,
-              secondary: payment.fields['Payment Date'],
+              secondary: fDate(payment.fields['Payment Date']),
               amount: `${fNumber(payment.fields['Payment Amount (UGX)'])} UGX`,
               href: paths.dashboard.fpo.payments,
             }))}

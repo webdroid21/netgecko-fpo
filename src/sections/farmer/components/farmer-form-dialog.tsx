@@ -58,6 +58,7 @@ type FarmerFormDialogProps = {
   open: boolean;
   farmer?: Farmer | null;
   fpoId?: string;
+  embedded?: boolean;
   onClose: () => void;
   onSaved?: (farmer?: Farmer) => void;
 };
@@ -102,7 +103,7 @@ function getDefaultValues(farmer?: Farmer | null): FormValues {
 function SectionHeader({ title }: { title: string }) {
   return (
     <Grid size={{ xs: 12 }}>
-      <Typography variant="subtitle2" sx={{ pt: 1 }}>
+      <Typography variant="subtitle2" sx={{ pt: 1, color: 'primary.main' }}>
         {title}
       </Typography>
       <Divider sx={{ mt: 0.5 }} />
@@ -110,7 +111,7 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: FarmerFormDialogProps) {
+export function FarmerFormDialog({ open, farmer, fpoId, embedded, onClose, onSaved }: FarmerFormDialogProps) {
   const isEdit = Boolean(farmer);
   const [crops, setCrops] = useState<{ id: string; name: string }[]>([]);
   const [villages, setVillages] = useState<VillageRecord[]>([]);
@@ -241,25 +242,29 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
     }
   });
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{isEdit ? 'Edit farmer' : 'Enter new farmer data'}</DialogTitle>
-
-      <Form methods={methods} onSubmit={onSubmit}>
-        <DialogContent dividers>
+  const form = (
+    <Form
+      methods={methods}
+      onSubmit={onSubmit}
+      style={embedded ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}
+    >
+      {embedded && (
+        <DialogTitle>{isEdit ? 'Edit farmer' : 'Enter new farmer data'}</DialogTitle>
+      )}
+      <DialogContent dividers sx={embedded ? { flexGrow: 1, overflow: 'auto' } : undefined}>
           <Grid container spacing={2}>
             <SectionHeader title="Identity" />
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Given Name" label="Given Name" />
+              <Field.Text required name="Given Name" label="Given Name" />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Surname" label="Surname" />
+              <Field.Text required name="Surname" label="Surname" />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="NIN (National Identification Number)" label="NIN" />
+              <Field.Text required name="NIN (National Identification Number)" label="NIN" />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
@@ -267,11 +272,15 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.DatePicker name="Birth date" label="Birth date" />
+              <Field.DatePicker
+                name="Birth date"
+                label="Birth date"
+                slotProps={{ textField: { required: true } }}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Select name="Gender" label="Gender">
+              <Field.Select required name="Gender" label="Gender">
                 <MenuItem value="">Select...</MenuItem>
                 {GENDERS.map((g) => (
                   <MenuItem key={g} value={g}>
@@ -341,11 +350,12 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
             <SectionHeader title="Contact" />
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Phone Number" label="Phone Number" placeholder="256xxxxxxxxx" />
+              <Field.Text required name="Phone Number" label="Phone Number" placeholder="256xxxxxxxxx" />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
+                required
                 name="Mobile Money Number"
                 label="Mobile Money Number"
                 placeholder="256xxxxxxxxx"
@@ -392,7 +402,11 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
             <SectionHeader title="Membership & produce" />
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.DatePicker name="Member since (date)" label="Member since (date)" />
+              <Field.DatePicker
+                name="Member since (date)"
+                label="Member since (date)"
+                slotProps={{ textField: { required: true } }}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
@@ -457,6 +471,16 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
           </LoadingButton>
         </DialogActions>
       </Form>
+  );
+
+  if (embedded) {
+    return form;
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>{isEdit ? 'Edit farmer' : 'Enter new farmer data'}</DialogTitle>
+      {form}
     </Dialog>
   );
 }
