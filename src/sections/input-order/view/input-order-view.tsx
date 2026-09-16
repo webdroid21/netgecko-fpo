@@ -15,8 +15,10 @@ import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
+import ToggleButton from '@mui/material/ToggleButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
@@ -558,12 +560,28 @@ export function InputOrderView() {
           </Stack>
 
           <Box sx={{ mb: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {t('fields.orderStatus')}
-              </Typography>
-              <Label color={statusColor(f['Order Status'])}>{f['Order Status'] || '—'}</Label>
-            </Stack>
+            {/* Status is managed by NetGecko in Airtable — shown as the same
+                segmented control but rendered non-interactive. */}
+            <ToggleButtonGroup
+              value={f['Order Status']}
+              exclusive
+              fullWidth
+              aria-label={t('fields.orderStatus')}
+              aria-readonly
+              sx={{ pointerEvents: 'none' }}
+            >
+              {STATUS_CARDS.map((s) => (
+                <ToggleButton
+                  key={s.key}
+                  value={s.key}
+                  color="primary"
+                  aria-label={s.label}
+                  tabIndex={-1}
+                >
+                  {t(`summary.statusCards.${s.key}`)}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
             <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, display: 'block' }}>
               {t('fields.statusManagedByNetGecko')}
             </Typography>
