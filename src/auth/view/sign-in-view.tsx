@@ -1,6 +1,5 @@
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
-import { varAlpha } from 'minimal-shared/utils';
 import { isSignInWithEmailLink } from 'firebase/auth';
 import { useTabs, useBoolean } from 'minimal-shared/hooks';
 
@@ -240,13 +239,13 @@ export function SignInView() {
       {!!info && (
         <Alert
           severity="info"
-          sx={(theme) => ({
+          sx={{
             mb: 3,
-            color: 'primary.main',
-            bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.5),
-            '& .MuiAlert-icon': { color: 'primary.main' },
-            '& .MuiAlert-message': { color: 'primary.main' },
-          })}
+            color: 'primary.contrastText',
+            bgcolor: 'primary.main',
+            '& .MuiAlert-icon': { color: 'primary.contrastText' },
+            '& .MuiAlert-message': { color: 'primary.contrastText' },
+          }}
         >
           {info}
         </Alert>
