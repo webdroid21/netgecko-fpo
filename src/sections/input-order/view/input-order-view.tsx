@@ -15,10 +15,8 @@ import Tooltip from '@mui/material/Tooltip';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
-import ToggleButton from '@mui/material/ToggleButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
@@ -371,18 +369,6 @@ export function InputOrderView() {
     setSelectedId(filteredOrders[0]?.id);
   }, [filteredOrders, selectedId, inputOrderId]);
 
-  const stats = useMemo(() => {
-    const total = filteredOrders.length;
-    const value = filteredOrders.reduce(
-      (sum, o) => sum + (Number(o.fields['Total Order Value (UGX)']) || 0),
-      0
-    );
-    const weight = filteredOrders.reduce(
-      (sum, o) => sum + (Number(o.fields['Total Weight (kg)']) || 0),
-      0
-    );
-    return { total, value, weight };
-  }, [filteredOrders]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -404,19 +390,6 @@ export function InputOrderView() {
     setFormOpen(true);
   };
 
-  const handleStatusChange = async (order: InputOrder, newStatus: string) => {
-    if (order.fields['Order Status'] === newStatus) return;
-    try {
-      await axios.patch(`/api/v1/input-orders/${order.id}`, {
-        fields: { 'Order Status': newStatus },
-      });
-      fetchOrders();
-    } catch (error: any) {
-      console.error('Update status error:', error?.message);
-      alert(error?.response?.data?.error?.message || error?.message || t('statusUpdateFailed'));
-    }
-  };
-
   const handleFarmerCreated = (farmer: Farmer) => {
     setFarmers((prev) => [...prev, farmer]);
   };
@@ -430,50 +403,18 @@ export function InputOrderView() {
   };
 
   const renderSummary = () => (
-    <>
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+    <Grid container spacing={2} sx={{ mb: 3 }}>
+      {STATUS_CARDS.map((s) => (
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
           <SummaryCard
-            title={t('summary.totalOrders.title')}
-            total={stats.total}
-            trend={{ value: 0, label: t('summary.trendLabel') }}
-            color="primary"
-            icon="solar:cart-4-bold-duotone"
+            title={t(`summary.statusCardTitles.${s.key}`)}
+            total={statusCounts[s.key]}
+            color={s.color}
+            icon="solar:notes-bold-duotone"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <SummaryCard
-            title={t('summary.totalValue.title')}
-            total={stats.value}
-            trend={{ value: 0, label: t('summary.trendLabel') }}
-            color="success"
-            icon="solar:tag-price-bold-duotone"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <SummaryCard
-            title={t('summary.totalWeight.title')}
-            total={stats.weight}
-            trend={{ value: 0, label: t('summary.trendLabel') }}
-            color="info"
-            icon="solar:scale-bold-duotone"
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        {STATUS_CARDS.map((s) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
-            <SummaryCard
-              title={t(`summary.statusCardTitles.${s.key}`)}
-              total={statusCounts[s.key]}
-              color={s.color}
-              icon="solar:notes-bold-duotone"
-            />
-          </Grid>
-        ))}
-      </Grid>
-    </>
+      ))}
+    </Grid>
   );
 
   const renderList = () => (
@@ -617,26 +558,14 @@ export function InputOrderView() {
           </Stack>
 
           <Box sx={{ mb: 3 }}>
-            <ToggleButtonGroup
-              value={f['Order Status']}
-              exclusive
-              fullWidth
-              onChange={(_, value) => value && selectedOrder && handleStatusChange(selectedOrder, value)}
-              aria-label={t('fields.orderStatus')}
-            >
-              {STATUS_CARDS.map((s) => (
-                <ToggleButton
-                  key={s.key}
-                  value={s.key}
-                  color="primary"
-                  aria-label={s.label}
-                >
-                  {t(`summary.statusCards.${s.key}`)}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {t('fields.orderStatus')}
+              </Typography>
+              <Label color={statusColor(f['Order Status'])}>{f['Order Status'] || '—'}</Label>
+            </Stack>
             <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, display: 'block' }}>
-              {t('fields.orderStatusHelper')}
+              {t('fields.statusManagedByNetGecko')}
             </Typography>
           </Box>
 

@@ -24,9 +24,9 @@
       "Closed": "Closed"
     },
     "statusCardTitles": {
-      "Open": "Open orders",
-      "Active": "Active orders",
-      "Closed": "Closed orders"
+      "Open": "Open input orders",
+      "Active": "Active input orders",
+      "Closed": "Closed input orders"
     }
   },
   "searchPlaceholder": "Search orders...",
@@ -43,6 +43,7 @@
   "fields": {
     "orderStatus": "Order status",
     "orderStatusHelper": "Order can only be updated if status is Open",
+    "statusManagedByNetGecko": "Status is managed by NetGecko",
     "willBeUpdatedByNetGecko": "Will be updated by NetGecko",
     "farmer": "Farmer",
     "season": "Season",
