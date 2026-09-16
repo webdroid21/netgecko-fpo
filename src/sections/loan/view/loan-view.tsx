@@ -1,6 +1,7 @@
 import type { Loan } from '../types';
 import type { Farmer } from 'src/sections/farmer/types';
 
+import { varAlpha } from 'minimal-shared/utils';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -52,6 +53,8 @@ const REPAYMENT_SUMMARY_CARDS = [
   { key: 'Green', titleKey: 'summary.repaymentGreen', color: 'success' as const, icon: 'solar:check-circle-bold-duotone' },
 ];
 
+const LOAN_STATUS_SEGMENTS = ['Open', 'Approved', 'Active', 'Closed'] as const;
+
 // Airtable fields can return arrays or objects (e.g. { specialValue: 'NaN' },
 // { error: '#ERROR!' }) — normalize them before rendering or aggregating.
 function fieldText(value: unknown): string {
@@ -59,12 +62,6 @@ function fieldText(value: unknown): string {
   if (Array.isArray(value)) return value.map(fieldText).filter(Boolean).join(', ');
   if (typeof value === 'object') return '';
   return String(value);
-}
-
-// Formula ids like "Input Loan #496 - Samuel Mukiibi - CM72032206LKJ" are
-// displayed verbatim — the client wants the column value as it is.
-function farmerName(value: unknown): string {
-  return fieldText(value);
 }
 
 function fieldNumber(value: unknown): number {
@@ -413,9 +410,8 @@ export function LoanView() {
         {REPAYMENT_SUMMARY_CARDS.map((s) => (
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
             <SummaryCard
-              title={`${t(s.titleKey)} (UGX)`}
+              title={t(s.titleKey)}
               total={repaymentStats[s.key]?.pending ?? 0}
-              subtext={t('summary.loansSubtext', { count: repaymentStats[s.key]?.count ?? 0 })}
               color={s.color}
               icon={s.icon}
             />
@@ -477,9 +473,6 @@ export function LoanView() {
                     <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
                   </Stack>
 
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {farmerName(loan.fields['Name (from Farmer)'])}
-                  </Typography>
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
                     {fNumber(fieldNumber(loan.fields['Total amount']))} UGX · {fNumber(fieldNumber(loan.fields['Total Amount Pending']))} pending
                   </Typography>
@@ -518,6 +511,48 @@ export function LoanView() {
             <Typography variant="h5">{fieldText(f['Loan ID']) || t('unnamedLoan')}</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {[fieldText(f['Loan Object']), fieldText(f['Name (from Season)'])].filter(Boolean).join(' · ')}
+            </Typography>
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            {/* Status is managed by NetGecko in Airtable — read-only
+                segmented display, same look as input orders. */}
+            <Box
+              role="group"
+              aria-label={t('fields.loanStatus')}
+              sx={{
+                display: 'flex',
+                p: 0.5,
+                border: 1,
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
+              {LOAN_STATUS_SEGMENTS.map((key) => {
+                const selected = fieldText(f['Loan Status']) === key;
+                const color = statusColor(key) as 'warning' | 'info' | 'success' | 'error';
+                return (
+                  <Box
+                    key={key}
+                    sx={(theme) => ({
+                      flex: 1,
+                      py: 1,
+                      textAlign: 'center',
+                      borderRadius: 0.75,
+                      typography: 'subtitle2',
+                      color: selected ? `${color}.main` : 'text.secondary',
+                      bgcolor: selected
+                        ? varAlpha(theme.vars.palette[color].mainChannel, 0.16)
+                        : 'transparent',
+                    })}
+                  >
+                    {t(`summary.statusCards.${key}`)}
+                  </Box>
+                );
+              })}
+            </Box>
+            <Typography variant="caption" sx={{ color: 'text.disabled', mt: 0.5, display: 'block' }}>
+              {t('fields.statusManagedByNetGecko')}
             </Typography>
           </Box>
 
