@@ -54,14 +54,10 @@ const STATUS_CARDS = [
 ];
 
 // Formula ids like "Input Order #633 - RICHARD SENGENDO - CM60047107K9FG"
-// embed " - <name> - <nin>"; the short ref is just the part before it.
-function shortRef(value: unknown): string {
-  return String(value ?? '').split(' - ')[0];
-}
-
+// are displayed verbatim — the client wants the column value as it is.
 function farmerName(value: unknown): string {
   return (Array.isArray(value) ? value : [value])
-    .map((v) => String(v ?? '').split(' - ')[0])
+    .map((v) => String(v ?? ''))
     .filter(Boolean)
     .join(', ');
 }
@@ -520,7 +516,7 @@ export function InputOrderView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={shortRef(order.fields['Order number']) || t('unnamedOrder')}
+                      primary={String(order.fields['Order number'] ?? '') || t('unnamedOrder')}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     {order.fields['Order Status'] && (
@@ -595,7 +591,7 @@ export function InputOrderView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{shortRef(f['Order number']) || t('unnamedOrder')}</Typography>
+              <Typography variant="h5">{String(f['Order number'] ?? '') || t('unnamedOrder')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {formattedDate}
               </Typography>

@@ -584,7 +584,7 @@ export function OverviewAppView() {
             emptyText={t('noRecentOrders')}
             items={stats.recentInputOrders.map((order) => ({
               id: order.id,
-              primary: String(order.fields['Order number'] || '').split(' - ')[0] || 'Unnamed',
+              primary: String(order.fields['Order number'] || '') || 'Unnamed',
               amount: `${fNumber(order.fields['Total Order Value (UGX)'])} UGX`,
               href: `${paths.dashboard.fpo.inputOrders}?farmerId=${order.fields.Farmer?.[0] ?? ''}`,
             }))}
@@ -602,8 +602,7 @@ export function OverviewAppView() {
             items={stats.recentLoans.map((loan) => ({
               id: loan.id,
               primary:
-                String(loan.fields['Loan ID'] || '').split(' - ')[0] ||
-                `Loan #${loan.fields.ID ?? '-'}`,
+                String(loan.fields['Loan ID'] || '') || String(loan.fields.ID ?? '-'),
               amount: `${fNumber(loan.fields['Total amount'])} UGX`,
               href: `${paths.dashboard.fpo.loans}?farmerId=${loan.fields.Farmer?.[0] ?? ''}`,
             }))}

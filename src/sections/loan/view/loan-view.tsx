@@ -61,14 +61,10 @@ function fieldText(value: unknown): string {
   return String(value);
 }
 
-// Formula ids like "Input Loan #496 - Samuel Mukiibi - CM72032206LKJ" embed
-// " - <name> - <nin>"; the short ref is just the part before it.
-function shortRef(value: unknown): string {
-  return fieldText(value).split(' - ')[0];
-}
-
+// Formula ids like "Input Loan #496 - Samuel Mukiibi - CM72032206LKJ" are
+// displayed verbatim — the client wants the column value as it is.
 function farmerName(value: unknown): string {
-  return fieldText(value).split(' - ')[0];
+  return fieldText(value);
 }
 
 function fieldNumber(value: unknown): number {
@@ -470,7 +466,7 @@ export function LoanView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={shortRef(loan.fields['Loan ID']) || t('unnamedLoan')}
+                      primary={fieldText(loan.fields['Loan ID']) || t('unnamedLoan')}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     {status && (
@@ -519,7 +515,7 @@ export function LoanView() {
       <Card sx={{ height: '100%', overflow: 'auto' }}>
         <CardContent>
           <Box sx={{ mb: 3 }}>
-            <Typography variant="h5">{shortRef(f['Loan ID']) || t('unnamedLoan')}</Typography>
+            <Typography variant="h5">{fieldText(f['Loan ID']) || t('unnamedLoan')}</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               {[fieldText(f['Loan Object']), fieldText(f['Name (from Season)'])].filter(Boolean).join(' · ')}
             </Typography>

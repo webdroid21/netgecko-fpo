@@ -496,7 +496,7 @@ export function SalesView() {
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1, mb: 0.5 }}>
                     <ListItemText
-                      primary={`${t('fields.orderNumber')} ${order.fields['Order #'] ?? ''}`}
+                      primary={String(order.fields.Name ?? order.fields['Order #'] ?? '')}
                       primaryTypographyProps={{ variant: 'subtitle2', noWrap: true }}
                     />
                     <Iconify icon={'solar:arrow-right-up-bold' as any} width={18} sx={{ ml: 'auto', flexShrink: 0, color: 'text.disabled' }} />
@@ -568,7 +568,7 @@ export function SalesView() {
             sx={{ mb: 3 }}
           >
             <Box>
-              <Typography variant="h5">{`${t('fields.orderNumber')} ${f['Order #'] ?? ''}`}</Typography>
+              <Typography variant="h5">{String(f.Name ?? f['Order #'] ?? '')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {fDate(f['Date Received'])} · {(f['Name (from Season)'] || []).join(', ')}
               </Typography>
