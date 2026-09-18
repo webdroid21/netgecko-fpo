@@ -1,4 +1,5 @@
 import type { Loan } from '../types';
+import type { LabelColor } from 'src/components/label';
 import type { Farmer } from 'src/sections/farmer/types';
 import type { ListFilterField, ListFilterValues } from 'src/components/list-filters';
 
@@ -77,6 +78,18 @@ function fieldNumber(value: unknown): number {
 
 function fieldArray(value: unknown): any[] {
   return Array.isArray(value) ? value : [];
+}
+
+// Lookup ratios arrive as arrays like [0.3] — render as a percent string.
+function fieldPercent(value: unknown): string {
+  const vals = Array.isArray(value) ? value : value == null ? [] : [value];
+  return vals
+    .map((v) => {
+      const n = fieldNumber(v);
+      return Number.isFinite(n) ? `${fNumber(n * 100)}%` : '';
+    })
+    .filter(Boolean)
+    .join(', ');
 }
 
 function repaymentBucket(value: unknown): 'Red' | 'Orange' | 'Green' | null {
@@ -205,6 +218,46 @@ function DetailRow({
   }
 
   return <Box sx={{ p: 1 }}>{content}</Box>;
+}
+
+// ----------------------------------------------------------------------
+
+function FlagRow({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value?: any;
+  color?: LabelColor;
+}) {
+  const text = fieldText(value);
+  const resolved: LabelColor =
+    color ??
+    (text === 'Green'
+      ? 'success'
+      : text === 'Orange'
+        ? 'warning'
+        : text === 'Red'
+          ? 'error'
+          : 'default');
+
+  return (
+    <Box sx={{ p: 1 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {label}
+      </Typography>
+      <Box sx={{ mt: 0.25 }}>
+        {text ? (
+          <Label color={resolved} variant="soft">
+            {text}
+          </Label>
+        ) : (
+          '—'
+        )}
+      </Box>
+    </Box>
+  );
 }
 
 // ----------------------------------------------------------------------
@@ -605,7 +658,18 @@ export function LoanView() {
               </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.loanStatus')} value={f['Loan Status']} />
+              <FlagRow
+                label={t('fields.loanStatus')}
+                value={f['Loan Status']}
+                color={statusColor(fieldText(f['Loan Status'])) as LabelColor}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FlagRow
+                label={t('fields.loanType')}
+                value={f['Loan Object']}
+                color={fieldText(f['Loan Object']) === 'Cash Advance' ? 'warning' : 'info'}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
@@ -615,10 +679,10 @@ export function LoanView() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.loanType')} value={fieldText(f['Loan Object'])} />
+              <DetailRow label={t('fields.issueDate')} value={fDate(f['Issue Date'])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.issueDate')} value={fDate(f['Issue Date'])} />
+              <DetailRow label={t('fields.downpaymentDueDate')} value={fDate(f['Downpayment Due Date'])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.repaymentDueDate')} value={fDate(f['Repayment Due Date'])} />
@@ -644,8 +708,29 @@ export function LoanView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
+                label={t('fields.totalAmountPending')}
+                value={f['Total Amount Pending']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
                 label={t('fields.totalAmount')}
                 value={f['Total amount']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.downpaymentPct')}
+                value={fieldPercent(f['% Downpayment']) || undefined}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.downpayment')}
+                value={f['Downpayment']}
                 helper={netgeckoHelper}
               />
             </Grid>
@@ -660,13 +745,6 @@ export function LoanView() {
               <DetailRow
                 label={t('fields.interest')}
                 value={f['Interest']}
-                helper={netgeckoHelper}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow
-                label={t('fields.downpayment')}
-                value={f['Downpayment']}
                 helper={netgeckoHelper}
               />
             </Grid>
@@ -688,16 +766,75 @@ export function LoanView() {
               </Typography>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
+              <FlagRow label={t('fields.flagDownpayment')} value={f['Flag (Downpayment)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('fields.repaymentStatus')}
-                value={f['Repayment Status']}
+                label={t('fields.downpaymentDueDate')}
+                value={fDate(f['Downpayment Due Date'])}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.downpaymentAmountPaid')}
+                value={f['Downpayment Amount Paid']}
                 helper={netgeckoHelper}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('fields.totalAmountPending')}
-                value={f['Total Amount Pending']}
+                label={t('fields.downpaymentAmountPending')}
+                value={f['Downpayment Amount Pending']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <FlagRow label={t('fields.flagRepayment')} value={f['Flag (Repayment)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.repaymentDueDate')}
+                value={fDate(f['Repayment Due Date'])}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.repaymentAmountPaid')}
+                value={f['Repayment Amount Paid']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.repaymentAmountDue')}
+                value={f['Repayment Amount Pending']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.penalty')}
+                value={
+                  f['Penalty (calc)'] && typeof f['Penalty (calc)'] !== 'object'
+                    ? f['Penalty (calc)']
+                    : f['Penalty per week']
+                }
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.penaltyAmountDue')}
+                value={f['Penalty Amount Due']}
+                helper={netgeckoHelper}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.repaymentStatus')}
+                value={f['Repayment Status']}
                 helper={netgeckoHelper}
               />
             </Grid>
