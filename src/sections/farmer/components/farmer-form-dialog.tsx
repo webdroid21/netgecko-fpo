@@ -288,8 +288,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
     label: string,
     existing: Attachment[],
     files: File[],
-    setFiles: Dispatch<SetStateAction<File[]>>,
-    useCamera?: boolean
+    setFiles: Dispatch<SetStateAction<File[]>>
   ) => (
     <>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -324,28 +323,45 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
           </IconButton>
         </Stack>
       ))}
-      <Button
-        size="small"
-        component="label"
-        startIcon={
-          <Iconify icon={useCamera ? ('solar:camera-bold' as any) : ('solar:upload-bold' as any)} width={16} />
-        }
-        sx={{ mt: 0.5 }}
-      >
-        {useCamera ? 'Take photo' : 'Attach file'}
-        <input
-          type="file"
-          accept={useCamera ? 'image/*' : 'image/*,application/pdf'}
-          capture={useCamera ? 'environment' : undefined}
-          multiple
-          hidden
-          onChange={(e) => {
-            const picked = Array.from(e.target.files || []);
-            if (picked.length) setFiles((prev) => [...prev, ...picked]);
-            e.target.value = '';
-          }}
-        />
-      </Button>
+      <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+        <Button
+          size="small"
+          component="label"
+          startIcon={<Iconify icon={'solar:camera-bold' as any} width={16} />}
+        >
+          Take photo
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            multiple
+            hidden
+            onChange={(e) => {
+              const picked = Array.from(e.target.files || []);
+              if (picked.length) setFiles((prev) => [...prev, ...picked]);
+              e.target.value = '';
+            }}
+          />
+        </Button>
+        <Button
+          size="small"
+          component="label"
+          startIcon={<Iconify icon={'solar:upload-bold' as any} width={16} />}
+        >
+          Attach file
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            multiple
+            hidden
+            onChange={(e) => {
+              const picked = Array.from(e.target.files || []);
+              if (picked.length) setFiles((prev) => [...prev, ...picked]);
+              e.target.value = '';
+            }}
+          />
+        </Button>
+      </Stack>
       <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block' }}>
         Files are uploaded when the farmer is saved
       </Typography>
@@ -398,8 +414,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
                 'Farmer ID (front back)',
                 existingAttachments,
                 pendingFiles,
-                setPendingFiles,
-                true
+                setPendingFiles
               )}
             </Grid>
 

@@ -883,7 +883,6 @@ export function FarmerView() {
                 label={t('fields.farmerIdFrontBack')}
                 value={f['Farmer ID (front back)']}
                 storageFolder={`farmer-ids/${detailFarmer.id}`}
-                camera
                 onSaved={handleFieldSaved}
               />
             </Grid>
@@ -1057,6 +1056,7 @@ export function FarmerView() {
                 label={t('fields.volumeSeasonA')}
                 value={f['Quantity sold last season A to Partner (units, kg, liter)']}
                 type="number"
+                helperText={t('fields.mainCropSoldHelper')}
                 onSaved={handleFieldSaved}
               />
             </Grid>
@@ -1068,6 +1068,7 @@ export function FarmerView() {
                 label={t('fields.volumeSeasonB')}
                 value={f['Quantity sold last season B to Partner (units, kg, liter)']}
                 type="number"
+                helperText={t('fields.mainCropSoldHelper')}
                 onSaved={handleFieldSaved}
               />
             </Grid>

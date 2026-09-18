@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { ref, getStorage, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import Box from '@mui/material/Box';
@@ -39,8 +39,6 @@ type RecordAttachmentFieldProps = {
   value?: Attachment[];
   /** Folder in Firebase Storage the file is uploaded to. */
   storageFolder: string;
-  /** Open the device camera instead of the file picker (mobile). */
-  camera?: boolean;
   onSaved: () => void;
 };
 
@@ -50,11 +48,9 @@ export function RecordAttachmentField({
   label,
   value,
   storageFolder,
-  camera,
   onSaved,
 }: RecordAttachmentFieldProps) {
   const { canEdit } = useAuthContext();
-  const inputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslate('common');
   const [uploading, setUploading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -169,43 +165,52 @@ export function RecordAttachmentField({
       )}
 
       {canEdit && (
-      <Button
-        size="small"
-        startIcon={
-          uploading ? (
-            <CircularProgress size={14} />
-          ) : (
-            <Iconify
-              icon={camera ? ('solar:camera-bold' as any) : ('solar:upload-bold' as any)}
-              width={16}
+        <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+          <Button
+            size="small"
+            component="label"
+            startIcon={
+              uploading ? (
+                <CircularProgress size={14} />
+              ) : (
+                <Iconify icon={'solar:camera-bold' as any} width={16} />
+              )
+            }
+            disabled={uploading}
+          >
+            {uploading ? t('uploading') : t('takePhoto')}
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+                e.target.value = '';
+              }}
             />
-          )
-        }
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        sx={{ mt: 0.5 }}
-      >
-        {uploading
-          ? t('uploading')
-          : camera
-            ? t('takePhoto')
-            : attachments.length
-              ? t('addFile')
-              : t('attachFile')}
-      </Button>
+          </Button>
+          <Button
+            size="small"
+            component="label"
+            startIcon={<Iconify icon={'solar:upload-bold' as any} width={16} />}
+            disabled={uploading}
+          >
+            {attachments.length ? t('addFile') : t('attachFile')}
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+                e.target.value = '';
+              }}
+            />
+          </Button>
+        </Stack>
       )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept={camera ? 'image/*' : 'image/*,application/pdf'}
-        capture={camera ? 'environment' : undefined}
-        hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFile(file);
-          e.target.value = '';
-        }}
-      />
     </Box>
   );
 }

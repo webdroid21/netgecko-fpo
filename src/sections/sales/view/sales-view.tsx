@@ -644,7 +644,6 @@ export function SalesView() {
                 label={t('fields.paymentSlip')}
                 value={f['Payment slip']}
                 storageFolder={`sales-orders/${selectedOrder.id}`}
-                camera
                 onSaved={fetchOrders}
               />
             </Grid>
