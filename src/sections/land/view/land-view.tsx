@@ -461,7 +461,12 @@ export function LandView() {
 
             <Stack direction="row" alignItems="center" spacing={1}>
               {canEdit && (
-                <Button variant="outlined" size="small" onClick={() => handleEdit(selectedLand)}>
+                <Button
+                  color="primary"
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleEdit(selectedLand)}
+                >
                   {t('actions.edit')}
                 </Button>
               )}

@@ -572,7 +572,12 @@ export function SalesView() {
 
             <Stack direction="row" alignItems="center" spacing={1}>
               {canEdit && (
-                <Button variant="outlined" size="small" onClick={() => handleEdit(selectedOrder)}>
+                <Button
+                  color="primary"
+                  variant="contained"
+                  size="small"
+                  onClick={() => handleEdit(selectedOrder)}
+                >
                   {t('actions.edit')}
                 </Button>
               )}

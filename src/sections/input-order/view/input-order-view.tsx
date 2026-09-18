@@ -536,7 +536,8 @@ export function InputOrderView() {
                 >
                   <span>
                     <Button
-                      variant="outlined"
+                      color="primary"
+                      variant="contained"
                       size="small"
                       disabled={f['Order Status'] !== 'Open'}
                       onClick={() => handleEdit(selectedOrder)}
