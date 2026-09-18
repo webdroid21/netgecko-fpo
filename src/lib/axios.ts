@@ -18,6 +18,10 @@ const axiosInstance = axios.create({
 // the SDK refreshes it automatically when expired — so idle tabs never send a
 // dead token. Fall back to the stored token before auth has restored.
 axiosInstance.interceptors.request.use(async (config) => {
+  // After a reload, wait for Firebase to finish restoring the session before
+  // deciding there is no user — otherwise early requests race ahead and send
+  // the stale stored token.
+  await (AUTH as any)?.authStateReady?.().catch(() => undefined);
   const currentUser = (AUTH as any)?.currentUser;
   if (currentUser) {
     try {
@@ -58,6 +62,14 @@ axiosInstance.interceptors.response.use(
           // fall through to the normalized error
         }
       }
+    }
+
+    // No response at all — typical right after the machine wakes from sleep
+    // while the network is still reconnecting. Wait a beat and retry GETs once.
+    if (!error?.response && original && !original.__retried && (!original.method || original.method === 'get')) {
+      original.__retried = true;
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      return axiosInstance.request(original);
     }
 
     const message = error?.response?.data?.message || error?.message || 'Something went wrong!';

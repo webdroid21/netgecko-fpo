@@ -24,6 +24,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { useRefetchOnVisible } from 'src/hooks/use-refetch-on-visible';
+
 import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
@@ -186,7 +188,6 @@ export function SalesView() {
       setOrders(data.records || []);
     } catch (error: any) {
       console.error('Fetch sales orders error:', error?.message);
-      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -203,7 +204,6 @@ export function SalesView() {
       setFarmers(data.records || []);
     } catch (error: any) {
       console.error('Fetch farmers error:', error?.message);
-      setFarmers([]);
     }
   }, [activeFbo]);
 
@@ -213,7 +213,6 @@ export function SalesView() {
       setCrops(data.records || []);
     } catch (error: any) {
       console.error('Fetch crops error:', error?.message);
-      setCrops([]);
     }
   }, []);
 
@@ -223,7 +222,6 @@ export function SalesView() {
       setSeasons(data.records || []);
     } catch (error: any) {
       console.error('Fetch seasons error:', error?.message);
-      setSeasons([]);
     }
   }, []);
 
@@ -233,6 +231,15 @@ export function SalesView() {
     fetchCrops();
     fetchSeasons();
   }, [fetchOrders, fetchFarmers, fetchCrops, fetchSeasons]);
+
+  const refetchAll = useCallback(() => {
+    fetchOrders();
+    fetchFarmers();
+    fetchCrops();
+    fetchSeasons();
+  }, [fetchOrders, fetchFarmers, fetchCrops, fetchSeasons]);
+
+  useRefetchOnVisible(refetchAll);
 
   const farmerName = useCallback(
     (id?: string) => {

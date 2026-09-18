@@ -24,6 +24,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { useRefetchOnVisible } from 'src/hooks/use-refetch-on-visible';
+
 import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
@@ -224,7 +226,6 @@ export function InputOrderView() {
       setOrders(data.records || []);
     } catch (error: any) {
       console.error('Fetch orders error:', error?.message);
-      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -241,7 +242,6 @@ export function InputOrderView() {
       setFarmers(data.records || []);
     } catch (error: any) {
       console.error('Fetch farmers error:', error?.message);
-      setFarmers([]);
     }
   }, [activeFbo]);
 
@@ -251,7 +251,6 @@ export function InputOrderView() {
       setSeasons(data.records || []);
     } catch (error: any) {
       console.error('Fetch seasons error:', error?.message);
-      setSeasons([]);
     }
   }, []);
 
@@ -263,7 +262,6 @@ export function InputOrderView() {
       setProducts(data.records || []);
     } catch (error: any) {
       console.error('Fetch products error:', error?.message);
-      setProducts([]);
     }
   }, [activeFbo]);
 
@@ -273,6 +271,15 @@ export function InputOrderView() {
     fetchSeasons();
     fetchProducts();
   }, [fetchOrders, fetchFarmers, fetchSeasons, fetchProducts]);
+
+  const refetchAll = useCallback(() => {
+    fetchOrders();
+    fetchFarmers();
+    fetchSeasons();
+    fetchProducts();
+  }, [fetchOrders, fetchFarmers, fetchSeasons, fetchProducts]);
+
+  useRefetchOnVisible(refetchAll);
 
   const orderFilterFields = useMemo(
     () => [

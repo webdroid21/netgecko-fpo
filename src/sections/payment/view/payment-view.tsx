@@ -19,6 +19,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { useRefetchOnVisible } from 'src/hooks/use-refetch-on-visible';
+
 import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
@@ -145,7 +147,6 @@ export function PaymentView() {
       setPayments(data.records || []);
     } catch (error: any) {
       console.error('Fetch payments error:', error?.message);
-      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -162,7 +163,6 @@ export function PaymentView() {
       setLoans(data.records || []);
     } catch (error: any) {
       console.error('Fetch loans error:', error?.message);
-      setLoans([]);
     }
   }, [activeFbo]);
 
@@ -170,6 +170,13 @@ export function PaymentView() {
     fetchPayments();
     fetchLoans();
   }, [fetchPayments, fetchLoans]);
+
+  const refetchAll = useCallback(() => {
+    fetchPayments();
+    fetchLoans();
+  }, [fetchPayments, fetchLoans]);
+
+  useRefetchOnVisible(refetchAll);
 
   const loanLabel = useCallback(
     (id?: string) => {

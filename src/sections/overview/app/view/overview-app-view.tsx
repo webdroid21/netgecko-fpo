@@ -4,7 +4,7 @@ import type { Payment } from 'src/sections/payment/types';
 import type { SalesOrder } from 'src/sections/sales/types';
 import type { InputOrder } from 'src/sections/input-order/types';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -22,6 +22,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components/router-link';
+
+import { useRefetchOnVisible } from 'src/hooks/use-refetch-on-visible';
 
 import { fNumber } from 'src/utils/format-number';
 
@@ -327,6 +329,11 @@ export function OverviewAppView() {
         }
       });
 
+      // Every request failed (e.g. the machine just woke up and the network
+      // or token refresh was not ready yet) — keep the previous stats instead
+      // of zeroing the dashboard.
+      if (results.every((res) => res.status === 'rejected')) return;
+
       const recordsOf = (res: PromiseSettledResult<any>) =>
         res.status === 'fulfilled' ? res.value?.data?.records || [] : [];
 
@@ -435,22 +442,7 @@ export function OverviewAppView() {
     fetchStats();
   }, [fetchStats]);
 
-  // Refetch when the user returns to an idle/open window.
-  const lastFetchAt = useRef(0);
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState !== 'visible') return;
-      if (Date.now() - lastFetchAt.current < 30_000) return;
-      lastFetchAt.current = Date.now();
-      fetchStats();
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    window.addEventListener('focus', onVisible);
-    return () => {
-      document.removeEventListener('visibilitychange', onVisible);
-      window.removeEventListener('focus', onVisible);
-    };
-  }, [fetchStats]);
+  useRefetchOnVisible(fetchStats);
 
   const firstName = user?.displayName?.split(' ')[0] ?? '';
 
@@ -471,7 +463,7 @@ export function OverviewAppView() {
               Welcome to NetGecko App - Boost farm productivity, grow your business and increase
               farmers&rsquo; incomes by using{' '}
               <MuiLink
-                href="https://netgecko.net"
+                href="https://www.netgecko.net"
                 target="_blank"
                 rel="noopener"
                 color="inherit"

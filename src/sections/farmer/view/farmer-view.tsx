@@ -10,7 +10,7 @@ type Crop = {
   fields: Record<string, any>;
 };
 
-import { useRef, useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -31,6 +31,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
+
+import { useRefetchOnVisible } from 'src/hooks/use-refetch-on-visible';
 
 import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
@@ -282,8 +284,9 @@ export function FarmerView() {
       const { data } = await axios.get(`/api/v1/farmers?${query}`);
       setFarmers(data.records || []);
     } catch (error: any) {
+      // Keep the previous records on failure — a transient error (e.g. the
+      // machine waking up) must not wipe the list to zero.
       console.error('Fetch farmers error:', error?.message);
-      setFarmers([]);
     } finally {
       setLoading(false);
     }
@@ -336,7 +339,6 @@ export function FarmerView() {
       setLands(data.records || []);
     } catch (error: any) {
       console.error('Fetch lands error:', error?.message);
-      setLands([]);
     }
   }, [activeFbo]);
 
@@ -355,6 +357,10 @@ export function FarmerView() {
     const results = await Promise.allSettled(
       endpoints.map((endpoint) => axios.get(`/api/v1/${endpoint}?${fpoQuery}`))
     );
+
+    // All requests failed (e.g. right after the machine woke up) — keep the
+    // previous records instead of zeroing the related-record lists.
+    if (results.every((res) => res.status === 'rejected')) return;
 
     const recordsOf = (res: PromiseSettledResult<any>) => {
       if (res.status === 'rejected') {
@@ -532,25 +538,14 @@ export function FarmerView() {
     fetchFullFarmer(selectedId);
   }, [selectedId, fetchFullFarmer]);
 
-  // Refetch when the user returns to an idle/open window.
-  const lastFetchAt = useRef(0);
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState !== 'visible') return;
-      if (Date.now() - lastFetchAt.current < 30_000) return;
-      lastFetchAt.current = Date.now();
-      fetchFarmers();
-      fetchLands();
-      fetchTransactions();
-      if (selectedId) fetchFullFarmer(selectedId);
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    window.addEventListener('focus', onVisible);
-    return () => {
-      document.removeEventListener('visibilitychange', onVisible);
-      window.removeEventListener('focus', onVisible);
-    };
+  const refetchAll = useCallback(() => {
+    fetchFarmers();
+    fetchLands();
+    fetchTransactions();
+    if (selectedId) fetchFullFarmer(selectedId);
   }, [fetchFarmers, fetchLands, fetchTransactions, fetchFullFarmer, selectedId]);
+
+  useRefetchOnVisible(refetchAll);
 
   const isWoman = (f: Farmer) => f.fields.Gender === 'Female';
   const roundPercent = (count: number, total: number) =>

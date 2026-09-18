@@ -20,6 +20,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { useRefetchOnVisible } from 'src/hooks/use-refetch-on-visible';
+
 import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
@@ -133,7 +135,6 @@ export function LandView() {
       setLands(data.records || []);
     } catch (error: any) {
       console.error('Fetch lands error:', error?.message);
-      setLands([]);
     } finally {
       setLoading(false);
     }
@@ -150,7 +151,6 @@ export function LandView() {
       setFarmers(data.records || []);
     } catch (error: any) {
       console.error('Fetch farmers error:', error?.message);
-      setFarmers([]);
     }
   }, [activeFbo]);
 
@@ -160,7 +160,6 @@ export function LandView() {
       setCrops(data.records || []);
     } catch (error: any) {
       console.error('Fetch crops error:', error?.message);
-      setCrops([]);
     }
   }, []);
 
@@ -169,6 +168,14 @@ export function LandView() {
     fetchFarmers();
     fetchCrops();
   }, [fetchLands, fetchFarmers, fetchCrops]);
+
+  const refetchAll = useCallback(() => {
+    fetchLands();
+    fetchFarmers();
+    fetchCrops();
+  }, [fetchLands, fetchFarmers, fetchCrops]);
+
+  useRefetchOnVisible(refetchAll);
 
   const landFilterFields = useMemo(
     () => [

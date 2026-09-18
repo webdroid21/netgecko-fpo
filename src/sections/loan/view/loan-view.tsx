@@ -22,6 +22,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 import { RouterLink } from 'src/routes/components/router-link';
 import { useSearchParams } from 'src/routes/hooks/use-search-params';
 
+import { useRefetchOnVisible } from 'src/hooks/use-refetch-on-visible';
+
 import { fDate } from 'src/utils/format-time';
 import { fNumber } from 'src/utils/format-number';
 
@@ -221,7 +223,6 @@ export function LoanView() {
       setLoans(data.records || []);
     } catch (error: any) {
       console.error('Fetch loans error:', error?.message);
-      setLoans([]);
     } finally {
       setLoading(false);
     }
@@ -238,7 +239,6 @@ export function LoanView() {
       setFarmers(data.records || []);
     } catch (error: any) {
       console.error('Fetch farmers error:', error?.message);
-      setFarmers([]);
     }
   }, [activeFbo]);
 
@@ -246,6 +246,13 @@ export function LoanView() {
     fetchLoans();
     fetchFarmers();
   }, [fetchLoans, fetchFarmers]);
+
+  const refetchAll = useCallback(() => {
+    fetchLoans();
+    fetchFarmers();
+  }, [fetchLoans, fetchFarmers]);
+
+  useRefetchOnVisible(refetchAll);
 
   const loanFilterFields = useMemo(() => {
     const distinct = (key: string) =>
