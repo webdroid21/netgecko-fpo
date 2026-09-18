@@ -83,32 +83,8 @@ type FormValues = z.infer<typeof schema>;
 
 // ----------------------------------------------------------------------
 
-export function getInputProductOptions(
-  products: InputProduct[],
-  order?: InputOrder | null,
-  allProducts: InputProduct[] = products
-) {
-  const baseOptions = products.map((p) => ({ value: p.id, label: productLabel(p) }));
-  const seen = new Set(baseOptions.map((o) => o.value));
-
-  if (order) {
-    INPUT_KEYS.forEach((key) => {
-      const value = firstInputValue(order.fields[key]);
-      if (value && !seen.has(value)) {
-        const linked = allProducts.find((p) => p.id === value);
-        const label =
-          productLabel(linked) !== 'Unnamed'
-            ? productLabel(linked)
-            : (order.fields[`Product ID (from ${key})`] ||
-                order.fields[`Product Name (from ${key})`] || [])[0] ||
-              value;
-        baseOptions.push({ value, label });
-        seen.add(value);
-      }
-    });
-  }
-
-  return baseOptions;
+export function getInputProductOptions(products: InputProduct[]) {
+  return products.map((p) => ({ value: p.id, label: productLabel(p) }));
 }
 
 type InputOrderFormDialogProps = {
@@ -118,7 +94,6 @@ type InputOrderFormDialogProps = {
   farmers: Farmer[];
   seasons: Season[];
   products: InputProduct[];
-  allProducts?: InputProduct[];
   onClose: () => void;
   onSaved: () => void;
   onFarmerCreated?: (farmer: Farmer) => void;
@@ -165,7 +140,6 @@ export function InputOrderFormDialog({
   farmers,
   seasons,
   products,
-  allProducts,
   onClose,
   onSaved,
   onFarmerCreated,
@@ -177,10 +151,7 @@ export function InputOrderFormDialog({
   const { t } = useTranslate('inputOrders');
   const { t: tCommon } = useTranslate('common');
 
-  const productOptions = useMemo(
-    () => getInputProductOptions(products, order, allProducts ?? products),
-    [products, allProducts, order]
-  );
+  const productOptions = useMemo(() => getInputProductOptions(products), [products]);
 
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(order),

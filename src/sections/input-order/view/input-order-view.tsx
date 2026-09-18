@@ -202,7 +202,7 @@ function getInputProductName(inputIds: string[], allProducts: InputProduct[]) {
 function getInputProductImage(inputIds: string[], allProducts: InputProduct[]) {
   if (!inputIds?.length) return null;
   const product = allProducts.find((p) => p.id === inputIds[0]);
-  const image = product?.fields.Image;
+  const image = product?.fields.Images?.[0];
   return Array.isArray(image) ? image[0] : image;
 }
 
@@ -296,11 +296,15 @@ export function InputOrderView() {
 
   useRefetchOnVisible(refetchAll, 5_000);
 
-  // Only "Display in App" products are pickable, but keep the full list for
-  // resolving product names/images on orders that already link hidden ones.
+  // Only "Display in App"-checked products are shown: pickers and the
+  // product name/image on order details. Hidden products render as "—".
   const displayProducts = useMemo(
     () => products.filter((p) => p.fields['Display in App']),
     [products]
+  );
+  const displayProductIds = useMemo(
+    () => new Set(displayProducts.map((p) => p.id)),
+    [displayProducts]
   );
 
   const orderFilterFields = useMemo(
@@ -521,7 +525,7 @@ export function InputOrderView() {
     const formattedDate = orderDate ? fDate(orderDate) : '—';
 
     const editable = f['Order Status'] === 'Open';
-    const productOptions = getInputProductOptions(displayProducts, selectedOrder, products);
+    const productOptions = getInputProductOptions(displayProducts);
 
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
@@ -682,15 +686,25 @@ export function InputOrderView() {
             {[1, 2, 3, 4, 5].map((idx) => {
               const inputIds = f[`Input ${idx}`] || [];
               const qty = f[`Quantity Input ${idx}`];
-              const lookupName = (
-                f[`Product ID (from Input ${idx})`] ||
-                f[`Product Name (from Input ${idx})`] ||
-                []
-              ).join(', ');
-              const resolvedName = getInputProductName(inputIds, products);
+              const inputVisible =
+                inputIds.length > 0 &&
+                inputIds.every((id: string) => displayProductIds.has(id));
+              const lookupName = inputVisible
+                ? (
+                    f[`Product ID (from Input ${idx})`] ||
+                    f[`Product Name (from Input ${idx})`] ||
+                    []
+                  ).join(', ')
+                : '';
+              const resolvedName = inputVisible
+                ? getInputProductName(inputIds, displayProducts)
+                : '';
               const productName = lookupName || resolvedName;
-              const lookupImage = f[`Image Input ${idx}`]?.[0];
-              const resolvedImage = !lookupImage ? getInputProductImage(inputIds, products) : null;
+              const lookupImage = inputVisible ? f[`Image Input ${idx}`]?.[0] : null;
+              const resolvedImage =
+                inputVisible && !lookupImage
+                  ? getInputProductImage(inputIds, displayProducts)
+                  : null;
               const image = lookupImage || resolvedImage;
 
               if ((!inputIds?.length && !productName) || !qty) return null;
@@ -837,7 +851,6 @@ export function InputOrderView() {
         farmers={farmers}
         seasons={seasons}
         products={displayProducts}
-        allProducts={products}
         onClose={() => setFormOpen(false)}
         onSaved={fetchOrders}
         onFarmerCreated={handleFarmerCreated}
