@@ -829,7 +829,6 @@ app.get('/api/v1/input-products', requireAuth, async (req, res) => {
     }
 
     const { data } = await airtableApi.post(`/${AIRTABLE_PRODUCTS_TABLE_ID}/listRecords`, {
-      filterByFormula: '{Display in App}',
       maxRecords: 1000,
     });
 

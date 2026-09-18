@@ -296,6 +296,13 @@ export function InputOrderView() {
 
   useRefetchOnVisible(refetchAll);
 
+  // Only "Display in App" products are pickable, but keep the full list for
+  // resolving product names/images on orders that already link hidden ones.
+  const displayProducts = useMemo(
+    () => products.filter((p) => p.fields['Display in App']),
+    [products]
+  );
+
   const orderFilterFields = useMemo(
     (): ListFilterField[] => [
       {
@@ -514,7 +521,7 @@ export function InputOrderView() {
     const formattedDate = orderDate ? fDate(orderDate) : '—';
 
     const editable = f['Order Status'] === 'Open';
-    const productOptions = getInputProductOptions(products, selectedOrder);
+    const productOptions = getInputProductOptions(displayProducts, selectedOrder);
 
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
@@ -829,7 +836,7 @@ export function InputOrderView() {
         fpoId={activeFbo?.id}
         farmers={farmers}
         seasons={seasons}
-        products={products}
+        products={displayProducts}
         onClose={() => setFormOpen(false)}
         onSaved={fetchOrders}
         onFarmerCreated={handleFarmerCreated}
