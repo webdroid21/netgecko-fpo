@@ -435,7 +435,7 @@ export function LoanView() {
         if (farmer?.fields.Gender === 'Female') statusBucket.women += 1;
       }
 
-      const repKey = repaymentBucket(l.fields['Repayment Status']);
+      const repKey = repaymentBucket(l.fields['Flag (Repayment)']);
       if (repKey) {
         repayments[repKey].count += 1;
         repayments[repKey].pending += fieldNumber(l.fields['Total Amount Pending']);
@@ -493,7 +493,8 @@ export function LoanView() {
           <Grid size={{ xs: 12, sm: 6, md: 4 }} key={s.key}>
             <SummaryCard
               title={t(s.titleKey)}
-              total={repaymentStats[s.key]?.pending ?? 0}
+              total={repaymentStats[s.key]?.count ?? 0}
+              subtext={`${fNumber(repaymentStats[s.key]?.pending ?? 0)} UGX pending`}
               color={s.color}
               icon={s.icon}
             />
