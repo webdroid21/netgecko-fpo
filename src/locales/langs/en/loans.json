@@ -32,7 +32,9 @@
   "sections": {
     "details": "Loan details",
     "amount": "Loan amount",
-    "repayment": "Repayment"
+    "downpayment": "Downpayment",
+    "repayment": "Repayment",
+    "penalty": "Penalty"
   },
   "fields": {
     "willBeUpdatedByNetGecko": "Will be updated by NetGecko",
