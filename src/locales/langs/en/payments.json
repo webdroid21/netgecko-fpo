@@ -10,7 +10,7 @@
     "totalReceived": {
       "title": "Total amount received (UGX)"
     },
-    "paymentsThisYear": "Total payment this year",
+    "paymentsThisYear": "Total payments this year",
     "amountThisYear": "Total payment amount this year (UGX)",
     "vsLastYear": "vs last year"
   },

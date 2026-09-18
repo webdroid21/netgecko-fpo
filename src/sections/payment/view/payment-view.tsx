@@ -394,9 +394,6 @@ export function PaymentView() {
           >
             <Box>
               <Typography variant="h5">{String(f['Payment ID'] ?? '-')}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {fDate(f['Payment Date'])} · {f.Source}
-              </Typography>
             </Box>
             {onCloseDetail && (
               <IconButton onClick={onCloseDetail}>
