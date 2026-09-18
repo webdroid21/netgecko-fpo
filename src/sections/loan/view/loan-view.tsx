@@ -599,7 +599,7 @@ export function LoanView() {
             <Box>
               <Typography variant="h5">{fieldText(f['Loan ID']) || t('unnamedLoan')}</Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {[fieldText(f['Loan Object']), fieldText(f['Name (from Season)'])].filter(Boolean).join(' · ')}
+                {fieldText(f['Name (from Season)'])}
               </Typography>
             </Box>
             {onCloseDetail && (
