@@ -1,5 +1,6 @@
 import type { Loan } from '../types';
 import type { Farmer } from 'src/sections/farmer/types';
+import type { ListFilterField, ListFilterValues } from 'src/components/list-filters';
 
 import { varAlpha } from 'minimal-shared/utils';
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -33,8 +34,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { ListFilters } from 'src/components/list-filters';
 import { DetailDialog } from 'src/components/detail-dialog';
+import { ListFilters, matchesListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -140,7 +141,21 @@ function DetailRow({
   numberOptions?: Intl.NumberFormatOptions;
 }) {
   let display = value ?? '—';
-  if (typeof value === 'number') {
+  if (Array.isArray(value)) {
+    // Airtable lookup/rollup fields arrive as arrays — format each numeric
+    // element so amounts keep thousand separators.
+    display =
+      value
+        .map((v) =>
+          typeof v === 'number' || (typeof v === 'string' && v !== '' && !Number.isNaN(Number(v)))
+            ? fNumber(Number(v), numberOptions)
+            : typeof v === 'object'
+              ? ''
+              : String(v ?? '')
+        )
+        .filter(Boolean)
+        .join(', ') || '—';
+  } else if (typeof value === 'number') {
     display = fNumber(value, numberOptions);
   } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
     display = fNumber(Number(value), numberOptions);
@@ -209,7 +224,7 @@ export function LoanView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filters, setFilters] = useState<ListFilterValues>({});
 
   const fetchLoans = useCallback(async () => {
     if (!activeFbo) return;
@@ -254,11 +269,14 @@ export function LoanView() {
 
   useRefetchOnVisible(refetchAll);
 
-  const loanFilterFields = useMemo(() => {
+  const loanFilterFields = useMemo((): ListFilterField[] => {
     const distinct = (key: string) =>
       Array.from(new Set(loans.map((l) => fieldText(l.fields[key])).filter(Boolean))).map(
         (v) => ({ value: v, label: v })
       );
+    const seasonOptions = Array.from(
+      new Set(loans.flatMap((l) => fieldArray(l.fields['Name (from Seasons)'])).map(String).filter(Boolean))
+    ).map((v) => ({ value: v, label: v }));
     return [
       { key: 'loanId', label: t('fields.loanId') },
       { key: 'loanStatus', label: t('fields.loanStatus'), options: distinct('Loan Status') },
@@ -271,7 +289,7 @@ export function LoanView() {
         })),
       },
       { key: 'verifiedMobileMoney', label: t('fields.verifiedMobileMoneyNumber') },
-      { key: 'season', label: t('fields.season') },
+      { key: 'season', label: t('fields.season'), options: seasonOptions, multiple: true },
       { key: 'loanObject', label: t('fields.loanObject'), options: distinct('Loan Object') },
       { key: 'totalAmount', label: t('fields.totalAmount') },
     ];
@@ -288,7 +306,7 @@ export function LoanView() {
       case 'verifiedMobileMoney':
         return fieldText(l.fields['Verified Mobile Money Number']);
       case 'season':
-        return `${fieldText(l.fields['Name (from Seasons)'])} ${fieldText(l.fields.Season)}`;
+        return fieldArray(l.fields['Name (from Seasons)']);
       case 'loanObject':
         return fieldText(l.fields['Loan Object']);
       case 'totalAmount':
@@ -316,21 +334,14 @@ export function LoanView() {
           fieldText(l.fields['Name (from Seasons)']),
           fieldText(l.fields['Verified Mobile Money Number']),
           fieldText(l.fields['Total amount']),
+          fNumber(fieldNumber(l.fields['Total amount'])),
           fieldText(l.fields['Issue Date']),
         ]
           .join(' ')
           .toLowerCase();
         if (!text.includes(term)) return false;
       }
-      return loanFilterFields.every(({ key, options }) => {
-        const value = filters[key];
-        if (!value) return true;
-        const fieldValue = loanFilterValue(l, key);
-        if (options) {
-          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
-        }
-        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
-      });
+      return matchesListFilters(l, loanFilterFields, filters, loanFilterValue);
     });
   }, [loans, search, filters, farmerFilter, loanFilterFields]);
 

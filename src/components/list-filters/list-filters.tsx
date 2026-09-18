@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { useRef, useState } from 'react';
 
 import Badge from '@mui/material/Badge';
@@ -8,6 +9,7 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Autocomplete from '@mui/material/Autocomplete';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { useTranslate } from 'src/locales';
 
@@ -20,14 +22,69 @@ export type ListFilterField = {
   label: string;
   /** When provided the filter renders a select with these options, otherwise a text input. */
   options?: { value: string; label: string }[];
+  /** Render a date picker; the stored value is an ISO day string (YYYY-MM-DD). */
+  type?: 'date';
+  /** Render a multi-select; the stored value is a string array of option values. */
+  multiple?: boolean;
 };
+
+export type ListFilterValues = Record<string, string | string[]>;
 
 type ListFiltersProps = {
   fields: ListFilterField[];
-  values: Record<string, string>;
-  onChange: (key: string, value: string) => void;
+  values: ListFilterValues;
+  onChange: (key: string, value: string | string[]) => void;
   onClear: () => void;
 };
+
+const hasValue = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value.length > 0 : Boolean(value);
+
+/**
+ * Shared list-filter matching used by all master/detail views.
+ * - text fields: case-insensitive substring over the raw field value
+ * - option fields: exact match against any of the record's values
+ * - multiple fields: any overlap between the record's values and the selection
+ * - date fields: day-level equality (falls back to substring on unparseable values)
+ */
+export function matchesListFilters<T>(
+  item: T,
+  fields: ListFilterField[],
+  values: ListFilterValues,
+  getValue: (item: T, key: string) => any
+): boolean {
+  return fields.every((field) => {
+    const raw = values[field.key];
+    if (!hasValue(raw)) return true;
+
+    const fieldValue = getValue(item, field.key);
+    const vals = Array.isArray(fieldValue) ? fieldValue : [fieldValue];
+
+    if (field.type === 'date') {
+      const target = String(raw);
+      return vals.some((v) => {
+        const parsed = dayjs(v);
+        if (parsed.isValid()) return parsed.format('YYYY-MM-DD') === target;
+        return String(v ?? '').includes(target);
+      });
+    }
+
+    if (field.multiple) {
+      const selected = Array.isArray(raw) ? raw : [raw];
+      return vals.some((v) => selected.includes(String(v)));
+    }
+
+    if (field.options) {
+      return vals.some((v) => String(v) === String(raw));
+    }
+
+    return vals.some((v) =>
+      String(v ?? '')
+        .toLowerCase()
+        .includes(String(raw).toLowerCase())
+    );
+  });
+}
 
 export function ListFilters({ fields, values, onChange, onClear }: ListFiltersProps) {
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -35,7 +92,7 @@ export function ListFilters({ fields, values, onChange, onClear }: ListFiltersPr
 
   const { t } = useTranslate('common');
 
-  const activeCount = fields.filter((f) => values[f.key]).length;
+  const activeCount = fields.filter((f) => hasValue(values[f.key])).length;
 
   return (
     <>
@@ -74,33 +131,81 @@ export function ListFilters({ fields, values, onChange, onClear }: ListFiltersPr
             </Button>
           </Stack>
 
-          {fields.map((field) =>
-            field.options ? (
-              <Autocomplete
-                key={field.key}
-                size="small"
-                fullWidth
-                autoHighlight
-                options={field.options}
-                getOptionLabel={(opt) => opt.label}
-                isOptionEqualToValue={(opt, val) => opt.value === val.value}
-                value={field.options.find((opt) => opt.value === values[field.key]) ?? null}
-                onChange={(_event, opt) => onChange(field.key, opt?.value ?? '')}
-                renderInput={(params) => (
-                  <TextField {...params} label={field.label} placeholder={t('all')} />
-                )}
-              />
-            ) : (
+          {fields.map((field) => {
+            if (field.type === 'date') {
+              const raw = values[field.key];
+              return (
+                <DatePicker
+                  key={field.key}
+                  label={field.label}
+                  format="DD/MM/YYYY"
+                  value={typeof raw === 'string' && raw ? dayjs(raw) : null}
+                  onChange={(newValue) =>
+                    onChange(field.key, newValue ? dayjs(newValue).format('YYYY-MM-DD') : '')
+                  }
+                  slotProps={{
+                    textField: { size: 'small', fullWidth: true },
+                    field: { clearable: true },
+                  }}
+                />
+              );
+            }
+
+            if (field.options && field.multiple) {
+              const raw = values[field.key];
+              const selectedValues = Array.isArray(raw) ? raw : raw ? [raw] : [];
+              return (
+                <Autocomplete
+                  key={field.key}
+                  size="small"
+                  fullWidth
+                  multiple
+                  autoHighlight
+                  disableCloseOnSelect
+                  options={field.options}
+                  getOptionLabel={(opt) => opt.label}
+                  isOptionEqualToValue={(opt, val) => opt.value === val.value}
+                  value={field.options.filter((opt) => selectedValues.includes(opt.value))}
+                  onChange={(_event, opts) => onChange(field.key, opts.map((o) => o.value))}
+                  renderInput={(params) => (
+                    <TextField {...params} label={field.label} placeholder={t('all')} />
+                  )}
+                />
+              );
+            }
+
+            if (field.options) {
+              const raw = values[field.key];
+              return (
+                <Autocomplete
+                  key={field.key}
+                  size="small"
+                  fullWidth
+                  autoHighlight
+                  options={field.options}
+                  getOptionLabel={(opt) => opt.label}
+                  isOptionEqualToValue={(opt, val) => opt.value === val.value}
+                  value={field.options.find((opt) => opt.value === raw) ?? null}
+                  onChange={(_event, opt) => onChange(field.key, opt?.value ?? '')}
+                  renderInput={(params) => (
+                    <TextField {...params} label={field.label} placeholder={t('all')} />
+                  )}
+                />
+              );
+            }
+
+            const raw = values[field.key];
+            return (
               <TextField
                 key={field.key}
                 size="small"
                 fullWidth
                 label={field.label}
-                value={values[field.key] ?? ''}
+                value={typeof raw === 'string' ? raw : ''}
                 onChange={(e) => onChange(field.key, e.target.value)}
               />
-            )
-          )}
+            );
+          })}
         </Stack>
       </Popover>
     </>

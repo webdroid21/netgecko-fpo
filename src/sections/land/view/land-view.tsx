@@ -1,5 +1,6 @@
 import type { Land , Crop } from '../types';
 import type { Farmer } from 'src/sections/farmer/types';
+import type { ListFilterField, ListFilterValues } from 'src/components/list-filters';
 
 import { useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
 
@@ -30,8 +31,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { ListFilters } from 'src/components/list-filters';
 import { DetailDialog } from 'src/components/detail-dialog';
+import { ListFilters, matchesListFilters } from 'src/components/list-filters';
 
 import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
 
@@ -119,7 +120,7 @@ export function LandView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filters, setFilters] = useState<ListFilterValues>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingLand, setEditingLand] = useState<Land | null>(null);
 
@@ -178,7 +179,7 @@ export function LandView() {
   useRefetchOnVisible(refetchAll);
 
   const landFilterFields = useMemo(
-    () => [
+    (): ListFilterField[] => [
       { key: 'land', label: t('fields.name') },
       {
         key: 'farmer',
@@ -248,15 +249,7 @@ export function LandView() {
           .toLowerCase();
         if (!text.includes(term)) return false;
       }
-      return landFilterFields.every(({ key, options }) => {
-        const value = filters[key];
-        if (!value) return true;
-        const fieldValue = landFilterValue(l, key);
-        if (options) {
-          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
-        }
-        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
-      });
+      return matchesListFilters(l, landFilterFields, filters, landFilterValue);
     });
   }, [lands, search, filters, farmerFilter, crops, landFilterFields]);
 

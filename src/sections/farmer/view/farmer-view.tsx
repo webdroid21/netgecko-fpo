@@ -10,6 +10,8 @@ type Crop = {
   fields: Record<string, any>;
 };
 
+import type { ListFilterField, ListFilterValues } from 'src/components/list-filters';
+
 import { useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
@@ -43,8 +45,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { ListFilters } from 'src/components/list-filters';
 import { DetailDialog } from 'src/components/detail-dialog';
+import { ListFilters, matchesListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -261,7 +263,7 @@ export function FarmerView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filters, setFilters] = useState<ListFilterValues>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingFarmer, setEditingFarmer] = useState<Farmer | null>(null);
   const [fullFarmer, setFullFarmer] = useState<Farmer | null>(null);
@@ -426,8 +428,9 @@ export function FarmerView() {
   }, [fetchTransactions]);
 
   const farmerFilterFields = useMemo(
-    () => [
-      { key: 'name', label: t('fields.givenName') },
+    (): ListFilterField[] => [
+      { key: 'givenName', label: t('fields.givenName') },
+      { key: 'surname', label: t('fields.surname') },
       { key: 'nin', label: t('fields.nin') },
       { key: 'farmerCode', label: t('fields.farmerCode') },
       { key: 'birthDate', label: t('fields.birthDate') },
@@ -454,8 +457,10 @@ export function FarmerView() {
     const fields = f.fields;
     const first = (v: any) => (Array.isArray(v) ? v[0] : v);
     switch (key) {
-      case 'name':
-        return `${fields['Given Name'] ?? ''} ${fields.Surname ?? ''} ${fields.Name ?? ''}`;
+      case 'givenName':
+        return `${fields['Given Name'] ?? ''} ${fields.Name ?? ''}`;
+      case 'surname':
+        return fields.Surname;
       case 'nin':
         return fields['NIN (National Identification Number)'];
       case 'farmerCode':
@@ -496,15 +501,7 @@ export function FarmerView() {
         const text = farmerFilterFields.map((field) => farmerFilterValue(f, field.key)).join(' ').toLowerCase();
         if (!text.includes(term)) return false;
       }
-      return farmerFilterFields.every(({ key, options }) => {
-        const value = filters[key];
-        if (!value) return true;
-        const fieldValue = farmerFilterValue(f, key);
-        if (options) {
-          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
-        }
-        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
-      });
+      return matchesListFilters(f, farmerFilterFields, filters, farmerFilterValue);
     });
   }, [farmers, search, filters, farmerFilterFields]);
 

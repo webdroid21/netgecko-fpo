@@ -1,5 +1,6 @@
 import type { Farmer } from 'src/sections/farmer/types';
 import type { Season, InputOrder, InputProduct } from '../types';
+import type { ListFilterField, ListFilterValues } from 'src/components/list-filters';
 
 import { varAlpha } from 'minimal-shared/utils';
 import { useMemo, Fragment, useState, useEffect, useCallback } from 'react';
@@ -35,8 +36,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { ListFilters } from 'src/components/list-filters';
 import { DetailDialog } from 'src/components/detail-dialog';
+import { ListFilters, matchesListFilters } from 'src/components/list-filters';
 
 import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
 
@@ -122,7 +123,21 @@ function DetailRow({
   numberOptions?: Intl.NumberFormatOptions;
 }) {
   let display = value ?? '—';
-  if (typeof value === 'number') {
+  if (Array.isArray(value)) {
+    // Airtable lookup/rollup fields arrive as arrays — format each numeric
+    // element so amounts keep thousand separators.
+    display =
+      value
+        .map((v) =>
+          typeof v === 'number' || (typeof v === 'string' && v !== '' && !Number.isNaN(Number(v)))
+            ? fNumber(Number(v), numberOptions)
+            : typeof v === 'object'
+              ? ''
+              : String(v ?? '')
+        )
+        .filter(Boolean)
+        .join(', ') || '—';
+  } else if (typeof value === 'number') {
     display = fNumber(value, numberOptions);
   } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
     display = fNumber(Number(value), numberOptions);
@@ -210,7 +225,7 @@ export function InputOrderView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filters, setFilters] = useState<ListFilterValues>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<InputOrder | null>(null);
 
@@ -282,15 +297,23 @@ export function InputOrderView() {
   useRefetchOnVisible(refetchAll);
 
   const orderFilterFields = useMemo(
-    () => [
+    (): ListFilterField[] => [
+      {
+        key: 'farmer',
+        label: t('fields.farmer'),
+        options: farmers.map((farmer) => ({
+          value: farmer.id,
+          label: farmer.fields.Name || 'Unnamed',
+        })),
+      },
       { key: 'orderNumber', label: t('fields.orderNumber') },
       {
         key: 'payNowPayLater',
         label: t('fields.payNowPayLater'),
         options: PAY_OPTIONS.map((o) => ({ value: o, label: o })),
       },
-      { key: 'orderDate', label: t('fields.orderDate') },
-      { key: 'orderDelivery', label: t('fields.orderDelivery') },
+      { key: 'orderDate', label: t('fields.orderDate'), type: 'date' },
+      { key: 'orderDelivery', label: t('fields.orderDelivery'), type: 'date' },
       {
         key: 'orderStatus',
         label: t('fields.orderStatus'),
@@ -300,14 +323,6 @@ export function InputOrderView() {
         key: 'season',
         label: t('fields.season'),
         options: seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' })),
-      },
-      {
-        key: 'farmer',
-        label: t('fields.farmer'),
-        options: farmers.map((farmer) => ({
-          value: farmer.id,
-          label: farmer.fields.Name || 'Unnamed',
-        })),
       },
     ],
     [t, seasons, farmers]
@@ -322,7 +337,7 @@ export function InputOrderView() {
       case 'orderDate':
         return o.fields['Order date'];
       case 'orderDelivery':
-        return `${o.fields['Order Delivery'] ?? ''} ${o.fields.Delivered ?? ''} ${o.fields['Delivery date'] ?? ''}`;
+        return [o.fields['Order Delivery'], o.fields.Delivered, o.fields['Delivery date']];
       case 'orderStatus':
         return o.fields['Order Status'];
       case 'season':
@@ -344,18 +359,10 @@ export function InputOrderView() {
 
     return list.filter((o) => {
       if (term) {
-        const text = `${o.fields['Order number'] ?? ''} ${o.fields['PayNow PayLater'] ?? ''} ${o.fields['Order date'] ?? ''} ${o.fields['Order Status'] ?? ''} ${(o.fields['Name (from Farmers)'] || []).join(' ')} ${(o.fields['Name (from Season)'] || []).join(' ')} ${o.fields['Total Order Value (UGX)'] ?? ''}`.toLowerCase();
+        const text = `${o.fields['Order number'] ?? ''} ${o.fields['PayNow PayLater'] ?? ''} ${o.fields['Order date'] ?? ''} ${o.fields['Order Status'] ?? ''} ${(o.fields['Name (from Farmers)'] || []).join(' ')} ${(o.fields['Name (from Season)'] || []).join(' ')} ${o.fields['Order Delivery'] ?? ''} ${o.fields['Delivery date'] ?? ''} ${o.fields['Total Order Value (UGX)'] ?? ''} ${fNumber(o.fields['Total Order Value (UGX)'])}`.toLowerCase();
         if (!text.includes(term)) return false;
       }
-      return orderFilterFields.every(({ key, options }) => {
-        const value = filters[key];
-        if (!value) return true;
-        const fieldValue = orderFilterValue(o, key);
-        if (options) {
-          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
-        }
-        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
-      });
+      return matchesListFilters(o, orderFilterFields, filters, orderFilterValue);
     });
   }, [orders, search, filters, farmerFilter, orderFilterFields]);
 

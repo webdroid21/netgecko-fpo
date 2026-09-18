@@ -1,5 +1,6 @@
 import type { Payment } from '../types';
 import type { Loan } from 'src/sections/loan/types';
+import type { ListFilterField, ListFilterValues } from 'src/components/list-filters';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -29,8 +30,8 @@ import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
-import { ListFilters } from 'src/components/list-filters';
 import { DetailDialog } from 'src/components/detail-dialog';
+import { ListFilters, matchesListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -97,7 +98,21 @@ function DetailRow({
   numberOptions?: Intl.NumberFormatOptions;
 }) {
   let display = value ?? '—';
-  if (typeof value === 'number') {
+  if (Array.isArray(value)) {
+    // Airtable lookup/rollup fields arrive as arrays — format each numeric
+    // element so amounts keep thousand separators.
+    display =
+      value
+        .map((v) =>
+          typeof v === 'number' || (typeof v === 'string' && v !== '' && !Number.isNaN(Number(v)))
+            ? fNumber(Number(v), numberOptions)
+            : typeof v === 'object'
+              ? ''
+              : String(v ?? '')
+        )
+        .filter(Boolean)
+        .join(', ') || '—';
+  } else if (typeof value === 'number') {
     display = fNumber(value, numberOptions);
   } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
     display = fNumber(Number(value), numberOptions);
@@ -133,7 +148,7 @@ export function PaymentView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filters, setFilters] = useState<ListFilterValues>({});
 
   const fetchPayments = useCallback(async () => {
     if (!activeFbo) return;
@@ -187,7 +202,7 @@ export function PaymentView() {
   );
 
   const paymentFilterFields = useMemo(
-    () => [
+    (): ListFilterField[] => [
       {
         key: 'source',
         label: t('fields.source'),
@@ -196,7 +211,7 @@ export function PaymentView() {
         ).map((v) => ({ value: v, label: v })),
       },
       { key: 'paymentAmount', label: t('fields.paymentAmount') },
-      { key: 'paymentDate', label: t('fields.paymentDate') },
+      { key: 'paymentDate', label: t('fields.paymentDate'), type: 'date' },
       { key: 'mobileMoneyNumber', label: t('fields.mobileMoneyNumberUsed') },
       {
         key: 'loan',
@@ -238,18 +253,10 @@ export function PaymentView() {
 
     return list.filter((p) => {
       if (term) {
-        const text = `${p.fields['Payment ID'] ?? ''} ${(p.fields['FPO (from Loans)'] || []).join(' ')} ${p.fields.Source ?? ''} ${p.fields['Payment reference'] ?? ''} ${p.fields['Payment Amount (UGX)'] ?? ''} ${p.fields['Payment Date'] ?? ''} ${p.fields['Mobile Money Number Used'] ?? ''} ${loanLabel(p.fields.Loans?.[0])}`.toLowerCase();
+        const text = `${p.fields['Payment ID'] ?? ''} ${(p.fields['FPO (from Loans)'] || []).join(' ')} ${p.fields.Source ?? ''} ${p.fields['Payment reference'] ?? ''} ${p.fields['Payment Amount (UGX)'] ?? ''} ${fNumber(p.fields['Payment Amount (UGX)'])} ${p.fields['Payment Date'] ?? ''} ${p.fields['Mobile Money Number Used'] ?? ''} ${loanLabel(p.fields.Loans?.[0])}`.toLowerCase();
         if (!text.includes(term)) return false;
       }
-      return paymentFilterFields.every(({ key, options }) => {
-        const value = filters[key];
-        if (!value) return true;
-        const fieldValue = paymentFilterValue(p, key);
-        if (options) {
-          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
-        }
-        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
-      });
+      return matchesListFilters(p, paymentFilterFields, filters, paymentFilterValue);
     });
   }, [payments, search, filters, farmerFilter, loans, loanLabel, paymentFilterFields]);
 

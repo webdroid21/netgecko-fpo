@@ -2,6 +2,7 @@ import type { SalesOrder } from '../types';
 import type { Crop } from 'src/sections/land/types';
 import type { Farmer } from 'src/sections/farmer/types';
 import type { Season } from 'src/sections/input-order/types';
+import type { ListFilterField, ListFilterValues } from 'src/components/list-filters';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 
@@ -34,8 +35,8 @@ import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
-import { ListFilters } from 'src/components/list-filters';
 import { DetailDialog } from 'src/components/detail-dialog';
+import { ListFilters, matchesListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -106,7 +107,21 @@ function DetailRow({
   numberOptions?: Intl.NumberFormatOptions;
 }) {
   let display = value ?? '—';
-  if (typeof value === 'number') {
+  if (Array.isArray(value)) {
+    // Airtable lookup/rollup fields arrive as arrays — format each numeric
+    // element so amounts keep thousand separators.
+    display =
+      value
+        .map((v) =>
+          typeof v === 'number' || (typeof v === 'string' && v !== '' && !Number.isNaN(Number(v)))
+            ? fNumber(Number(v), numberOptions)
+            : typeof v === 'object'
+              ? ''
+              : String(v ?? '')
+        )
+        .filter(Boolean)
+        .join(', ') || '—';
+  } else if (typeof value === 'number') {
     display = fNumber(value, numberOptions);
   } else if (typeof value === 'string' && value !== '' && !Number.isNaN(Number(value))) {
     display = fNumber(Number(value), numberOptions);
@@ -172,7 +187,7 @@ export function SalesView() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filters, setFilters] = useState<ListFilterValues>({});
   const [formOpen, setFormOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<SalesOrder | null>(null);
 
@@ -262,14 +277,14 @@ export function SalesView() {
   );
 
   const salesFilterFields = useMemo(
-    () => [
+    (): ListFilterField[] => [
       { key: 'name', label: t('fields.name') },
       {
         key: 'season',
         label: t('fields.season'),
         options: seasons.map((s) => ({ value: s.id, label: s.fields.Name || 'Unnamed' })),
       },
-      { key: 'dateReceived', label: t('fields.dateReceived') },
+      { key: 'dateReceived', label: t('fields.dateReceived'), type: 'date' },
       {
         key: 'farmer',
         label: t('fields.farmer'),
@@ -335,20 +350,14 @@ export function SalesView() {
           productName(o.fields.Product?.[0]),
           o.fields['Voucher Total (UGX)'],
           o.fields['Total Price'],
+          fNumber(o.fields['Voucher Total (UGX)']),
+          fNumber(o.fields['Total Price']),
         ]
           .join(' ')
           .toLowerCase();
         if (!text.includes(term)) return false;
       }
-      return salesFilterFields.every(({ key, options }) => {
-        const value = filters[key];
-        if (!value) return true;
-        const fieldValue = salesFilterValue(o, key);
-        if (options) {
-          return Array.isArray(fieldValue) ? fieldValue.includes(value) : fieldValue === value;
-        }
-        return String(fieldValue ?? '').toLowerCase().includes(value.toLowerCase());
-      });
+      return matchesListFilters(o, salesFilterFields, filters, salesFilterValue);
     });
   }, [orders, search, filters, farmerFilter, salesFilterFields, farmerName, productName]);
 
