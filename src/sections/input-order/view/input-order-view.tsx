@@ -521,7 +521,7 @@ export function InputOrderView() {
     const formattedDate = orderDate ? fDate(orderDate) : '—';
 
     const editable = f['Order Status'] === 'Open';
-    const productOptions = getInputProductOptions(displayProducts, selectedOrder);
+    const productOptions = getInputProductOptions(displayProducts, selectedOrder, products);
 
     return (
       <Card sx={{ height: '100%', overflow: 'auto' }}>
@@ -837,6 +837,7 @@ export function InputOrderView() {
         farmers={farmers}
         seasons={seasons}
         products={displayProducts}
+        allProducts={products}
         onClose={() => setFormOpen(false)}
         onSaved={fetchOrders}
         onFarmerCreated={handleFarmerCreated}
