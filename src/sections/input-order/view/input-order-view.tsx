@@ -294,7 +294,7 @@ export function InputOrderView() {
     fetchProducts();
   }, [fetchOrders, fetchFarmers, fetchSeasons, fetchProducts]);
 
-  useRefetchOnVisible(refetchAll);
+  useRefetchOnVisible(refetchAll, 5_000);
 
   // Only "Display in App" products are pickable, but keep the full list for
   // resolving product names/images on orders that already link hidden ones.
