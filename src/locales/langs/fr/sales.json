@@ -23,20 +23,21 @@
     "edit": "Modifier"
   },
   "fields": {
-    "orderNumber": "Commande n°",
     "dateReceived": "Date de réception",
     "farmer": "Agriculteur",
     "product": "Produit",
     "season": "Saison",
     "quantityKg": "Quantité (kg)",
-    "pricePerKg": "Prix par kg (UGX)",
     "totalPrice": "Prix total (UGX)",
-    "millingFee": "Frais de mouture (UGX)",
     "transportFee": "Frais de transport (UGX)",
     "voucherTotal": "Total du bon (UGX)",
-    "paid": "Payé",
-    "paidYes": "Oui",
-    "paidNo": "Non"
+    "name": "Nom",
+    "date": "Date",
+    "pricePerQuantity": "Prix par quantité (UGX)",
+    "otherFee": "Autres frais (UGX)",
+    "paymentSlip": "Reçu de paiement",
+    "amountCash": "Montant en espèces (UGX)",
+    "amountMobileMoney": "Montant mobile money (UGX)"
   },
   "form": {
     "title": {
@@ -48,9 +49,15 @@
     "product": "Produit",
     "dateReceived": "Date de réception",
     "quantityKg": "Quantité (kg)",
-    "pricePerKg": "Prix par kg (UGX)",
     "addNew": "Ajouter un nouveau",
-    "selectPlaceholder": "Sélectionner..."
+    "selectPlaceholder": "Sélectionner...",
+    "pricePerQuantity": "Prix par quantité (UGX)",
+    "totalPrice": "Prix total (UGX)",
+    "totalPriceHelper": "Calculé automatiquement (prix × quantité)",
+    "transportFee": "Frais de transport (UGX)",
+    "otherFee": "Autres frais (UGX)",
+    "amountCash": "Montant en espèces (UGX)",
+    "amountMobileMoney": "Montant mobile money (UGX)"
   },
   "buyerForm": {
     "title": "Ajouter un nouvel acheteur",
@@ -63,5 +70,10 @@
       "address": "Adresse",
       "bankAccountNumber": "Numéro de compte bancaire"
     }
+  },
+  "sections": {
+    "order": "Détails de la commande",
+    "product": "Produit",
+    "payment": "Paiement"
   }
 }

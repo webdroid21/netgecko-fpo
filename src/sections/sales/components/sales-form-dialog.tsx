@@ -15,12 +15,15 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Divider from '@mui/material/Divider';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import useMediaQuery from '@mui/material/useMediaQuery';
+
+import { fNumber } from 'src/utils/format-number';
 
 import axios from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
@@ -37,7 +40,11 @@ const schema = z.object({
   Product: z.string().min(1, { message: 'Required' }),
   'Date Received': z.date({ message: 'Required' }),
   'Quantity (kg)': z.number().min(1, { message: 'Required' }),
-  'Price per KG (UGX)': z.number().min(1, { message: 'Required' }),
+  'Price per Quantity (UGX)': z.number().min(1, { message: 'Required' }),
+  'Transport Fee (UGX)': z.number().optional(),
+  'Other Fee (UGX)': z.number().optional(),
+  'Amount Cash': z.number().optional(),
+  'Amount Mobile Money?': z.number().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -75,7 +82,11 @@ function getDefaultValues(order?: SalesOrder | null): FormValues {
     Product: f?.Product?.[0] ?? '',
     'Date Received': f?.['Date Received'] ? dayjs(f['Date Received']).toDate() : (undefined as any),
     'Quantity (kg)': f?.['Quantity (kg)'] ?? undefined,
-    'Price per KG (UGX)': f?.['Price per KG (UGX)'] ?? undefined,
+    'Price per Quantity (UGX)': f?.['Price per Quantity (UGX)'] ?? undefined,
+    'Transport Fee (UGX)': f?.['Transport Fee (UGX)'] ?? undefined,
+    'Other Fee (UGX)': f?.['Other Fee (UGX)'] ?? undefined,
+    'Amount Cash': f?.['Amount Cash'] ?? undefined,
+    'Amount Mobile Money?': f?.['Amount Mobile Money?'] ?? undefined,
   };
 }
 
@@ -143,6 +154,11 @@ export function SalesFormDialog({
     }
   };
 
+  // Airtable computes {Total Price} = {Price per Quantity} * {Quantity} — show a
+  // live preview while the user types; the value itself is never submitted.
+  const totalPrice =
+    (Number(watch('Price per Quantity (UGX)')) || 0) * (Number(watch('Quantity (kg)')) || 0);
+
   const renderAutocomplete = (
     name: keyof FormValues,
     label: string,
@@ -208,6 +224,16 @@ export function SalesFormDialog({
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
+              <Field.DatePicker
+                name="Date Received"
+                label={t('form.dateReceived')}
+                slotProps={{ textField: { required: true } }}
+              />
+            </Grid>
+
+            <SectionHeader title={t('sections.product')} />
+
+            <Grid size={{ xs: 12, md: 6 }}>
               {renderAutocomplete(
                 'Product',
                 t('form.product'),
@@ -218,16 +244,6 @@ export function SalesFormDialog({
                 true
               )}
             </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Field.DatePicker
-                name="Date Received"
-                label={t('form.dateReceived')}
-                slotProps={{ textField: { required: true } }}
-              />
-            </Grid>
-
-            <SectionHeader title={t('sections.payment')} />
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
@@ -241,9 +257,49 @@ export function SalesFormDialog({
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
-                name="Price per KG (UGX)"
-                label={t('form.pricePerKg')}
+                name="Price per Quantity (UGX)"
+                label={t('form.pricePerQuantity')}
                 required
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                fullWidth
+                label={t('form.totalPrice')}
+                value={totalPrice ? fNumber(totalPrice) : ''}
+                helperText={t('form.totalPriceHelper')}
+                slotProps={{ input: { readOnly: true } }}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Field.Text
+                type="number"
+                name="Transport Fee (UGX)"
+                label={t('form.transportFee')}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Field.Text
+                type="number"
+                name="Other Fee (UGX)"
+                label={t('form.otherFee')}
+              />
+            </Grid>
+
+            <SectionHeader title={t('sections.payment')} />
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Field.Text type="number" name="Amount Cash" label={t('form.amountCash')} />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Field.Text
+                type="number"
+                name="Amount Mobile Money?"
+                label={t('form.amountMobileMoney')}
               />
             </Grid>
           </Grid>

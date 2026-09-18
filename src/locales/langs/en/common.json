@@ -20,5 +20,9 @@
   "close": "Close",
   "filters": "Filters",
   "clearFilters": "Clear",
-  "all": "All"
+  "all": "All",
+  "attachFile": "Attach file",
+  "addFile": "Add file",
+  "takePhoto": "Take photo",
+  "uploading": "Uploading…"
 }

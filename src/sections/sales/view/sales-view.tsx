@@ -37,6 +37,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Iconify } from 'src/components/iconify';
 import { DetailDialog } from 'src/components/detail-dialog';
 import { ListFilters, matchesListFilters } from 'src/components/list-filters';
+import { RecordAttachmentField } from 'src/components/record-attachment-field';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -591,12 +592,6 @@ export function SalesView() {
               <Divider sx={{ mt: 0.5 }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.orderNumber')} value={f['Order #']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.dateReceived')} value={fDate(f['Date Received'])} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
                 label={t('fields.farmer')}
                 value={farmerName(f.Farmers?.[0])}
@@ -604,12 +599,53 @@ export function SalesView() {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow
+                label={t('fields.season')}
+                value={(f['Name (from Season)'] || []).join(', ')}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.date')} value={fDate(f['Date Received'])} />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2" sx={{ color: 'primary.main', pt: 1 }}>
+                {t('sections.product')}
+              </Typography>
+              <Divider sx={{ mt: 0.5 }} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow label={t('fields.product')} value={productName(f.Product?.[0])} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <DetailRow
-                label={t('fields.season')}
-                value={(f['Name (from Season)'] || []).join(', ')}
+                label={t('fields.pricePerQuantity')}
+                value={f['Price per Quantity (UGX)']}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.quantityKg')} value={f['Quantity (kg)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.totalPrice')} value={f['Total Price']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.transportFee')} value={f['Transport Fee (UGX)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.otherFee')} value={f['Other Fee (UGX)']} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DetailRow label={t('fields.voucherTotal')} value={f['Voucher Total (UGX)']} />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <RecordAttachmentField
+                endpoint={`/api/v1/sales-orders/${selectedOrder.id}`}
+                name="Payment slip"
+                label={t('fields.paymentSlip')}
+                value={f['Payment slip']}
+                storageFolder={`sales-orders/${selectedOrder.id}`}
+                camera
+                onSaved={fetchOrders}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
@@ -619,25 +655,13 @@ export function SalesView() {
               <Divider sx={{ mt: 0.5 }} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.quantityKg')} value={f['Quantity (kg)']} />
+              <DetailRow label={t('fields.amountCash')} value={f['Amount Cash']} />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.pricePerKg')} value={f['Price per KG (UGX)']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.totalPrice')} value={f['Total Price']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.millingFee')} value={f['Milling Fee (UGX)']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.transportFee')} value={f['Transport Fee (UGX)']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.voucherTotal')} value={f['Voucher Total (UGX)']} />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <DetailRow label={t('fields.paid')} value={f.Paid ? t('fields.paidYes') : t('fields.paidNo')} />
+              <DetailRow
+                label={t('fields.amountMobileMoney')}
+                value={f['Amount Mobile Money?']}
+              />
             </Grid>
           </Grid>
         </CardContent>

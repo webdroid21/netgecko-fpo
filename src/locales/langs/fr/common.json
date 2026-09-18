@@ -17,5 +17,9 @@
   "cancelled": "Annulé",
   "status": "Statut",
   "error": "Une erreur s’est produite",
-  "close": "Fermer"
+  "close": "Fermer",
+  "attachFile": "Joindre un fichier",
+  "addFile": "Ajouter un fichier",
+  "uploading": "Envoi en cours…",
+  "takePhoto": "Prendre une photo"
 }

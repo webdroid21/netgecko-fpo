@@ -30,34 +30,39 @@ type Attachment = {
   thumbnails?: { small?: { url: string } };
 };
 
-type FarmerAttachmentFieldProps = {
-  farmerId: string;
+type RecordAttachmentFieldProps = {
+  /** API path of the record, e.g. `/api/v1/sales-orders/rec123`. */
+  endpoint: string;
+  /** Airtable attachment field name. */
   name: string;
   label: string;
   value?: Attachment[];
+  /** Folder in Firebase Storage the file is uploaded to. */
+  storageFolder: string;
   /** Open the device camera instead of the file picker (mobile). */
   camera?: boolean;
   onSaved: () => void;
 };
 
-export function FarmerAttachmentField({
-  farmerId,
+export function RecordAttachmentField({
+  endpoint,
   name,
   label,
   value,
+  storageFolder,
   camera,
   onSaved,
-}: FarmerAttachmentFieldProps) {
+}: RecordAttachmentFieldProps) {
   const { canEdit } = useAuthContext();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslate('farmers');
+  const { t } = useTranslate('common');
   const [uploading, setUploading] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const attachments: Attachment[] = Array.isArray(value) ? value : [];
 
   const patchAttachments = async (next: { id?: string; url?: string; filename?: string }[]) => {
-    await axios.patch(`/api/v1/farmers/${farmerId}`, { fields: { [name]: next } });
+    await axios.patch(endpoint, { fields: { [name]: next } });
     onSaved();
   };
 
@@ -66,7 +71,7 @@ export function FarmerAttachmentField({
     try {
       const upload = await compressImage(file);
       const storage = getStorage(firebaseApp);
-      const fileRef = ref(storage, `farmer-ids/${farmerId}/${Date.now()}-${upload.name}`);
+      const fileRef = ref(storage, `${storageFolder}/${Date.now()}-${upload.name}`);
       await uploadBytes(fileRef, upload);
       const url = await getDownloadURL(fileRef);
       await patchAttachments([
@@ -181,12 +186,12 @@ export function FarmerAttachmentField({
         sx={{ mt: 0.5 }}
       >
         {uploading
-          ? t('fields.uploading')
+          ? t('uploading')
           : camera
-            ? t('fields.takePhoto')
+            ? t('takePhoto')
             : attachments.length
-              ? t('fields.addFile')
-              : t('fields.attachFile')}
+              ? t('addFile')
+              : t('attachFile')}
       </Button>
       )}
       <input

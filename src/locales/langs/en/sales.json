@@ -23,21 +23,21 @@
     "edit": "Edit"
   },
   "fields": {
-    "orderNumber": "Order #",
     "dateReceived": "Date received",
     "farmer": "Farmer",
     "product": "Product",
     "season": "Season",
     "quantityKg": "Quantity (kg)",
-    "pricePerKg": "Price per kg (UGX)",
     "totalPrice": "Total price (UGX)",
-    "millingFee": "Milling fee (UGX)",
     "transportFee": "Transport fee (UGX)",
     "voucherTotal": "Voucher total (UGX)",
-    "paid": "Paid",
-    "paidYes": "Yes",
-    "paidNo": "No",
-    "name": "Name"
+    "name": "Name",
+    "date": "Date",
+    "pricePerQuantity": "Price per quantity (UGX)",
+    "otherFee": "Other fee (UGX)",
+    "paymentSlip": "Payment slip",
+    "amountCash": "Amount cash (UGX)",
+    "amountMobileMoney": "Amount mobile money (UGX)"
   },
   "form": {
     "title": {
@@ -49,9 +49,15 @@
     "product": "Product",
     "dateReceived": "Date received",
     "quantityKg": "Quantity (kg)",
-    "pricePerKg": "Price per kg (UGX)",
     "addNew": "Add new",
-    "selectPlaceholder": "Select..."
+    "selectPlaceholder": "Select...",
+    "pricePerQuantity": "Price per quantity (UGX)",
+    "totalPrice": "Total price (UGX)",
+    "totalPriceHelper": "Calculated automatically (price × quantity)",
+    "transportFee": "Transport fee (UGX)",
+    "otherFee": "Other fee (UGX)",
+    "amountCash": "Amount cash (UGX)",
+    "amountMobileMoney": "Amount mobile money (UGX)"
   },
   "buyerForm": {
     "title": "Add a new buyer",
@@ -67,6 +73,7 @@
   },
   "sections": {
     "order": "Order details",
-    "payment": "Quantity & payment"
+    "payment": "Payment",
+    "product": "Product"
   }
 }

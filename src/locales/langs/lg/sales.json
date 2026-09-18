@@ -23,20 +23,21 @@
     "edit": "Kyusa"
   },
   "fields": {
-    "orderNumber": "Order #",
     "dateReceived": "Olunaku lwe kwafuna",
     "farmer": "Mulimi",
     "product": "Ekintu ekitundibwa",
     "season": "Sizoni",
     "quantityKg": "Obungi (kg)",
-    "pricePerKg": "Omuwendo ku kg (UGX)",
     "totalPrice": "Omuwendo gwonna (UGX)",
-    "millingFee": "Ssente za kusengula (UGX)",
     "transportFee": "Ssente z'okutwala (UGX)",
     "voucherTotal": "Omuwendo gwa voucher (UGX)",
-    "paid": "Kisasulwa",
-    "paidYes": "Yee",
-    "paidNo": "Nedda"
+    "name": "Erinnya",
+    "date": "Olunaku",
+    "pricePerQuantity": "Omuwendo ku kipimo (UGX)",
+    "otherFee": "Ssente endala (UGX)",
+    "paymentSlip": "Slip y’okusasula",
+    "amountCash": "Ssente mu cash (UGX)",
+    "amountMobileMoney": "Ssente za mobile money (UGX)"
   },
   "form": {
     "title": {
@@ -48,9 +49,15 @@
     "product": "Ekintu ekitundibwa",
     "dateReceived": "Olunaku lwe kwafuna",
     "quantityKg": "Obungi (kg)",
-    "pricePerKg": "Omuwendo ku kg (UGX)",
     "addNew": "Yongerako ekipya",
-    "selectPlaceholder": "Londako..."
+    "selectPlaceholder": "Londako...",
+    "pricePerQuantity": "Omuwendo ku kipimo (UGX)",
+    "totalPrice": "Omuwendo gwonna (UGX)",
+    "totalPriceHelper": "Bibalebwa byokka (omuwendo × obungi)",
+    "transportFee": "Ssente z’okutwala (UGX)",
+    "otherFee": "Ssente endala (UGX)",
+    "amountCash": "Ssente mu cash (UGX)",
+    "amountMobileMoney": "Ssente za mobile money (UGX)"
   },
   "buyerForm": {
     "title": "Yongerako aguza omupya",
@@ -63,5 +70,10 @@
       "address": "Endagiriro",
       "bankAccountNumber": "Ennamba ya akawunti y’ebbanki"
     }
+  },
+  "sections": {
+    "order": "Ebikwata ku kiragiro",
+    "product": "Ekintu ekitundibwa",
+    "payment": "Okusasula"
   }
 }

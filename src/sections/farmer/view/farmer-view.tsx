@@ -47,12 +47,12 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { DetailDialog } from 'src/components/detail-dialog';
 import { ListFilters, matchesListFilters } from 'src/components/list-filters';
+import { RecordAttachmentField } from 'src/components/record-attachment-field';
 
 import { useAuthContext } from 'src/auth/hooks';
 
 import { FarmerFormDialog } from '../components/farmer-form-dialog';
 import { InlineEditField } from '../components/farmer-inline-field';
-import { FarmerAttachmentField } from '../components/farmer-attachment-field';
 
 // ----------------------------------------------------------------------
 
@@ -877,11 +877,12 @@ export function FarmerView() {
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <FarmerAttachmentField
-                farmerId={detailFarmer.id}
+              <RecordAttachmentField
+                endpoint={`/api/v1/farmers/${detailFarmer.id}`}
                 name="Farmer ID (front back)"
                 label={t('fields.farmerIdFrontBack')}
                 value={f['Farmer ID (front back)']}
+                storageFolder={`farmer-ids/${detailFarmer.id}`}
                 camera
                 onSaved={handleFieldSaved}
               />
@@ -1071,11 +1072,12 @@ export function FarmerView() {
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              <FarmerAttachmentField
-                farmerId={detailFarmer.id}
+              <RecordAttachmentField
+                endpoint={`/api/v1/farmers/${detailFarmer.id}`}
                 name="Receipts of these sales to Coop"
                 label={t('fields.salesReceipts')}
                 value={f['Receipts of these sales to Coop']}
+                storageFolder={`farmer-sales/${detailFarmer.id}`}
                 onSaved={handleFieldSaved}
               />
             </Grid>

@@ -17,5 +17,9 @@
   "cancelled": "Kisaziddwamu",
   "status": "Embeera",
   "error": "Wabadeewo ensobi",
-  "close": "Ggalawo"
+  "close": "Ggalawo",
+  "attachFile": "Yongerako fayiro",
+  "addFile": "Yongerako fayiro",
+  "uploading": "Kutikka…",
+  "takePhoto": "Tola ekifaananyi"
 }
