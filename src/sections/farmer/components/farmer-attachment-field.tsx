@@ -10,6 +10,8 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { compressImage } from 'src/utils/compress-image';
+
 import axios from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
 import { firebaseApp } from 'src/lib/firebase';
@@ -62,13 +64,14 @@ export function FarmerAttachmentField({
   const handleFile = async (file: File) => {
     setUploading(true);
     try {
+      const upload = await compressImage(file);
       const storage = getStorage(firebaseApp);
-      const fileRef = ref(storage, `farmer-ids/${farmerId}/${Date.now()}-${file.name}`);
-      await uploadBytes(fileRef, file);
+      const fileRef = ref(storage, `farmer-ids/${farmerId}/${Date.now()}-${upload.name}`);
+      await uploadBytes(fileRef, upload);
       const url = await getDownloadURL(fileRef);
       await patchAttachments([
         ...attachments.map((a) => ({ id: a.id })),
-        { url, filename: file.name },
+        { url, filename: upload.name },
       ]);
       toast.success(`${label} updated successfully`);
     } catch (error: any) {

@@ -23,6 +23,8 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
+import { compressImage } from 'src/utils/compress-image';
+
 import axios from 'src/lib/axios';
 import { firebaseApp } from 'src/lib/firebase';
 
@@ -220,11 +222,12 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
     const storage = getStorage(firebaseApp);
     const uploaded = [];
     for (const file of files) {
-      const fileRef = ref(storage, `farmer-ids/${farmerId}/${Date.now()}-${file.name}`);
+      const upload = await compressImage(file);
+      const fileRef = ref(storage, `farmer-ids/${farmerId}/${Date.now()}-${upload.name}`);
 
-      await uploadBytes(fileRef, file);
+      await uploadBytes(fileRef, upload);
 
-      uploaded.push({ url: await getDownloadURL(fileRef), filename: file.name });
+      uploaded.push({ url: await getDownloadURL(fileRef), filename: upload.name });
     }
     await axios.patch(`/api/v1/farmers/${farmerId}`, {
       fields: {
