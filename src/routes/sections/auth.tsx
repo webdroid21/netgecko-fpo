@@ -17,9 +17,6 @@ import { GuestGuard } from 'src/auth/guard';
  *************************************** */
 const Firebase = {
   SignInPage: lazy(() => import('src/pages/auth/sign-in')),
-  SignUpPage: lazy(() => import('src/pages/auth/sign-up')),
-  VerifyPage: lazy(() => import('src/pages/auth/verify')),
-  ResetPasswordPage: lazy(() => import('src/pages/auth/reset-password')),
 };
 
 // ----------------------------------------------------------------------
@@ -41,32 +38,6 @@ export const authRoutes: RouteObject[] = [
               <Firebase.SignInPage />
             </AuthCenteredContent>
           </GuestGuard>
-        ),
-      },
-      {
-        path: 'sign-up',
-        element: (
-          <GuestGuard>
-            <AuthCenteredContent>
-              <Firebase.SignUpPage />
-            </AuthCenteredContent>
-          </GuestGuard>
-        ),
-      },
-      {
-        path: 'verify',
-        element: (
-          <AuthCenteredContent>
-            <Firebase.VerifyPage />
-          </AuthCenteredContent>
-        ),
-      },
-      {
-        path: 'reset-password',
-        element: (
-          <AuthCenteredContent>
-            <Firebase.ResetPasswordPage />
-          </AuthCenteredContent>
         ),
       },
     ],

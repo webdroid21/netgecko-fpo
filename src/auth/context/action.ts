@@ -6,10 +6,7 @@ import {
   signOut as _signOut,
   signInWithEmailLink,
   signInWithCustomToken,
-  createUserWithEmailAndPassword as _createUserWithEmailAndPassword,
 } from 'firebase/auth';
-
-import { paths } from 'src/routes/paths';
 
 import axios from 'src/lib/axios';
 import { AUTH } from 'src/lib/firebase';
@@ -19,13 +16,6 @@ import { AUTH } from 'src/lib/firebase';
 export type VerifyOtpParams = {
   phone: string;
   otp: string;
-};
-
-export type SignUpParams = {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
 };
 
 export const signInWithGoogle = async () => {
@@ -42,29 +32,6 @@ export const signInWithGithub = async () => {
 export const signInWithTwitter = async () => {
   const provider = new TwitterAuthProvider();
   await signInWithPopup(AUTH, provider);
-};
-
-const signInContinueUrl = () => `${window.location.origin}${paths.auth.firebase.signIn}`;
-
-export const signUp = async ({ email, password, firstName, lastName }: SignUpParams) => {
-  const newUser = await _createUserWithEmailAndPassword(AUTH, email, password);
-  await sendVerificationEmail(email);
-  // Note: a matching record in Airtable is still required to log in.
-  return newUser;
-};
-
-export const sendPasswordResetEmail = async ({ email }: { email: string }) => {
-  await axios.post('/api/v1/auth/password-reset', {
-    email,
-    continueUrl: signInContinueUrl(),
-  });
-};
-
-export const sendVerificationEmail = async (email: string) => {
-  await axios.post('/api/v1/auth/verification-email', {
-    email,
-    continueUrl: signInContinueUrl(),
-  });
 };
 
 export const sendMagicLink = async (email: string, continueUrl: string) => {

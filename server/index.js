@@ -115,6 +115,24 @@ function buildFilterFormula(email, phone) {
   return `OR(${parts.join(',')})`;
 }
 
+// Users must exist (and be Active) in Airtable before they can sign in.
+async function findActiveUser(email, phone) {
+  if (!email && !phone) return null;
+  const { data } = await airtableApi.post(`/${AIRTABLE_USERS_TABLE_ID}/listRecords`, {
+    filterByFormula: buildFilterFormula(email, phone),
+    maxRecords: 1,
+    returnFieldsByFieldId: false,
+  });
+  const record = data.records?.[0];
+  return record?.fields?.Active ? record : null;
+}
+
+const ACCESS_DENIED = {
+  error: 'ACCESS_DENIED',
+  message:
+    'Your account is not registered, please contact support@netgecko.net to gain access',
+};
+
 async function updateLoginMeta(recordId, firebaseUid) {
   const payload = {
     records: [
@@ -151,27 +169,13 @@ app.post('/api/v1/auth/verify', async (req, res) => {
     const phone = decoded.phone_number ? toE164(decoded.phone_number) : null;
 
     if (!email && !phone) {
-      return res.status(403).json({
-        error: 'ACCESS_DENIED',
-        message: 'Your account is not registered, please contact support@netgecko.net to gain access',
-      });
+      return res.status(403).json(ACCESS_DENIED);
     }
 
-    const formula = buildFilterFormula(email, phone);
-    const listUrl = `/${AIRTABLE_USERS_TABLE_ID}/listRecords`;
-    const { data } = await airtableApi.post(listUrl, {
-      filterByFormula: formula,
-      maxRecords: 1,
-      returnFieldsByFieldId: false,
-    });
+    const record = await findActiveUser(email, phone);
 
-    const record = data.records?.[0];
-
-    if (!record || !record.fields?.Active) {
-      return res.status(403).json({
-        error: 'ACCESS_DENIED',
-        message: 'Your account is not registered, please contact support@netgecko.net to gain access',
-      });
+    if (!record) {
+      return res.status(403).json(ACCESS_DENIED);
     }
 
     const fields = record.fields;
@@ -258,6 +262,11 @@ app.post('/api/v1/auth/magic-link', async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: 'BAD_REQUEST', message: 'Email is required.' });
     }
+    const user = await findActiveUser(email, null);
+    if (!user) {
+      return res.status(403).json(ACCESS_DENIED);
+    }
+
     const link = await admin.auth().generateSignInWithEmailLink(email, {
       url: continueUrl || `${req.headers.origin || ''}/auth/sign-in`,
       handleCodeInApp: true,
@@ -278,68 +287,6 @@ app.post('/api/v1/auth/magic-link', async (req, res) => {
     return res
       .status(500)
       .json({ error: 'EMAIL_FAILED', message: 'Failed to send the sign-in link.' });
-  }
-});
-
-app.post('/api/v1/auth/password-reset', async (req, res) => {
-  try {
-    const { email, continueUrl } = req.body || {};
-    if (!email) {
-      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Email is required.' });
-    }
-    const link = await admin.auth().generatePasswordResetLink(email, {
-      url: continueUrl || `${req.headers.origin || ''}/auth/sign-in`,
-    });
-    await sendEmail({
-      to: email,
-      subject: 'Reset your NetGecko App password',
-      html: authEmailHtml({
-        intro: `We received a request to reset the password for your NetGecko App account (${email}). If you want to choose a new password, click this link:`,
-        actionUrl: link,
-        actionLabel: 'Reset password',
-        ignoreNote: 'If you did not request this link, you can safely ignore this email.',
-      }),
-    });
-    return res.json({ ok: true });
-  } catch (error) {
-    console.error('/api/v1/auth/password-reset error:', error?.response?.data || error.message);
-    const code = error?.errorInfo?.code || error?.code;
-    if (code === 'auth/user-not-found') {
-      return res
-        .status(404)
-        .json({ error: 'USER_NOT_FOUND', message: 'No account exists for this email.' });
-    }
-    return res
-      .status(500)
-      .json({ error: 'EMAIL_FAILED', message: 'Failed to send the password reset email.' });
-  }
-});
-
-app.post('/api/v1/auth/verification-email', async (req, res) => {
-  try {
-    const { email, continueUrl } = req.body || {};
-    if (!email) {
-      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Email is required.' });
-    }
-    const link = await admin.auth().generateEmailVerificationLink(email, {
-      url: continueUrl || `${req.headers.origin || ''}/auth/sign-in`,
-    });
-    await sendEmail({
-      to: email,
-      subject: 'Verify your NetGecko App email',
-      html: authEmailHtml({
-        intro: `We received a request to verify this email address for your NetGecko App account (${email}). Click this link:`,
-        actionUrl: link,
-        actionLabel: 'Verify email',
-        ignoreNote: 'If you did not request this link, you can safely ignore this email.',
-      }),
-    });
-    return res.json({ ok: true });
-  } catch (error) {
-    console.error('/api/v1/auth/verification-email error:', error?.response?.data || error.message);
-    return res
-      .status(500)
-      .json({ error: 'EMAIL_FAILED', message: 'Failed to send the verification email.' });
   }
 });
 
@@ -377,6 +324,12 @@ app.post('/api/v1/auth/phone/request-otp', async (req, res) => {
     }
 
     const e164 = toE164(phone);
+
+    const user = await findActiveUser(null, e164);
+    if (!user) {
+      return res.status(403).json(ACCESS_DENIED);
+    }
+
     const existing = phoneOtps.get(e164);
     if (existing && Date.now() - existing.lastSentAt < OTP_RESEND_MS) {
       return res.status(429).json({
@@ -460,6 +413,11 @@ app.post('/api/v1/auth/phone/verify-otp', async (req, res) => {
       return res.status(400).json({ error: 'OTP_INVALID', message: 'Invalid code.' });
     }
     phoneOtps.delete(e164);
+
+    const airtableUser = await findActiveUser(null, e164);
+    if (!airtableUser) {
+      return res.status(403).json(ACCESS_DENIED);
+    }
 
     let user;
     try {
