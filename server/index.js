@@ -237,19 +237,18 @@ async function sendEmail({ to, subject, html }) {
   );
 }
 
-function authEmailHtml({ title, intro, actionUrl, actionLabel }) {
+function authEmailHtml({ intro, actionUrl, actionLabel, ignoreNote }) {
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#1c252e">
-    <h2 style="margin:0 0 16px;color:#4EA82F">${title}</h2>
+    <p style="margin:0 0 16px;line-height:1.5">Hello,</p>
     <p style="margin:0 0 24px;line-height:1.5">${intro}</p>
     <a href="${actionUrl}" style="display:inline-block;background:#4EA82F;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:8px">${actionLabel}</a>
     <p style="margin:24px 0 0;font-size:12px;color:#637381;line-height:1.5">
       If the button does not work, copy and paste this link into your browser:<br/>
       <a href="${actionUrl}" style="color:#4EA82F;word-break:break-all">${actionUrl}</a>
     </p>
-    <p style="margin:24px 0 0;font-size:12px;color:#637381">
-      If you did not request this email, you can safely ignore it.
-    </p>
+    <p style="margin:24px 0 0;line-height:1.5">${ignoreNote}</p>
+    <p style="margin:24px 0 0;line-height:1.5">Thanks,<br/>The NetGecko team</p>
   </div>`;
 }
 
@@ -265,12 +264,12 @@ app.post('/api/v1/auth/magic-link', async (req, res) => {
     });
     await sendEmail({
       to: email,
-      subject: 'Your NetGecko sign-in link',
+      subject: 'Your login link to access NetGecko App',
       html: authEmailHtml({
-        title: 'Sign in to NetGecko',
-        intro: 'Click the button below to sign in to your NetGecko account. This link can only be used once.',
+        intro: `We received a request to sign in to NetGecko App using this email address. If you want to sign in with ${email} account, click this link:`,
         actionUrl: link,
-        actionLabel: 'Sign in',
+        actionLabel: 'Sign in to NetGecko App',
+        ignoreNote: 'If you did not request this link, you can safely ignore this email.',
       }),
     });
     return res.json({ ok: true });
@@ -293,12 +292,12 @@ app.post('/api/v1/auth/password-reset', async (req, res) => {
     });
     await sendEmail({
       to: email,
-      subject: 'Reset your NetGecko password',
+      subject: 'Reset your NetGecko App password',
       html: authEmailHtml({
-        title: 'Reset your password',
-        intro: 'Click the button below to choose a new password for your NetGecko account.',
+        intro: `We received a request to reset the password for your NetGecko App account (${email}). If you want to choose a new password, click this link:`,
         actionUrl: link,
         actionLabel: 'Reset password',
+        ignoreNote: 'If you did not request this link, you can safely ignore this email.',
       }),
     });
     return res.json({ ok: true });
@@ -327,12 +326,12 @@ app.post('/api/v1/auth/verification-email', async (req, res) => {
     });
     await sendEmail({
       to: email,
-      subject: 'Verify your NetGecko email',
+      subject: 'Verify your NetGecko App email',
       html: authEmailHtml({
-        title: 'Verify your email',
-        intro: 'Click the button below to verify this email address for your NetGecko account.',
+        intro: `We received a request to verify this email address for your NetGecko App account (${email}). Click this link:`,
         actionUrl: link,
         actionLabel: 'Verify email',
+        ignoreNote: 'If you did not request this link, you can safely ignore this email.',
       }),
     });
     return res.json({ ok: true });
