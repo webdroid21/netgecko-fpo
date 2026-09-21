@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const cors = require('cors');
+const crypto = require('crypto');
 const express = require('express');
 const admin = require('firebase-admin');
 const axios = require('axios');
@@ -219,6 +220,269 @@ app.post('/api/v1/auth/verify', async (req, res) => {
 });
 
 // ----------------------------------------------------------------------
+// Auth emails via Resend (custom templates) — replaces Firebase's own mail
+// ----------------------------------------------------------------------
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM = process.env.RESEND_FROM || 'NetGecko <onboarding@resend.dev>';
+
+async function sendEmail({ to, subject, html }) {
+  if (!RESEND_API_KEY) {
+    throw new Error('Resend is not configured (missing RESEND_API_KEY).');
+  }
+  await axios.post(
+    'https://api.resend.com/emails',
+    { from: RESEND_FROM, to: [to], subject, html },
+    { headers: { Authorization: `Bearer ${RESEND_API_KEY}` } }
+  );
+}
+
+function authEmailHtml({ title, intro, actionUrl, actionLabel }) {
+  return `
+  <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#1c252e">
+    <h2 style="margin:0 0 16px;color:#4EA82F">${title}</h2>
+    <p style="margin:0 0 24px;line-height:1.5">${intro}</p>
+    <a href="${actionUrl}" style="display:inline-block;background:#4EA82F;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:8px">${actionLabel}</a>
+    <p style="margin:24px 0 0;font-size:12px;color:#637381;line-height:1.5">
+      If the button does not work, copy and paste this link into your browser:<br/>
+      <a href="${actionUrl}" style="color:#4EA82F;word-break:break-all">${actionUrl}</a>
+    </p>
+    <p style="margin:24px 0 0;font-size:12px;color:#637381">
+      If you did not request this email, you can safely ignore it.
+    </p>
+  </div>`;
+}
+
+app.post('/api/v1/auth/magic-link', async (req, res) => {
+  try {
+    const { email, continueUrl } = req.body || {};
+    if (!email) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Email is required.' });
+    }
+    const link = await admin.auth().generateSignInWithEmailLink(email, {
+      url: continueUrl || `${req.headers.origin || ''}/auth/sign-in`,
+      handleCodeInApp: true,
+    });
+    await sendEmail({
+      to: email,
+      subject: 'Your NetGecko sign-in link',
+      html: authEmailHtml({
+        title: 'Sign in to NetGecko',
+        intro: 'Click the button below to sign in to your NetGecko account. This link can only be used once.',
+        actionUrl: link,
+        actionLabel: 'Sign in',
+      }),
+    });
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('/api/v1/auth/magic-link error:', error?.response?.data || error.message);
+    return res
+      .status(500)
+      .json({ error: 'EMAIL_FAILED', message: 'Failed to send the sign-in link.' });
+  }
+});
+
+app.post('/api/v1/auth/password-reset', async (req, res) => {
+  try {
+    const { email, continueUrl } = req.body || {};
+    if (!email) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Email is required.' });
+    }
+    const link = await admin.auth().generatePasswordResetLink(email, {
+      url: continueUrl || `${req.headers.origin || ''}/auth/sign-in`,
+    });
+    await sendEmail({
+      to: email,
+      subject: 'Reset your NetGecko password',
+      html: authEmailHtml({
+        title: 'Reset your password',
+        intro: 'Click the button below to choose a new password for your NetGecko account.',
+        actionUrl: link,
+        actionLabel: 'Reset password',
+      }),
+    });
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('/api/v1/auth/password-reset error:', error?.response?.data || error.message);
+    const code = error?.errorInfo?.code || error?.code;
+    if (code === 'auth/user-not-found') {
+      return res
+        .status(404)
+        .json({ error: 'USER_NOT_FOUND', message: 'No account exists for this email.' });
+    }
+    return res
+      .status(500)
+      .json({ error: 'EMAIL_FAILED', message: 'Failed to send the password reset email.' });
+  }
+});
+
+app.post('/api/v1/auth/verification-email', async (req, res) => {
+  try {
+    const { email, continueUrl } = req.body || {};
+    if (!email) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Email is required.' });
+    }
+    const link = await admin.auth().generateEmailVerificationLink(email, {
+      url: continueUrl || `${req.headers.origin || ''}/auth/sign-in`,
+    });
+    await sendEmail({
+      to: email,
+      subject: 'Verify your NetGecko email',
+      html: authEmailHtml({
+        title: 'Verify your email',
+        intro: 'Click the button below to verify this email address for your NetGecko account.',
+        actionUrl: link,
+        actionLabel: 'Verify email',
+      }),
+    });
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('/api/v1/auth/verification-email error:', error?.response?.data || error.message);
+    return res
+      .status(500)
+      .json({ error: 'EMAIL_FAILED', message: 'Failed to send the verification email.' });
+  }
+});
+
+// ----------------------------------------------------------------------
+// Phone sign-in via Africa's Talking OTP -> Firebase custom token
+// ----------------------------------------------------------------------
+
+const AT_API_KEY = process.env.AT_API_KEY;
+const AT_USERNAME = process.env.AT_USERNAME;
+const AT_SENDER_ID = process.env.AT_SENDER_ID;
+
+const phoneOtps = new Map(); // e164 -> { code, expiresAt, attempts, lastSentAt }
+const OTP_TTL_MS = 5 * 60 * 1000;
+const OTP_RESEND_MS = 60 * 1000;
+const OTP_MAX_ATTEMPTS = 5;
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of phoneOtps) {
+    if (now > entry.expiresAt) phoneOtps.delete(key);
+  }
+}, 10 * 60 * 1000).unref();
+
+app.post('/api/v1/auth/phone/request-otp', async (req, res) => {
+  try {
+    const { phone } = req.body || {};
+    if (!phone) {
+      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Phone number is required.' });
+    }
+    if (!AT_API_KEY || !AT_USERNAME) {
+      return res.status(503).json({
+        error: 'SMS_NOT_CONFIGURED',
+        message: "Phone sign-in is not configured (missing AT_API_KEY/AT_USERNAME).",
+      });
+    }
+
+    const e164 = toE164(phone);
+    const existing = phoneOtps.get(e164);
+    if (existing && Date.now() - existing.lastSentAt < OTP_RESEND_MS) {
+      return res.status(429).json({
+        error: 'RATE_LIMITED',
+        message: 'Please wait a moment before requesting another code.',
+      });
+    }
+
+    const code = String(crypto.randomInt(100000, 1000000));
+    phoneOtps.set(e164, {
+      code,
+      expiresAt: Date.now() + OTP_TTL_MS,
+      attempts: 0,
+      lastSentAt: Date.now(),
+    });
+
+    const form = new URLSearchParams({
+      username: AT_USERNAME,
+      to: e164,
+      message: `Your NetGecko sign-in code is ${code}. It expires in 5 minutes.`,
+    });
+    if (AT_SENDER_ID) form.set('from', AT_SENDER_ID);
+
+    const { data } = await axios.post(
+      'https://api.africastalking.com/version1/messaging',
+      form.toString(),
+      {
+        headers: {
+          apiKey: AT_API_KEY,
+          Accept: 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    const smsStatus = data?.SMSMessageData?.Recipients?.[0]?.status;
+    if (smsStatus && !String(smsStatus).startsWith('Success')) {
+      phoneOtps.delete(e164);
+      return res
+        .status(400)
+        .json({ error: 'SMS_FAILED', message: `Could not send SMS (${smsStatus}).` });
+    }
+
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('/api/v1/auth/phone/request-otp error:', error?.response?.data || error.message);
+    return res
+      .status(500)
+      .json({ error: 'SMS_FAILED', message: 'Failed to send the verification code.' });
+  }
+});
+
+app.post('/api/v1/auth/phone/verify-otp', async (req, res) => {
+  try {
+    const { phone, code } = req.body || {};
+    if (!phone || !code) {
+      return res
+        .status(400)
+        .json({ error: 'BAD_REQUEST', message: 'Phone number and code are required.' });
+    }
+
+    const e164 = toE164(phone);
+    const entry = phoneOtps.get(e164);
+    if (!entry) {
+      return res
+        .status(400)
+        .json({ error: 'OTP_INVALID', message: 'No code was requested for this number.' });
+    }
+    if (Date.now() > entry.expiresAt) {
+      phoneOtps.delete(e164);
+      return res.status(400).json({ error: 'OTP_EXPIRED', message: 'The code has expired.' });
+    }
+    entry.attempts += 1;
+    if (entry.attempts > OTP_MAX_ATTEMPTS) {
+      phoneOtps.delete(e164);
+      return res
+        .status(429)
+        .json({ error: 'RATE_LIMITED', message: 'Too many attempts, request a new code.' });
+    }
+    if (String(code).trim() !== entry.code) {
+      return res.status(400).json({ error: 'OTP_INVALID', message: 'Invalid code.' });
+    }
+    phoneOtps.delete(e164);
+
+    let user;
+    try {
+      user = await admin.auth().getUserByPhoneNumber(e164);
+    } catch (error) {
+      const errCode = error?.errorInfo?.code || error?.code;
+      if (errCode === 'auth/user-not-found') {
+        user = await admin.auth().createUser({ phoneNumber: e164 });
+      } else {
+        throw error;
+      }
+    }
+
+    const token = await admin.auth().createCustomToken(user.uid);
+    return res.json({ token });
+  } catch (error) {
+    console.error('/api/v1/auth/phone/verify-otp error:', error?.response?.data || error.message);
+    return res
+      .status(500)
+      .json({ error: 'OTP_VERIFY_FAILED', message: 'Failed to verify the code.' });
+  }
+});
 
 // ----------------------------------------------------------------------
 

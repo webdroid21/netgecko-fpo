@@ -44,7 +44,7 @@ export function SignInView() {
   const tabs = useTabs('email');
   const isSubmitting = useBoolean();
 
-  const [confirmation, setConfirmation] = useState<any>(null);
+  const [otpSent, setOtpSent] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -100,7 +100,7 @@ export function SignInView() {
       await sendMagicLink(email, continueUrl);
       setInfo(t('magicLinkSent'));
     } catch (err: any) {
-      setLocalError(err?.message || t('failedMagicLink'));
+      setLocalError(err?.response?.data?.message || err?.message || t('failedMagicLink'));
     } finally {
       isSubmitting.onFalse();
     }
@@ -115,11 +115,11 @@ export function SignInView() {
     }
     isSubmitting.onTrue();
     try {
-      const result = await sendPhoneOtp(phone, 'recaptcha-signin');
-      setConfirmation(result);
+      await sendPhoneOtp(phone);
+      setOtpSent(true);
       setInfo(t('otpSent'));
     } catch (err: any) {
-      setLocalError(err?.message || t('failedOtp'));
+      setLocalError(err?.response?.data?.message || err?.message || t('failedOtp'));
     } finally {
       isSubmitting.onFalse();
     }
@@ -127,7 +127,7 @@ export function SignInView() {
 
   const handleVerifyOtp = async () => {
     setLocalError(null);
-    if (!confirmation) {
+    if (!otpSent) {
       setLocalError(t('requestOtpFirst'));
       return;
     }
@@ -137,11 +137,11 @@ export function SignInView() {
     }
     isSubmitting.onTrue();
     try {
-      await verifyPhoneOtp({ confirmationResult: confirmation, otp });
+      await verifyPhoneOtp({ phone, otp });
       // AuthProvider/GuestGuard will handle the redirect once the session is verified.
       // Keep the button loading until the redirect happens.
     } catch (err: any) {
-      setLocalError(err?.message || t('invalidOtp'));
+      setLocalError(err?.response?.data?.message || err?.message || t('invalidOtp'));
       isSubmitting.onFalse();
     }
   };
@@ -186,7 +186,7 @@ export function SignInView() {
 
     return (
       <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-        {confirmation ? (
+        {otpSent ? (
           <>
             <Field.Code name="otp" length={6} />
             <Button
@@ -203,7 +203,6 @@ export function SignInView() {
         ) : (
           <>
             <Field.Phone name="phone" label={t('phoneLabel')} defaultCountry="UG" />
-            <div id="recaptcha-signin" />
             <Button
               fullWidth
               size="large"

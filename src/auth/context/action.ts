@@ -1,24 +1,23 @@
 import {
   signInWithPopup,
-  RecaptchaVerifier,
   GoogleAuthProvider,
   GithubAuthProvider,
   TwitterAuthProvider,
-  signInWithEmailLink,
   signOut as _signOut,
-  sendSignInLinkToEmail,
-  signInWithPhoneNumber,
-  sendEmailVerification as _sendEmailVerification,
-  sendPasswordResetEmail as _sendPasswordResetEmail,
+  signInWithEmailLink,
+  signInWithCustomToken,
   createUserWithEmailAndPassword as _createUserWithEmailAndPassword,
 } from 'firebase/auth';
 
+import { paths } from 'src/routes/paths';
+
+import axios from 'src/lib/axios';
 import { AUTH } from 'src/lib/firebase';
 
 // ----------------------------------------------------------------------
 
 export type VerifyOtpParams = {
-  confirmationResult: any;
+  phone: string;
   otp: string;
 };
 
@@ -45,20 +44,31 @@ export const signInWithTwitter = async () => {
   await signInWithPopup(AUTH, provider);
 };
 
+const signInContinueUrl = () => `${window.location.origin}${paths.auth.firebase.signIn}`;
+
 export const signUp = async ({ email, password, firstName, lastName }: SignUpParams) => {
   const newUser = await _createUserWithEmailAndPassword(AUTH, email, password);
-  await _sendEmailVerification(newUser.user);
+  await sendVerificationEmail(email);
   // Note: a matching record in Airtable is still required to log in.
   return newUser;
 };
 
 export const sendPasswordResetEmail = async ({ email }: { email: string }) => {
-  await _sendPasswordResetEmail(AUTH, email);
+  await axios.post('/api/v1/auth/password-reset', {
+    email,
+    continueUrl: signInContinueUrl(),
+  });
+};
+
+export const sendVerificationEmail = async (email: string) => {
+  await axios.post('/api/v1/auth/verification-email', {
+    email,
+    continueUrl: signInContinueUrl(),
+  });
 };
 
 export const sendMagicLink = async (email: string, continueUrl: string) => {
-  const actionCodeSettings = { url: continueUrl, handleCodeInApp: true };
-  await sendSignInLinkToEmail(AUTH, email, actionCodeSettings);
+  await axios.post('/api/v1/auth/magic-link', { email, continueUrl });
   window.localStorage.setItem('emailForSignIn', email);
 };
 
@@ -68,14 +78,13 @@ export const completeMagicLinkSignIn = async (email: string, url: string) => {
   return result.user;
 };
 
-export const sendPhoneOtp = async (phone: string, containerId: string) => {
-  const recaptcha = new RecaptchaVerifier(AUTH, containerId, { size: 'invisible' });
-  const confirmationResult = await signInWithPhoneNumber(AUTH, phone, recaptcha);
-  return confirmationResult;
+export const sendPhoneOtp = async (phone: string) => {
+  await axios.post('/api/v1/auth/phone/request-otp', { phone });
 };
 
-export const verifyPhoneOtp = async ({ confirmationResult, otp }: VerifyOtpParams) => {
-  const result = await confirmationResult.confirm(otp);
+export const verifyPhoneOtp = async ({ phone, otp }: VerifyOtpParams) => {
+  const { data } = await axios.post('/api/v1/auth/phone/verify-otp', { phone, code: otp });
+  const result = await signInWithCustomToken(AUTH, data.token);
   return result.user;
 };
 
