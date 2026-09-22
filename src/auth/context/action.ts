@@ -16,6 +16,7 @@ import { AUTH } from 'src/lib/firebase';
 export type VerifyOtpParams = {
   phone: string;
   otp: string;
+  otpSession: string;
 };
 
 export const signInWithGoogle = async () => {
@@ -46,11 +47,16 @@ export const completeMagicLinkSignIn = async (email: string, url: string) => {
 };
 
 export const sendPhoneOtp = async (phone: string) => {
-  await axios.post('/api/v1/auth/phone/request-otp', { phone });
+  const { data } = await axios.post('/api/v1/auth/phone/request-otp', { phone });
+  return data.otpSession as string;
 };
 
-export const verifyPhoneOtp = async ({ phone, otp }: VerifyOtpParams) => {
-  const { data } = await axios.post('/api/v1/auth/phone/verify-otp', { phone, code: otp });
+export const verifyPhoneOtp = async ({ phone, otp, otpSession }: VerifyOtpParams) => {
+  const { data } = await axios.post('/api/v1/auth/phone/verify-otp', {
+    phone,
+    code: otp,
+    otpSession,
+  });
   const result = await signInWithCustomToken(AUTH, data.token);
   return result.user;
 };

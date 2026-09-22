@@ -306,17 +306,40 @@ const AT_API_KEY = process.env.AT_API_KEY;
 const AT_USERNAME = process.env.AT_USERNAME;
 const AT_SENDER_ID = process.env.AT_SENDER_ID;
 
-const phoneOtps = new Map(); // e164 -> { code, expiresAt, attempts, lastSentAt }
+// OTPs can't live in a Map on serverless (Vercel) — request and verify may hit
+// different instances. The proof is a stateless HMAC-signed session token instead.
+const OTP_SECRET = process.env.OTP_SECRET || AT_API_KEY || 'netgecko-otp-dev-secret';
 const OTP_TTL_MS = 5 * 60 * 1000;
 const OTP_RESEND_MS = 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
 
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of phoneOtps) {
-    if (now > entry.expiresAt) phoneOtps.delete(key);
+// Best-effort in-memory throttles only — resetting on cold start is acceptable
+// because expiry and code correctness are enforced inside the signed token.
+const otpLastSentAt = new Map(); // e164 -> timestamp
+const otpAttempts = new Map(); // codeHash -> attempt count
+
+const hashOtpCode = (code) =>
+  crypto.createHash('sha256').update(`${OTP_SECRET}:${code}`).digest('hex');
+
+function signOtpSession(payload) {
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', OTP_SECRET).update(body).digest('base64url');
+  return `${body}.${sig}`;
+}
+
+function verifyOtpSession(token) {
+  const [body, sig] = String(token || '').split('.');
+  if (!body || !sig) return null;
+  const expected = crypto.createHmac('sha256', OTP_SECRET).update(body).digest('base64url');
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  try {
+    return JSON.parse(Buffer.from(body, 'base64url').toString());
+  } catch {
+    return null;
   }
-}, 10 * 60 * 1000).unref();
+}
 
 app.post('/api/v1/auth/phone/request-otp', async (req, res) => {
   try {
@@ -338,8 +361,8 @@ app.post('/api/v1/auth/phone/request-otp', async (req, res) => {
       return res.status(403).json(ACCESS_DENIED);
     }
 
-    const existing = phoneOtps.get(e164);
-    if (existing && Date.now() - existing.lastSentAt < OTP_RESEND_MS) {
+    const lastSentAt = otpLastSentAt.get(e164) || 0;
+    if (Date.now() - lastSentAt < OTP_RESEND_MS) {
       return res.status(429).json({
         error: 'RATE_LIMITED',
         message: 'Please wait a moment before requesting another code.',
@@ -347,12 +370,6 @@ app.post('/api/v1/auth/phone/request-otp', async (req, res) => {
     }
 
     const code = String(crypto.randomInt(100000, 1000000));
-    phoneOtps.set(e164, {
-      code,
-      expiresAt: Date.now() + OTP_TTL_MS,
-      attempts: 0,
-      lastSentAt: Date.now(),
-    });
 
     const form = new URLSearchParams({
       username: AT_USERNAME,
@@ -375,13 +392,20 @@ app.post('/api/v1/auth/phone/request-otp', async (req, res) => {
 
     const smsStatus = data?.SMSMessageData?.Recipients?.[0]?.status;
     if (smsStatus && !String(smsStatus).startsWith('Success')) {
-      phoneOtps.delete(e164);
       return res
         .status(400)
         .json({ error: 'SMS_FAILED', message: `Could not send SMS (${smsStatus}).` });
     }
 
-    return res.json({ ok: true });
+    otpLastSentAt.set(e164, Date.now());
+    return res.json({
+      ok: true,
+      otpSession: signOtpSession({
+        phone: e164,
+        codeHash: hashOtpCode(code),
+        exp: Date.now() + OTP_TTL_MS,
+      }),
+    });
   } catch (error) {
     console.error('/api/v1/auth/phone/request-otp error:', error?.response?.data || error.message);
     return res
@@ -392,35 +416,36 @@ app.post('/api/v1/auth/phone/request-otp', async (req, res) => {
 
 app.post('/api/v1/auth/phone/verify-otp', async (req, res) => {
   try {
-    const { phone, code } = req.body || {};
-    if (!phone || !code) {
-      return res
-        .status(400)
-        .json({ error: 'BAD_REQUEST', message: 'Phone number and code are required.' });
+    const { phone, code, otpSession } = req.body || {};
+    if (!phone || !code || !otpSession) {
+      return res.status(400).json({
+        error: 'BAD_REQUEST',
+        message: 'Phone number, code, and OTP session are required.',
+      });
     }
 
     const e164 = toE164(phone);
-    const entry = phoneOtps.get(e164);
-    if (!entry) {
+    const session = verifyOtpSession(otpSession);
+    if (!session || session.phone !== e164) {
       return res
         .status(400)
         .json({ error: 'OTP_INVALID', message: 'No code was requested for this number.' });
     }
-    if (Date.now() > entry.expiresAt) {
-      phoneOtps.delete(e164);
+    if (Date.now() > session.exp) {
       return res.status(400).json({ error: 'OTP_EXPIRED', message: 'The code has expired.' });
     }
-    entry.attempts += 1;
-    if (entry.attempts > OTP_MAX_ATTEMPTS) {
-      phoneOtps.delete(e164);
+
+    const attempts = (otpAttempts.get(session.codeHash) || 0) + 1;
+    otpAttempts.set(session.codeHash, attempts);
+    if (attempts > OTP_MAX_ATTEMPTS) {
       return res
         .status(429)
         .json({ error: 'RATE_LIMITED', message: 'Too many attempts, request a new code.' });
     }
-    if (String(code).trim() !== entry.code) {
+    if (hashOtpCode(String(code).trim()) !== session.codeHash) {
       return res.status(400).json({ error: 'OTP_INVALID', message: 'Invalid code.' });
     }
-    phoneOtps.delete(e164);
+    otpAttempts.delete(session.codeHash);
 
     const airtableUser = await findActiveUser(null, e164);
     if (!airtableUser) {

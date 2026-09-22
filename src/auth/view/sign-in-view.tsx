@@ -45,6 +45,7 @@ export function SignInView() {
   const isSubmitting = useBoolean();
 
   const [otpSent, setOtpSent] = useState(false);
+  const [otpSession, setOtpSession] = useState('');
   const [info, setInfo] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -115,7 +116,8 @@ export function SignInView() {
     }
     isSubmitting.onTrue();
     try {
-      await sendPhoneOtp(phone);
+      const session = await sendPhoneOtp(phone);
+      setOtpSession(session);
       setOtpSent(true);
       setInfo(t('otpSent'));
     } catch (err: any) {
@@ -137,7 +139,7 @@ export function SignInView() {
     }
     isSubmitting.onTrue();
     try {
-      await verifyPhoneOtp({ phone, otp });
+      await verifyPhoneOtp({ phone, otp, otpSession });
       // AuthProvider/GuestGuard will handle the redirect once the session is verified.
       // Keep the button loading until the redirect happens.
     } catch (err: any) {
