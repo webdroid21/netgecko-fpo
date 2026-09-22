@@ -284,6 +284,14 @@ app.post('/api/v1/auth/magic-link', async (req, res) => {
     return res.json({ ok: true });
   } catch (error) {
     console.error('/api/v1/auth/magic-link error:', error?.response?.data || error.message);
+    const code = error?.errorInfo?.code || error?.code;
+    if (code === 'auth/unauthorized-continue-uri') {
+      return res.status(400).json({
+        error: 'CONTINUE_URL_NOT_AUTHORIZED',
+        message:
+          'This app domain is not authorized in Firebase. Add it under Authentication → Settings → Authorized domains.',
+      });
+    }
     return res
       .status(500)
       .json({ error: 'EMAIL_FAILED', message: 'Failed to send the sign-in link.' });
