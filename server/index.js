@@ -1652,7 +1652,7 @@ app.post('/api/v1/:resource/:id/attachments', requireAuth, requireEditor, async 
     }
 
     const { data } = await axios.post(
-      `https://content.airtable.com/v0/bases/${AIRTABLE_BASE_ID}/records/${id}/${encodeURIComponent(field)}/uploadAttachment`,
+      `https://content.airtable.com/v0/${AIRTABLE_BASE_ID}/${id}/${encodeURIComponent(field)}/uploadAttachment`,
       { contentType: contentType || 'application/octet-stream', file, filename },
       {
         headers: {
