@@ -83,7 +83,9 @@ initFirebase();
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+// Attachment uploads arrive as base64 (~1.4x the file size, capped at 5MB
+// by Airtable), so the JSON limit must clear the 100kb default.
+app.use(express.json({ limit: '10mb' }));
 
 // ----------------------------------------------------------------------
 
@@ -1616,6 +1618,59 @@ app.delete('/api/v1/sales-orders/:id', requireAuth, requireEditor, async (req, r
     return res.status(status).json({
       error: 'AIRTABLE_ERROR',
       message: error?.response?.data?.error?.message || 'Unable to delete sales order.',
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+// Attachment uploads go straight to Airtable's uploadAttachment endpoint —
+// no intermediate storage bucket, and Airtable appends the file to the
+// field's existing attachments server-side.
+
+const ATTACHMENT_RESOURCES = new Set([
+  'farmers',
+  'lands',
+  'input-orders',
+  'loans',
+  'payments',
+  'sales-orders',
+  'buyers',
+]);
+
+app.post('/api/v1/:resource/:id/attachments', requireAuth, requireEditor, async (req, res) => {
+  try {
+    const { resource, id } = req.params;
+    if (!ATTACHMENT_RESOURCES.has(resource)) {
+      return res.status(404).json({ error: 'NOT_FOUND', message: 'Unknown resource.' });
+    }
+
+    const { field, filename, contentType, file } = req.body || {};
+    if (!field || !filename || !file) {
+      return res
+        .status(400)
+        .json({ error: 'BAD_REQUEST', message: 'field, filename and file are required.' });
+    }
+
+    const { data } = await axios.post(
+      `https://content.airtable.com/v0/bases/${AIRTABLE_BASE_ID}/records/${id}/${encodeURIComponent(field)}/uploadAttachment`,
+      { contentType: contentType || 'application/octet-stream', file, filename },
+      {
+        headers: {
+          Authorization: `Bearer ${AIRTABLE_PAT}`,
+          'Content-Type': 'application/json',
+        },
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+      }
+    );
+
+    return res.status(201).json({ record: data });
+  } catch (error) {
+    console.error('/api/v1/:resource/:id/attachments error:', error?.response?.data || error.message);
+    const status = error?.response?.status || 500;
+    return res.status(status).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to upload attachment.',
     });
   }
 });

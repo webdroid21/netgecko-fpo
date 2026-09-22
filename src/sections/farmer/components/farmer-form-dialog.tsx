@@ -2,10 +2,10 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Farmer } from '../types';
 
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ref, getStorage, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
@@ -23,10 +23,9 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
-import { compressImage } from 'src/utils/compress-image';
+import { uploadAttachment } from 'src/utils/upload-attachment';
 
 import axios from 'src/lib/axios';
-import { firebaseApp } from 'src/lib/firebase';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
@@ -212,28 +211,16 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
       .catch(() => setVillages([]));
   }, [open, farmer, reset]);
 
-  const uploadPendingFiles = async (
-    farmerId: string,
-    fieldName: string,
-    files: File[],
-    existing: Attachment[]
-  ) => {
-    if (!files.length) return;
-    const storage = getStorage(firebaseApp);
-    const uploaded = [];
-    for (const file of files) {
-      const upload = await compressImage(file);
-      const fileRef = ref(storage, `farmer-ids/${farmerId}/${Date.now()}-${upload.name}`);
-
-      await uploadBytes(fileRef, upload);
-
-      uploaded.push({ url: await getDownloadURL(fileRef), filename: upload.name });
-    }
-    await axios.patch(`/api/v1/farmers/${farmerId}`, {
-      fields: {
-        [fieldName]: [...existing.map((a) => ({ id: a.id })), ...uploaded],
-      },
-    });
+  // Uploads straight to Airtable, in parallel; returns how many files
+  // failed so the caller can warn without losing the saved farmer.
+  const uploadPendingFiles = async (farmerId: string, fieldName: string, files: File[]) => {
+    const results = await Promise.allSettled(
+      files.map((file) => uploadAttachment(`/api/v1/farmers/${farmerId}`, fieldName, file))
+    );
+    results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .forEach((r) => console.error('Attachment upload failed:', r.reason?.message ?? r.reason));
+    return results.filter((r) => r.status === 'rejected').length;
   };
 
   const onSubmit = handleSubmit(async (data) => {
@@ -268,17 +255,23 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
         response = await axios.post('/api/v1/farmers', { fpoId, fields: payload });
       }
       const savedId = farmer?.id ?? response?.data?.record?.id;
+      let failedUploads = 0;
       if (savedId) {
-        await uploadPendingFiles(savedId, 'Farmer ID (front back)', pendingFiles, existingAttachments);
-        await uploadPendingFiles(
-          savedId,
-          'Receipts of these sales to Coop',
-          pendingReceipts,
-          existingReceipts
-        );
+        const [idFailures, receiptFailures] = await Promise.all([
+          uploadPendingFiles(savedId, 'Farmer ID (front back)', pendingFiles),
+          uploadPendingFiles(savedId, 'Receipts of these sales to Coop', pendingReceipts),
+        ]);
+        failedUploads = idFailures + receiptFailures;
       }
+      // The record is saved at this point — always close, even if some
+      // attachments failed (resubmitting a create would duplicate it).
       onSaved?.(response?.data?.record);
       onClose();
+      if (failedUploads) {
+        toast.error(
+          `Farmer saved, but ${failedUploads} attachment${failedUploads > 1 ? 's' : ''} failed to upload — add them again from the farmer page.`
+        );
+      }
     } catch (error: any) {
       console.error('Farmer save error:', error?.response?.data || error?.message);
       const message =

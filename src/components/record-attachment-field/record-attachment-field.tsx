@@ -1,6 +1,5 @@
 import { toast } from 'sonner';
 import { useState } from 'react';
-import { ref, getStorage, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -10,11 +9,10 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { compressImage } from 'src/utils/compress-image';
+import { uploadAttachment } from 'src/utils/upload-attachment';
 
 import axios from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
-import { firebaseApp } from 'src/lib/firebase';
 
 import { Iconify } from 'src/components/iconify';
 
@@ -37,8 +35,6 @@ type RecordAttachmentFieldProps = {
   name: string;
   label: string;
   value?: Attachment[];
-  /** Folder in Firebase Storage the file is uploaded to. */
-  storageFolder: string;
   onSaved: () => void;
 };
 
@@ -47,7 +43,6 @@ export function RecordAttachmentField({
   name,
   label,
   value,
-  storageFolder,
   onSaved,
 }: RecordAttachmentFieldProps) {
   const { canEdit } = useAuthContext();
@@ -65,15 +60,8 @@ export function RecordAttachmentField({
   const handleFile = async (file: File) => {
     setUploading(true);
     try {
-      const upload = await compressImage(file);
-      const storage = getStorage(firebaseApp);
-      const fileRef = ref(storage, `${storageFolder}/${Date.now()}-${upload.name}`);
-      await uploadBytes(fileRef, upload);
-      const url = await getDownloadURL(fileRef);
-      await patchAttachments([
-        ...attachments.map((a) => ({ id: a.id })),
-        { url, filename: upload.name },
-      ]);
+      await uploadAttachment(endpoint, name, file);
+      onSaved();
       toast.success(`${label} updated successfully`);
     } catch (error: any) {
       toast.error(error?.message || `Failed to upload ${label}`);

@@ -877,7 +877,6 @@ export function FarmerView() {
                 name="Farmer ID (front back)"
                 label={t('fields.farmerIdFrontBack')}
                 value={f['Farmer ID (front back)']}
-                storageFolder={`farmer-ids/${detailFarmer.id}`}
                 onSaved={handleFieldSaved}
               />
             </Grid>
@@ -1073,7 +1072,6 @@ export function FarmerView() {
                 name="Receipts of these sales to Coop"
                 label={t('fields.salesReceipts')}
                 value={f['Receipts of these sales to Coop']}
-                storageFolder={`farmer-sales/${detailFarmer.id}`}
                 onSaved={handleFieldSaved}
               />
             </Grid>

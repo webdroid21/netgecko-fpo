@@ -636,7 +636,6 @@ export function SalesView() {
                 name="Payment slip"
                 label={t('fields.paymentSlip')}
                 value={f['Payment slip']}
-                storageFolder={`sales-orders/${selectedOrder.id}`}
                 onSaved={fetchOrders}
               />
             </Grid>
