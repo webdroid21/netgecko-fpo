@@ -147,6 +147,13 @@ const ACCESS_DENIED = {
     'Your account is not registered, please contact support@netgecko.net to gain access',
 };
 
+// Comma-separated emails that always get NetGecko Admin access — lets test
+// accounts see every partner without changing their Airtable role.
+const ADMIN_EMAILS = (process.env.AUTH_ADMIN_EMAILS || '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
 async function updateLoginMeta(recordId, firebaseUid) {
   const payload = {
     records: [
@@ -193,7 +200,10 @@ app.post('/api/v1/auth/verify', async (req, res) => {
     }
 
     const fields = record.fields;
-    const role = fields.Role || '';
+    const role =
+      email && ADMIN_EMAILS.includes(email.toLowerCase())
+        ? 'NetGecko Admin'
+        : fields.Role || '';
 
     let fbos;
     if (role === 'NetGecko Admin') {
