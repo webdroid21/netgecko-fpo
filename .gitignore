@@ -37,3 +37,4 @@ tsconfig.tsbuildinfo
 .ncurc.js
 *firebase-adminsdk*.json
 .vite/
+server/serviceAccount.json
