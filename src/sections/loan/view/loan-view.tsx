@@ -92,6 +92,20 @@ function fieldPercent(value: unknown): string {
     .join(', ');
 }
 
+// 'Total Amount Pending' is a formula field that can return an error object
+// ({ specialValue: 'NaN' }) on some loans — fall back to the repayment pending
+// amount instead of counting it as 0.
+function totalPendingAmount(fields: Loan['fields']): number {
+  const total = fields['Total Amount Pending'];
+  if (
+    typeof total === 'number' ||
+    (typeof total === 'string' && total.trim() !== '' && Number.isFinite(Number(total)))
+  ) {
+    return fieldNumber(total);
+  }
+  return fieldNumber(fields['Repayment Amount Pending']);
+}
+
 function repaymentBucket(value: unknown): 'Red' | 'Orange' | 'Green' | null {
   const rep = fieldText(value).toLowerCase();
   if (rep.includes('red') || rep.includes('🔴')) return 'Red';
@@ -438,7 +452,7 @@ export function LoanView() {
       const repKey = repaymentBucket(l.fields['Flag (Repayment)']);
       if (repKey) {
         repayments[repKey].count += 1;
-        repayments[repKey].pending += fieldNumber(l.fields['Total Amount Pending']);
+        repayments[repKey].pending += totalPendingAmount(l.fields);
       }
     });
 
@@ -557,7 +571,7 @@ export function LoanView() {
                   </Stack>
 
                   <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                    {fNumber(fieldNumber(loan.fields['Total amount']))} UGX · {fNumber(fieldNumber(loan.fields['Total Amount Pending']))} pending
+                    {fNumber(fieldNumber(loan.fields['Total amount']))} UGX · {fNumber(totalPendingAmount(loan.fields))} pending
                   </Typography>
                 </ListItemButton>
               );
@@ -691,7 +705,7 @@ export function LoanView() {
             <Grid size={{ xs: 12, sm: 4 }}>
               <DetailRow
                 label={t('fields.totalAmountPending')}
-                value={f['Total Amount Pending']}
+                value={totalPendingAmount(f)}
                 helper={netgeckoHelper}
               />
             </Grid>
@@ -832,12 +846,8 @@ export function LoanView() {
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <DetailRow
-                label={t('fields.penalty')}
-                value={
-                  f['Penalty (calc)'] && typeof f['Penalty (calc)'] !== 'object'
-                    ? f['Penalty (calc)']
-                    : f['Penalty per week']
-                }
+                label={t('fields.penaltyPerWeek')}
+                value={f['Penalty per week']}
                 helper={netgeckoHelper}
               />
             </Grid>

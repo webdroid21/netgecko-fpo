@@ -577,7 +577,7 @@ function toAirtableFields(input, fpoId) {
   }
 
   if (fpoId) {
-    fields.FPO = [fpoId];
+    fields.Partner = [fpoId];
   }
 
   return fields;

@@ -280,7 +280,10 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
       onSaved?.(response?.data?.record);
       onClose();
     } catch (error: any) {
-      console.error('Farmer save error:', error?.message);
+      console.error('Farmer save error:', error?.response?.data || error?.message);
+      const message =
+        error?.response?.data?.message || error?.message || 'Failed to save farmer';
+      alert(message);
     }
   });
 
