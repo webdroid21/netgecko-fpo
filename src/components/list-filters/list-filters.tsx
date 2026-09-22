@@ -11,6 +11,8 @@ import Typography from '@mui/material/Typography';
 import Autocomplete from '@mui/material/Autocomplete';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
+import { fNumber } from 'src/utils/format-number';
+
 import { useTranslate } from 'src/locales';
 
 import { Iconify } from 'src/components/iconify';
@@ -84,6 +86,41 @@ export function matchesListFilters<T>(
         .includes(String(raw).toLowerCase())
     );
   });
+}
+
+/**
+ * Builds the lowercase free-text search haystack for a record: every field
+ * value is included so the search box covers all of the item's data, not
+ * just the columns shown in the list.
+ * - arrays/lookups are flattened recursively
+ * - numbers are added both raw and thousand-separated ("1200000" and "1,200,000")
+ * - attachment objects contribute their filename
+ */
+export function recordSearchText(fields: Record<string, unknown>): string {
+  const parts: string[] = [];
+
+  const push = (value: unknown) => {
+    if (value == null) return;
+    if (Array.isArray(value)) {
+      value.forEach(push);
+      return;
+    }
+    if (typeof value === 'number') {
+      parts.push(String(value));
+      const formatted = fNumber(value);
+      if (formatted !== String(value)) parts.push(formatted);
+      return;
+    }
+    if (typeof value === 'object') {
+      const filename = (value as { filename?: unknown }).filename;
+      if (typeof filename === 'string') parts.push(filename);
+      return;
+    }
+    parts.push(String(value));
+  };
+
+  Object.values(fields).forEach(push);
+  return parts.join(' ').toLowerCase();
 }
 
 export function ListFilters({ fields, values, onChange, onClear }: ListFiltersProps) {

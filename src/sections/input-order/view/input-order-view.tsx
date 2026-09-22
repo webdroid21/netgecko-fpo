@@ -37,7 +37,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { DetailDialog } from 'src/components/detail-dialog';
-import { ListFilters, matchesListFilters } from 'src/components/list-filters';
+import { ListFilters, recordSearchText, matchesListFilters } from 'src/components/list-filters';
 
 import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
 
@@ -370,12 +370,17 @@ export function InputOrderView() {
 
     return list.filter((o) => {
       if (term) {
-        const text = `${o.fields['Order number'] ?? ''} ${o.fields['PayNow PayLater'] ?? ''} ${o.fields['Order date'] ?? ''} ${o.fields['Order Status'] ?? ''} ${(o.fields['Name (from Farmers)'] || []).join(' ')} ${(o.fields['Name (from Season)'] || []).join(' ')} ${o.fields['Order Delivery'] ?? ''} ${o.fields['Delivery date'] ?? ''} ${o.fields['Total Order Value (UGX)'] ?? ''} ${fNumber(o.fields['Total Order Value (UGX)'])}`.toLowerCase();
+        // All order fields plus the input product names resolved from the
+        // linked product records.
+        const inputNames = [1, 2, 3, 4, 5]
+          .map((idx) => getInputProductName(o.fields[`Input ${idx}`] || [], products))
+          .join(' ');
+        const text = `${recordSearchText(o.fields)} ${inputNames}`.toLowerCase();
         if (!text.includes(term)) return false;
       }
       return matchesListFilters(o, orderFilterFields, filters, orderFilterValue);
     });
-  }, [orders, search, filters, farmerFilter, orderFilterFields]);
+  }, [orders, search, filters, farmerFilter, orderFilterFields, products]);
 
   const selectedOrder = useMemo(
     () => filteredOrders.find((o) => o.id === selectedId) || filteredOrders[0] || null,

@@ -31,7 +31,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { DetailDialog } from 'src/components/detail-dialog';
-import { ListFilters, matchesListFilters } from 'src/components/list-filters';
+import { ListFilters, recordSearchText, matchesListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -253,7 +253,7 @@ export function PaymentView() {
 
     return list.filter((p) => {
       if (term) {
-        const text = `${p.fields['Payment ID'] ?? ''} ${(p.fields['FPO (from Loans)'] || []).join(' ')} ${p.fields.Source ?? ''} ${p.fields['Payment reference'] ?? ''} ${p.fields['Payment Amount (UGX)'] ?? ''} ${fNumber(p.fields['Payment Amount (UGX)'])} ${p.fields['Payment Date'] ?? ''} ${p.fields['Mobile Money Number Used'] ?? ''} ${loanLabel(p.fields.Loans?.[0])}`.toLowerCase();
+        const text = `${recordSearchText(p.fields)} ${loanLabel(p.fields.Loans?.[0])}`.toLowerCase();
         if (!text.includes(term)) return false;
       }
       return matchesListFilters(p, paymentFilterFields, filters, paymentFilterValue);

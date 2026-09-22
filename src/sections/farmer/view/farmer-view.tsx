@@ -46,8 +46,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { DetailDialog } from 'src/components/detail-dialog';
-import { ListFilters, matchesListFilters } from 'src/components/list-filters';
 import { RecordAttachmentField } from 'src/components/record-attachment-field';
+import { ListFilters, recordSearchText, matchesListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -448,14 +448,12 @@ export function FarmerView() {
       { key: 'email', label: t('fields.email') },
       { key: 'phone', label: t('fields.phoneNumber') },
       { key: 'mobileMoney', label: t('fields.mobileMoneyNumber') },
-      { key: 'mmNameCheck', label: t('fields.mmNameCheck') },
     ],
     [t]
   );
 
   const farmerFilterValue = (f: Farmer, key: string): any => {
     const fields = f.fields;
-    const first = (v: any) => (Array.isArray(v) ? v[0] : v);
     switch (key) {
       case 'givenName':
         return `${fields['Given Name'] ?? ''} ${fields.Name ?? ''}`;
@@ -487,8 +485,6 @@ export function FarmerView() {
         return fields['Phone Number'];
       case 'mobileMoney':
         return `${fields['Mobile Money Number'] ?? ''} ${fields['Verified Mobile Money Number'] ?? ''}`;
-      case 'mmNameCheck':
-        return first(fields['MM Name Check']);
       default:
         return '';
     }
@@ -498,8 +494,7 @@ export function FarmerView() {
     const term = search.trim().toLowerCase();
     return farmers.filter((f) => {
       if (term) {
-        const text = farmerFilterFields.map((field) => farmerFilterValue(f, field.key)).join(' ').toLowerCase();
-        if (!text.includes(term)) return false;
+        if (!recordSearchText(f.fields).includes(term)) return false;
       }
       return matchesListFilters(f, farmerFilterFields, filters, farmerFilterValue);
     });

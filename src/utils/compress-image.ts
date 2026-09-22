@@ -2,13 +2,13 @@
 // Image compression for uploads (camera photos, scans, receipts).
 //
 // Phone cameras produce 3-8MB files; for farmer ID photos and receipts
-// ~1920px on the long edge is still print quality (~300dpi at 16cm) while
-// cutting uploads to a few hundred KB — faster upload on slow networks
-// and far less Firebase Storage usage.
+// ~1600px on the long edge is still minimum print quality (~300dpi at
+// 13.5cm) while cutting uploads to ~100-300KB — faster upload on slow
+// networks and far less Firebase Storage usage.
 // ----------------------------------------------------------------------
 
-const MAX_DIMENSION = 1920;
-const JPEG_QUALITY = 0.72;
+const MAX_DIMENSION = 1600;
+const JPEG_QUALITY = 0.6;
 /** Files at or below this size are uploaded as-is (already small enough). */
 const MIN_SIZE_BYTES = 300 * 1024;
 

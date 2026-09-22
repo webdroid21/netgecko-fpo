@@ -36,8 +36,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 import { DetailDialog } from 'src/components/detail-dialog';
-import { ListFilters, matchesListFilters } from 'src/components/list-filters';
 import { RecordAttachmentField } from 'src/components/record-attachment-field';
+import { ListFilters, recordSearchText, matchesListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -342,20 +342,8 @@ export function SalesView() {
 
     return list.filter((o) => {
       if (term) {
-        const text = [
-          o.fields.Name,
-          o.fields['Order #'],
-          (o.fields['Name (from Season)'] || []).join(' '),
-          o.fields['Date Received'],
-          farmerName(o.fields.Farmers?.[0]),
-          productName(o.fields.Product?.[0]),
-          o.fields['Voucher Total (UGX)'],
-          o.fields['Total Price'],
-          fNumber(o.fields['Voucher Total (UGX)']),
-          fNumber(o.fields['Total Price']),
-        ]
-          .join(' ')
-          .toLowerCase();
+        // All order fields plus farmer/product names resolved from linked records.
+        const text = `${recordSearchText(o.fields)} ${farmerName(o.fields.Farmers?.[0])} ${productName(o.fields.Product?.[0])}`.toLowerCase();
         if (!text.includes(term)) return false;
       }
       return matchesListFilters(o, salesFilterFields, filters, salesFilterValue);

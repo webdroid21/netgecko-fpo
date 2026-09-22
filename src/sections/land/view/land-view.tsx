@@ -32,7 +32,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { DetailDialog } from 'src/components/detail-dialog';
-import { ListFilters, matchesListFilters } from 'src/components/list-filters';
+import { ListFilters, recordSearchText, matchesListFilters } from 'src/components/list-filters';
 
 import { InlineEditField } from 'src/sections/farmer/components/farmer-inline-field';
 
@@ -237,16 +237,9 @@ export function LandView() {
 
     return list.filter((l) => {
       if (term) {
-        const text = [
-          l.fields.Land,
-          (l.fields['Name (from Owner)'] || []).join(' '),
-          l.fields['Land Ownership'],
-          l.fields['Land Size (Acres)'],
-          getProductNames(l, crops).join(' '),
-          (l.fields['Product Name (from Crop)'] || []).join(' '),
-        ]
-          .join(' ')
-          .toLowerCase();
+        // Crop names resolved from the linked records are added on top of all
+        // the land's own fields.
+        const text = `${recordSearchText(l.fields)} ${getProductNames(l, crops).join(' ')}`.toLowerCase();
         if (!text.includes(term)) return false;
       }
       return matchesListFilters(l, landFilterFields, filters, landFilterValue);

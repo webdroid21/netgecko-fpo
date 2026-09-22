@@ -36,7 +36,7 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { DetailDialog } from 'src/components/detail-dialog';
-import { ListFilters, matchesListFilters } from 'src/components/list-filters';
+import { ListFilters, recordSearchText, matchesListFilters } from 'src/components/list-filters';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -359,6 +359,16 @@ export function LoanView() {
       { key: 'season', label: t('fields.season'), options: seasonOptions, multiple: true },
       { key: 'loanObject', label: t('fields.loanObject'), options: distinct('Loan Object') },
       { key: 'totalAmount', label: t('fields.totalAmount') },
+      {
+        key: 'flagRepayment',
+        label: t('fields.flagRepayment'),
+        options: distinct('Flag (Repayment)'),
+      },
+      {
+        key: 'flagDownpayment',
+        label: t('fields.flagDownpayment'),
+        options: distinct('Flag (Downpayment)'),
+      },
     ];
   }, [t, loans, farmers]);
 
@@ -378,6 +388,10 @@ export function LoanView() {
         return fieldText(l.fields['Loan Object']);
       case 'totalAmount':
         return l.fields['Total amount'];
+      case 'flagRepayment':
+        return fieldText(l.fields['Flag (Repayment)']);
+      case 'flagDownpayment':
+        return fieldText(l.fields['Flag (Downpayment)']);
       default:
         return '';
     }
@@ -393,20 +407,7 @@ export function LoanView() {
 
     return list.filter((l) => {
       if (term) {
-        const text = [
-          fieldText(l.fields['Loan ID']),
-          fieldText(l.fields['Name (from Farmer)']),
-          fieldText(l.fields['Loan Status']),
-          fieldText(l.fields['Loan Object']),
-          fieldText(l.fields['Name (from Seasons)']),
-          fieldText(l.fields['Verified Mobile Money Number']),
-          fieldText(l.fields['Total amount']),
-          fNumber(fieldNumber(l.fields['Total amount'])),
-          fieldText(l.fields['Issue Date']),
-        ]
-          .join(' ')
-          .toLowerCase();
-        if (!text.includes(term)) return false;
+        if (!recordSearchText(l.fields).includes(term)) return false;
       }
       return matchesListFilters(l, loanFilterFields, filters, loanFilterValue);
     });
