@@ -97,6 +97,18 @@ const airtableApi = axios.create({
   },
 });
 
+// Airtable returns at most 100 records per call — follow `offset` until exhausted.
+async function listAllRecords(tableId, params = {}) {
+  const records = [];
+  let offset;
+  do {
+    const { data } = await airtableApi.post(`/${tableId}/listRecords`, { ...params, offset });
+    records.push(...(data.records || []));
+    offset = data.offset;
+  } while (offset);
+  return { records };
+}
+
 function toE164(raw) {
   const digits = String(raw).replace(/\D/g, '');
   if (digits.startsWith('0') && digits.length >= 10) {
@@ -186,10 +198,7 @@ app.post('/api/v1/auth/verify', async (req, res) => {
     let fbos;
     if (role === 'NetGecko Admin') {
       // Admins can access every partner.
-      const { data: fpoData } = await airtableApi.post(
-        `/${AIRTABLE_FPOS_TABLE_ID}/listRecords`,
-        { fields: ['Name'] }
-      );
+      const fpoData = await listAllRecords(AIRTABLE_FPOS_TABLE_ID, { fields: ['Name'] });
       fbos = (fpoData.records || []).map((fpo) => ({
         id: fpo.id,
         name: fpo.fields?.Name || fpo.id,
@@ -817,9 +826,8 @@ app.get('/api/v1/farmers', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'BAD_REQUEST', message: 'fpoId or fpoName is required.' });
     }
 
-    const { data } = await airtableApi.post(`/${AIRTABLE_FARMERS_TABLE_ID}/listRecords`, {
+    const data = await listAllRecords(AIRTABLE_FARMERS_TABLE_ID, {
       filterByFormula: buildFpoFilter(fpoName || fpoId),
-      maxRecords: 100,
     });
 
     return res.json({ records: data.records || [] });
@@ -915,9 +923,7 @@ app.delete('/api/v1/farmers/:id', requireAuth, requireEditor, async (req, res) =
 
 app.get('/api/v1/crops', requireAuth, async (req, res) => {
   try {
-    const { data } = await airtableApi.post(`/${AIRTABLE_CROPS_TABLE_ID}/listRecords`, {
-      maxRecords: 1000,
-    });
+    const data = await listAllRecords(AIRTABLE_CROPS_TABLE_ID);
 
     return res.json({ records: data.records || [] });
   } catch (error) {
@@ -936,9 +942,7 @@ const AIRTABLE_VILLAGES_TABLE_ID = process.env.AIRTABLE_VILLAGES_TABLE_ID || 'tb
 
 app.get('/api/v1/villages', requireAuth, async (req, res) => {
   try {
-    const { data } = await airtableApi.post(`/${AIRTABLE_VILLAGES_TABLE_ID}/listRecords`, {
-      maxRecords: 1000,
-    });
+    const data = await listAllRecords(AIRTABLE_VILLAGES_TABLE_ID);
 
     return res.json({ records: data.records || [] });
   } catch (error) {
@@ -963,9 +967,8 @@ app.get('/api/v1/lands', requireAuth, async (req, res) => {
 
     const filter = buildLandsFilter(fpoId, fpoName);
     console.log('[Lands filter]', fpoId, fpoName, filter);
-    const { data } = await airtableApi.post(`/${AIRTABLE_LANDS_TABLE_ID}/listRecords`, {
+    const data = await listAllRecords(AIRTABLE_LANDS_TABLE_ID, {
       filterByFormula: filter,
-      maxRecords: 100,
     });
 
     console.log('[Lands result]', data.records?.length, data.error);
@@ -1062,9 +1065,7 @@ app.delete('/api/v1/lands/:id', requireAuth, requireEditor, async (req, res) => 
 
 app.get('/api/v1/seasons', requireAuth, async (req, res) => {
   try {
-    const { data } = await airtableApi.post(`/${AIRTABLE_SEASONS_TABLE_ID}/listRecords`, {
-      maxRecords: 100,
-    });
+    const data = await listAllRecords(AIRTABLE_SEASONS_TABLE_ID);
     return res.json({ records: data.records || [] });
   } catch (error) {
     console.error('/api/v1/seasons error:', error?.response?.data || error.message);
@@ -1092,9 +1093,7 @@ app.get('/api/v1/input-products', requireAuth, async (req, res) => {
       }
     }
 
-    const { data } = await airtableApi.post(`/${AIRTABLE_PRODUCTS_TABLE_ID}/listRecords`, {
-      maxRecords: 1000,
-    });
+    const data = await listAllRecords(AIRTABLE_PRODUCTS_TABLE_ID);
 
     let records = data.records || [];
     if (cropIds.length) {
@@ -1126,9 +1125,8 @@ app.get('/api/v1/input-orders', requireAuth, async (req, res) => {
     }
 
     const filter = buildOrdersFilter(fpoId, fpoName);
-    const { data } = await airtableApi.post(`/${AIRTABLE_ORDERS_TABLE_ID}/listRecords`, {
+    const data = await listAllRecords(AIRTABLE_ORDERS_TABLE_ID, {
       filterByFormula: filter,
-      maxRecords: 100,
     });
 
     return res.json({ records: data.records || [] });
@@ -1226,9 +1224,7 @@ app.delete('/api/v1/input-orders/:id', requireAuth, requireEditor, async (req, r
 
 app.get('/api/v1/loan-types', requireAuth, async (req, res) => {
   try {
-    const { data } = await airtableApi.post(`/${AIRTABLE_LOAN_TYPES_TABLE_ID}/listRecords`, {
-      maxRecords: 100,
-    });
+    const data = await listAllRecords(AIRTABLE_LOAN_TYPES_TABLE_ID);
     return res.json({ records: data.records || [] });
   } catch (error) {
     console.error('/api/v1/loan-types error:', error?.response?.data || error.message);
@@ -1251,9 +1247,8 @@ app.get('/api/v1/loans', requireAuth, async (req, res) => {
     }
 
     const filter = buildLoansFilter(fpoId, fpoName);
-    const { data } = await airtableApi.post(`/${AIRTABLE_LOANS_TABLE_ID}/listRecords`, {
+    const data = await listAllRecords(AIRTABLE_LOANS_TABLE_ID, {
       filterByFormula: filter,
-      maxRecords: 100,
     });
 
     return res.json({ records: data.records || [] });
@@ -1358,9 +1353,8 @@ app.get('/api/v1/payments', requireAuth, async (req, res) => {
     }
 
     const filter = buildPaymentsFilter(fpoId, fpoName);
-    const { data } = await airtableApi.post(`/${AIRTABLE_PAYMENTS_TABLE_ID}/listRecords`, {
+    const data = await listAllRecords(AIRTABLE_PAYMENTS_TABLE_ID, {
       filterByFormula: filter,
-      maxRecords: 100,
     });
 
     return res.json({ records: data.records || [] });
@@ -1458,9 +1452,7 @@ app.delete('/api/v1/payments/:id', requireAuth, requireEditor, async (req, res) 
 
 app.get('/api/v1/buyers', requireAuth, async (req, res) => {
   try {
-    const { data } = await airtableApi.post(`/${AIRTABLE_BUYERS_TABLE_ID}/listRecords`, {
-      maxRecords: 100,
-    });
+    const data = await listAllRecords(AIRTABLE_BUYERS_TABLE_ID);
     return res.json({ records: data.records || [] });
   } catch (error) {
     console.error('/api/v1/buyers error:', error?.response?.data || error.message);
@@ -1501,9 +1493,7 @@ app.post('/api/v1/buyers', requireAuth, requireEditor, async (req, res) => {
 
 app.get('/api/v1/inventory', requireAuth, async (req, res) => {
   try {
-    const { data } = await airtableApi.post(`/${AIRTABLE_INVENTORY_TABLE_ID}/listRecords`, {
-      maxRecords: 1000,
-    });
+    const data = await listAllRecords(AIRTABLE_INVENTORY_TABLE_ID);
     return res.json({ records: data.records || [] });
   } catch (error) {
     console.error('/api/v1/inventory error:', error?.response?.data || error.message);
@@ -1526,9 +1516,8 @@ app.get('/api/v1/sales-orders', requireAuth, async (req, res) => {
     }
 
     const filter = buildSalesOrdersFilter(fpoId, fpoName);
-    const { data } = await airtableApi.post(`/${AIRTABLE_SALES_ORDERS_TABLE_ID}/listRecords`, {
+    const data = await listAllRecords(AIRTABLE_SALES_ORDERS_TABLE_ID, {
       filterByFormula: filter,
-      maxRecords: 100,
     });
 
     return res.json({ records: data.records || [] });
