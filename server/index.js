@@ -292,6 +292,14 @@ app.post('/api/v1/auth/magic-link', async (req, res) => {
           'This app domain is not authorized in Firebase. Add it under Authentication → Settings → Authorized domains.',
       });
     }
+    const resendError = error?.response?.data;
+    if (String(resendError?.message || '').includes('resend.com/domains')) {
+      return res.status(502).json({
+        error: 'EMAIL_DOMAIN_NOT_VERIFIED',
+        message:
+          'RESEND_FROM must be on a verified domain — onboarding@resend.dev only delivers to the Resend account owner.',
+      });
+    }
     return res
       .status(500)
       .json({ error: 'EMAIL_FAILED', message: 'Failed to send the sign-in link.' });
