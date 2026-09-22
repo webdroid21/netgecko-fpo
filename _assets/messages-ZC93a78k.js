@@ -1,0 +1,1 @@
+const s={success:"语言已更改！",error:"更改语言时出错！",loading:"加载中..."},e={languageSwitch:s};export{e as default,s as languageSwitch};

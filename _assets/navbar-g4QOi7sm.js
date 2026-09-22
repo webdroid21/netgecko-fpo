@@ -1,0 +1,1 @@
+const r="App",s="NetGecko App",a="Awaka",n="Abalimi",t="Ettaka",o="Bisabibwa by'inputs",p="Loans",c="Ensasula",e="Okutunda",u={app:"App",subheader:s,home:a,farmers:n,lands:t,inputOrders:o,loans:p,payments:c,sales:e};export{r as app,u as default,n as farmers,a as home,o as inputOrders,t as lands,p as loans,c as payments,e as sales,s as subheader};

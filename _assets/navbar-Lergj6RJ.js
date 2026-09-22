@@ -1,0 +1,1 @@
+const t="Ứng dụng",n="Công việc",o="Người dùng",c="Du lịch",s="Hóa đơn",e={title:"Blog",caption:"Phím tắt tùy chỉnh."},a="NetGecko App",g={app:t,job:n,user:o,travel:c,invoice:s,blog:e,subheader:a};export{t as app,e as blog,g as default,s as invoice,n as job,a as subheader,c as travel,o as user};

@@ -1,0 +1,1 @@
+const e="应用",c="工作",n="用户",s="旅行",a="发票",o={title:"博客",caption:"自定义键盘快捷键。"},t="NetGecko App",p={app:"应用",job:"工作",user:"用户",travel:"旅行",invoice:"发票",blog:o,subheader:t};export{e as app,o as blog,p as default,a as invoice,c as job,t as subheader,s as travel,n as user};
