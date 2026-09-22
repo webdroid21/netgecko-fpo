@@ -347,7 +347,7 @@ export function OverviewAppView() {
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-      const isRecent = (record: any) => {
+      const recordDate = (record: any) => {
         const date =
           record.fields['Order date'] ||
           record.fields['Order Date'] ||
@@ -355,10 +355,13 @@ export function OverviewAppView() {
           record.fields['Payment Date'] ||
           record.fields['Date Received'] ||
           record.createdTime;
-        if (!date) return false;
-        const d = new Date(date);
-        return !Number.isNaN(d.getTime()) && d >= oneYearAgo;
+        const time = date ? new Date(date).getTime() : NaN;
+        return Number.isNaN(time) ? 0 : time;
       };
+
+      const isRecent = (record: any) => recordDate(record) >= oneYearAgo.getTime();
+
+      const byNewest = (a: any, b: any) => recordDate(b) - recordDate(a);
 
       const addFarmerLinks = (record: any, ids: Set<string>) => {
         const farmer = record.fields?.Farmer ?? record.fields?.Farmers;
@@ -410,9 +413,9 @@ export function OverviewAppView() {
         ),
         sales: sales.length,
         salesRevenue: sales.reduce((sum, s) => sum + (Number(s.fields['Total Price']) || 0), 0),
-        recentInputOrders: orders.slice(0, 5),
-        recentLoans: loans.slice(0, 5),
-        recentPayments: payments.slice(0, 5),
+        recentInputOrders: [...orders].sort(byNewest).slice(0, 5),
+        recentLoans: [...loans].sort(byNewest).slice(0, 5),
+        recentPayments: [...payments].sort(byNewest).slice(0, 5),
         memberStatus: {
           total: farmers.length,
           active,
