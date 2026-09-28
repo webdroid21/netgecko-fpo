@@ -38,3 +38,4 @@ tsconfig.tsbuildinfo
 *firebase-adminsdk*.json
 .vite/
 server/serviceAccount.json
+.env*

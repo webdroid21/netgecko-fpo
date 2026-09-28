@@ -1,0 +1,9 @@
+server/.env
+server/.env.*
+server/serviceAccount.json
+server/node_modules
+server/.vercel
+node_modules
+.env
+.env.local
+.vercel
