@@ -24,5 +24,6 @@
   "attachFile": "Attach file",
   "addFile": "Add file",
   "takePhoto": "Take photo",
-  "uploading": "Uploading…"
+  "uploading": "Uploading…",
+  "required": "Required"
 }

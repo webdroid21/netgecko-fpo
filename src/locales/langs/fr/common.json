@@ -21,5 +21,6 @@
   "attachFile": "Joindre un fichier",
   "addFile": "Ajouter un fichier",
   "uploading": "Envoi en cours…",
-  "takePhoto": "Prendre une photo"
+  "takePhoto": "Prendre une photo",
+  "required": "Obligatoire"
 }

@@ -32,9 +32,12 @@
     "givenName": "Given Name",
     "surname": "Surname",
     "gender": "Gender",
+    "genderFemale": "Female",
+    "genderMale": "Male",
     "birthDate": "Birth date",
     "age": "Age",
     "farmerCode": "Farmer Code",
+    "farmerCodeHelper": "Mandatory for some cooperatives",
     "nin": "National ID (NIN)",
     "farmerIdFrontBack": "Farmer ID (front back)",
     "phoneNumber": "Phone Number",
@@ -81,5 +84,16 @@
     "address": "Address",
     "membership": "Membership and Product",
     "workers": "Workers"
+  },
+  "form": {
+    "title": {
+      "new": "Enter new farmer data",
+      "edit": "Edit farmer"
+    },
+    "selectPlaceholder": "Select...",
+    "filesUploadedOnSave": "Files are uploaded when the farmer is saved",
+    "attachmentFallback": "Attachment",
+    "saveError": "Failed to save farmer",
+    "attachmentsFailed": "Farmer saved, but {{count}} attachment(s) failed to upload — add them again from the farmer page."
   }
 }

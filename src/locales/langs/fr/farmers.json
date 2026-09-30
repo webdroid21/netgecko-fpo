@@ -32,9 +32,12 @@
     "givenName": "Prénom",
     "surname": "Nom de famille",
     "gender": "Sexe",
+    "genderFemale": "Femme",
+    "genderMale": "Homme",
     "birthDate": "Date de naissance",
     "age": "Âge",
     "farmerCode": "Code agriculteur",
+    "farmerCodeHelper": "Obligatoire pour certaines coopératives",
     "nin": "ID national (NIN)",
     "farmerIdFrontBack": "Farmer ID (front back)",
     "phoneNumber": "Numéro de téléphone",
@@ -56,6 +59,7 @@
     "mainCropSoldHelper": "Obligatoire pour PayLater (prêt)",
     "volumeSeasonA": "Quantité vendue la saison A",
     "volumeSeasonB": "Quantité vendue la saison B",
+    "salesReceipts": "Reçus de ces ventes au Partenaire",
     "seasonalWorkers": "Nombre d’ouvriers saisonniers/tempora ires",
     "permanentWorkers": "Nombre d’ouvriers permanents",
     "landsCount": "Nombre de terres",
@@ -80,5 +84,16 @@
     "address": "Adresse",
     "membership": "Adhésion & produits",
     "workers": "Travailleurs"
+  },
+  "form": {
+    "title": {
+      "new": "Saisir les données du nouvel agriculteur",
+      "edit": "Modifier l'agriculteur"
+    },
+    "selectPlaceholder": "Sélectionner...",
+    "filesUploadedOnSave": "Les fichiers sont téléversés lors de l'enregistrement de l'agriculteur",
+    "attachmentFallback": "Pièce jointe",
+    "saveError": "Échec de l'enregistrement de l'agriculteur",
+    "attachmentsFailed": "Agriculteur enregistré, mais {{count}} pièce(s) jointe(s) n'ont pas pu être téléversées — ajoutez-les depuis la page de l'agriculteur."
   }
 }

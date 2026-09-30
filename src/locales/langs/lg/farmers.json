@@ -1,25 +1,25 @@
 {
   "page": {
     "title": "Abalimi",
-    "subtitle": "Register, update, view farmers records",
+    "subtitle": "Wandiika, kyusa, era olabe ebiwandiiko by'abalimi",
     "addFarmer": "Yongerako mulimi"
   },
   "summary": {
     "totalMembers": {
       "title": "Abalimi bonna",
-      "subtext": "{{percentage}}% women"
+      "subtext": "{{percentage}}% abakazi"
     },
     "activeFarmers": {
       "title": "Abalimi abakolamu",
-      "subtext": "{{percentage}}% women"
+      "subtext": "{{percentage}}% abakazi"
     },
     "pendingApproval": {
       "title": "Balindiriddwa okukakasebwa",
-      "subtext": "{{percentage}}% women"
+      "subtext": "{{percentage}}% abakazi"
     },
     "inactive": {
       "title": "Abatalina musomo",
-      "subtext": "{{percentage}}% women"
+      "subtext": "{{percentage}}% abakazi"
     }
   },
   "searchPlaceholder": "Noonya abalimi...",
@@ -32,18 +32,21 @@
     "givenName": "Erinnya erisooka",
     "surname": "Erinnya ery’omulembe",
     "gender": "Obutonde",
+    "genderFemale": "Omukazi",
+    "genderMale": "Omusajja",
     "birthDate": "Olunaku lw’okuzalibwa",
     "age": "Emyaaka",
     "farmerCode": "Akabonero ka mulimi",
+    "farmerCodeHelper": "Kyetaagisa ku koperative ezimu",
     "nin": "National ID (NIN)",
-    "farmerIdFrontBack": "Farmer ID (front back)",
+    "farmerIdFrontBack": "Kaadi y'omulimi (maso n'emabega)",
     "phoneNumber": "Ennamba y’essimu",
     "mobileMoneyNumber": "Ennamba ya Mobile Money",
     "verifiedMobileMoneyNumber": "Ennamba ya Mobile Money ekakasiddwa",
-    "verifiedMobileMoneyNote": "Number verified & used by NetGecko. Contact us to change it.",
+    "verifiedMobileMoneyNote": "Ennamba ekakasiddwa era ekozesebwa NetGecko. Tukwateko okugikyusa.",
     "email": "Email",
-    "address": "Address",
-    "addressNote": "Will appear once verified by NetGecko",
+    "address": "Eddereeva",
+    "addressNote": "Ejja kulabika ng'ekakasiddwa NetGecko",
     "addressHelper": "Londa ekyalo — parish, sub-county, district ne region bijjawo otomatikki",
     "village": "Kyalo",
     "parish": "Parish",
@@ -53,9 +56,10 @@
     "memberSince": "Bazzaayo obumemba okuva (ennaku)",
     "memberSinceYear": "Omwaka gw’atandika obumemba",
     "mainCropSold": "Ekikulu ky’atunda mu Partner",
-    "mainCropSoldHelper": "Mandatory for PayLater (loan)",
+    "mainCropSoldHelper": "Kyetaagisa ku PayLater (loan)",
     "volumeSeasonA": "Obungi obwatundiddwa mu kiseera A",
     "volumeSeasonB": "Obungi obwatundiddwa mu kiseera B",
+    "salesReceipts": "Risiti z'ebintu ebitundiddwa Partner",
     "seasonalWorkers": "# bakozi ba kiseera/ab’ekiseera",
     "permanentWorkers": "# bakozi abakkakkamu",
     "landsCount": "# ettaka",
@@ -80,5 +84,16 @@
     "address": "Eddereeva",
     "membership": "Obumemba n'ebilimo",
     "workers": "Abakozi"
+  },
+  "form": {
+    "title": {
+      "new": "Yingiza ebikwata ku mulimi omupya",
+      "edit": "Kyusa ebikwata ku mulimi"
+    },
+    "selectPlaceholder": "Londa...",
+    "filesUploadedOnSave": "Fayiro zitikka nga omulimi atedde",
+    "attachmentFallback": "Attachment",
+    "saveError": "Okutereka omulimi kuganye",
+    "attachmentsFailed": "Omulimi atedde, naye attachments {{count}} tezitikka — zongerako ku lupapula lw'omulimi."
   }
 }

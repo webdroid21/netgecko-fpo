@@ -438,7 +438,7 @@ export function FarmerView() {
       {
         key: 'gender',
         label: t('fields.gender'),
-        options: ['Male', 'Female'].map((g) => ({ value: g, label: g })),
+        options: ['Male', 'Female'].map((g) => ({ value: g, label: t(`fields.gender${g}`) })),
       },
       { key: 'village', label: t('fields.village') },
       { key: 'parish', label: t('fields.parish') },

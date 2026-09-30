@@ -4,7 +4,7 @@ import type { Farmer } from '../types';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Grid from '@mui/material/Grid';
@@ -26,6 +26,7 @@ import DialogContent from '@mui/material/DialogContent';
 import { uploadAttachment } from 'src/utils/upload-attachment';
 
 import axios from 'src/lib/axios';
+import { useTranslate } from 'src/locales';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
@@ -34,26 +35,27 @@ import { Form, Field } from 'src/components/hook-form';
 
 const GENDERS = ['Male', 'Female'];
 
-const schema = z.object({
-  'Given Name': z.string().min(1, { message: 'Required' }),
-  Surname: z.string().min(1, { message: 'Required' }),
-  'NIN (National Identification Number)': z.string().min(1, { message: 'Required' }),
-  'Farmer Code': z.string().optional(),
-  'Birth date': z.string().min(1, { message: 'Required' }),
-  Gender: z.string().min(1, { message: 'Required' }),
-  'Phone Number': z.string().min(1, { message: 'Required' }),
-  'Mobile Money Number': z.string().min(1, { message: 'Required' }),
-  Email: z.string().optional(),
-  Address: z.string().min(1, { message: 'Required' }),
-  'Member since (date)': z.string().min(1, { message: 'Required' }),
-  'Main product sold to Partner': z.string().optional(),
-  'Quantity sold last season A to Partner (units, kg, liter)': z.number().optional(),
-  'Quantity sold last season B to Partner (units, kg, liter)': z.number().optional(),
-  '# seasonal/temporary workers hired & paid by farmer': z.number().optional(),
-  '# permanent workers hired & paid by farmer': z.number().optional(),
-});
+const buildSchema = (required: string) =>
+  z.object({
+    'Given Name': z.string().min(1, { message: required }),
+    Surname: z.string().min(1, { message: required }),
+    'NIN (National Identification Number)': z.string().min(1, { message: required }),
+    'Farmer Code': z.string().optional(),
+    'Birth date': z.string().min(1, { message: required }),
+    Gender: z.string().min(1, { message: required }),
+    'Phone Number': z.string().min(1, { message: required }),
+    'Mobile Money Number': z.string().min(1, { message: required }),
+    Email: z.string().optional(),
+    Address: z.string().min(1, { message: required }),
+    'Member since (date)': z.string().min(1, { message: required }),
+    'Main product sold to Partner': z.string().optional(),
+    'Quantity sold last season A to Partner (units, kg, liter)': z.number().optional(),
+    'Quantity sold last season B to Partner (units, kg, liter)': z.number().optional(),
+    '# seasonal/temporary workers hired & paid by farmer': z.number().optional(),
+    '# permanent workers hired & paid by farmer': z.number().optional(),
+  });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 // ----------------------------------------------------------------------
 
@@ -114,12 +116,17 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: FarmerFormDialogProps) {
+  const { t } = useTranslate('farmers');
+  const { t: tCommon } = useTranslate('common');
+
   const isEdit = Boolean(farmer);
   const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('md'));
   const [crops, setCrops] = useState<{ id: string; name: string }[]>([]);
   const [villages, setVillages] = useState<VillageRecord[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [pendingReceipts, setPendingReceipts] = useState<File[]>([]);
+
+  const schema = useMemo(() => buildSchema(tCommon('required')), [tCommon]);
 
   const methods = useForm<FormValues>({
     defaultValues: getDefaultValues(farmer),
@@ -268,14 +275,12 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
       onSaved?.(response?.data?.record);
       onClose();
       if (failedUploads) {
-        toast.error(
-          `Farmer saved, but ${failedUploads} attachment${failedUploads > 1 ? 's' : ''} failed to upload — add them again from the farmer page.`
-        );
+        toast.error(t('form.attachmentsFailed', { count: failedUploads }));
       }
     } catch (error: any) {
       console.error('Farmer save error:', error?.response?.data || error?.message);
       const message =
-        error?.response?.data?.message || error?.message || 'Failed to save farmer';
+        error?.response?.data?.message || error?.message || t('form.saveError');
       alert(message);
     }
   });
@@ -301,7 +306,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
               variant="body2"
               sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
             >
-              {a.filename || 'Attachment'}
+              {a.filename || t('form.attachmentFallback')}
             </MuiLink>
           ))}
         </Stack>
@@ -325,7 +330,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
           component="label"
           startIcon={<Iconify icon={'solar:camera-bold' as any} width={16} />}
         >
-          Take photo
+          {tCommon('takePhoto')}
           <input
             type="file"
             accept="image/*"
@@ -344,7 +349,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
           component="label"
           startIcon={<Iconify icon={'solar:upload-bold' as any} width={16} />}
         >
-          Attach file
+          {tCommon('attachFile')}
           <input
             type="file"
             accept="image/*,application/pdf"
@@ -359,7 +364,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
         </Button>
       </Stack>
       <Typography variant="caption" sx={{ color: 'text.disabled', display: 'block' }}>
-        Files are uploaded when the farmer is saved
+        {t('form.filesUploadedOnSave')}
       </Typography>
     </>
   );
@@ -368,38 +373,40 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
     <Form methods={methods} onSubmit={onSubmit}>
       <DialogContent dividers>
           <Grid container spacing={2}>
-            <SectionHeader title="Identity" />
+            <SectionHeader title={t('sections.identity')} />
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text required name="Given Name" label="Given Name" />
+              <Field.Text required name="Given Name" label={t('fields.givenName')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text required name="Surname" label="Surname" />
+              <Field.Text required name="Surname" label={t('fields.surname')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text required name="NIN (National Identification Number)" label="NIN" />
+              <Field.Text required name="NIN (National Identification Number)" label={t('fields.nin')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Farmer Code" label="Farmer Code" helperText="Mandatory for some cooperatives" />
+              <Field.Text name="Farmer Code" label={t('fields.farmerCode')} helperText={t('fields.farmerCodeHelper')} />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.DatePicker
                 name="Birth date"
-                label="Birth date"
+                label={t('fields.birthDate')}
                 slotProps={{ textField: { required: true } }}
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Select required name="Gender" label="Gender">
-                <MenuItem value="">Select...</MenuItem>
+              <Field.Select required name="Gender" label={t('fields.gender')}>
+                <MenuItem value="">
+                  <em>{t('form.selectPlaceholder')}</em>
+                </MenuItem>
                 {GENDERS.map((g) => (
                   <MenuItem key={g} value={g}>
-                    {g}
+                    {t(`fields.gender${g}`)}
                   </MenuItem>
                 ))}
               </Field.Select>
@@ -407,66 +414,66 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
 
             <Grid size={{ xs: 12 }}>
               {renderAttachmentBlock(
-                'Farmer ID (front back)',
+                t('fields.farmerIdFrontBack'),
                 existingAttachments,
                 pendingFiles,
                 setPendingFiles
               )}
             </Grid>
 
-            <SectionHeader title="Contact" />
+            <SectionHeader title={t('sections.contact')} />
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text required name="Phone Number" label="Phone Number" placeholder="256xxxxxxxxx" />
+              <Field.Text required name="Phone Number" label={t('fields.phoneNumber')} placeholder="256xxxxxxxxx" />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 required
                 name="Mobile Money Number"
-                label="Mobile Money Number"
+                label={t('fields.mobileMoneyNumber')}
                 placeholder="256xxxxxxxxx"
               />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <Field.Text name="Email" label="Email" />
+              <Field.Text name="Email" label={t('fields.email')} />
             </Grid>
 
-            <SectionHeader title="Address" />
+            <SectionHeader title={t('sections.address')} />
 
             <Grid size={{ xs: 12 }}>
               {renderAutocomplete(
                 'Address',
-                'Village',
+                t('fields.village'),
                 villages.map((v) => ({ value: v.id, label: v.summary || v.village || v.id })),
                 true,
-                'Parish, sub-county, district and region are filled in automatically'
+                t('fields.addressHelper')
               )}
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth size="small" label="Parish" value={derived.parish} disabled />
+              <TextField fullWidth size="small" label={t('fields.parish')} value={derived.parish} disabled />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth size="small" label="Sub-county" value={derived.subCounty} disabled />
+              <TextField fullWidth size="small" label={t('fields.subCounty')} value={derived.subCounty} disabled />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth size="small" label="District" value={derived.district} disabled />
+              <TextField fullWidth size="small" label={t('fields.district')} value={derived.district} disabled />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth size="small" label="Region" value={derived.region} disabled />
+              <TextField fullWidth size="small" label={t('fields.region')} value={derived.region} disabled />
             </Grid>
 
-            <SectionHeader title="Membership and Product" />
+            <SectionHeader title={t('sections.membership')} />
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.DatePicker
                 name="Member since (date)"
-                label="Member since (date)"
+                label={t('fields.memberSince')}
                 slotProps={{ textField: { required: true } }}
               />
             </Grid>
@@ -474,10 +481,10 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
             <Grid size={{ xs: 12, md: 6 }}>
               {renderAutocomplete(
                 'Main product sold to Partner',
-                'Main product sold to partner',
+                t('fields.mainCropSold'),
                 crops.map((crop) => ({ value: crop.id, label: crop.name })),
                 false,
-                'Mandatory for PayLater (loan)'
+                t('fields.mainCropSoldHelper')
               )}
             </Grid>
 
@@ -485,8 +492,8 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
               <Field.Text
                 type="number"
                 name="Quantity sold last season A to Partner (units, kg, liter)"
-                label="Quantity sold last season A to Partner"
-                helperText="Mandatory for PayLater (loan)"
+                label={t('fields.volumeSeasonA')}
+                helperText={t('fields.mainCropSoldHelper')}
               />
             </Grid>
 
@@ -494,27 +501,27 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
               <Field.Text
                 type="number"
                 name="Quantity sold last season B to Partner (units, kg, liter)"
-                label="Quantity sold last season B to Partner"
-                helperText="Mandatory for PayLater (loan)"
+                label={t('fields.volumeSeasonB')}
+                helperText={t('fields.mainCropSoldHelper')}
               />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
               {renderAttachmentBlock(
-                'Receipts of these sales to Partner',
+                t('fields.salesReceipts'),
                 existingReceipts,
                 pendingReceipts,
                 setPendingReceipts
               )}
             </Grid>
 
-            <SectionHeader title="Workers" />
+            <SectionHeader title={t('sections.workers')} />
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Field.Text
                 type="number"
                 name="# seasonal/temporary workers hired & paid by farmer"
-                label="# seasonal/temporary workers hired & paid by farmer"
+                label={t('fields.seasonalWorkers')}
               />
             </Grid>
 
@@ -522,7 +529,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
               <Field.Text
                 type="number"
                 name="# permanent workers hired & paid by farmer"
-                label="# permanent workers hired & paid by farmer"
+                label={t('fields.permanentWorkers')}
               />
             </Grid>
           </Grid>
@@ -530,10 +537,10 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
 
         <DialogActions>
           <Button onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            Save
+            {tCommon('save')}
           </LoadingButton>
         </DialogActions>
       </Form>
@@ -541,7 +548,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={fullScreen}>
-      <DialogTitle>{isEdit ? 'Edit farmer' : 'Enter new farmer data'}</DialogTitle>
+      <DialogTitle>{isEdit ? t('form.title.edit') : t('form.title.new')}</DialogTitle>
       {form}
     </Dialog>
   );
