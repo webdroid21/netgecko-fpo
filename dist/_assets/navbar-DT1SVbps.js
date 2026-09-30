@@ -1,0 +1,1 @@
+const s="Application",t="NetGecko App",n="Accueil",e="Agriculteurs",a="Parcelles",c="Commandes d’intrants",o="Prêts",r="Paiements",l="Ventes",p={app:s,subheader:t,home:n,farmers:e,lands:a,inputOrders:c,loans:o,payments:r,sales:l};export{s as app,p as default,e as farmers,n as home,c as inputOrders,a as lands,o as loans,r as payments,l as sales,t as subheader};
