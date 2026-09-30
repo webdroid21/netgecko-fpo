@@ -1,6 +1,9 @@
 {
   "title": "Aperçu du partenaire",
   "welcome": "Bon retour",
+  "welcomeBannerText1": "Bienvenue sur NetGecko App — Augmentez la productivité agricole, développez votre activité et accroissez les revenus des agriculteurs en utilisant",
+  "welcomeBannerLink": "le service NetGecko",
+  "welcomeBannerText2": "et en numérisant vos opérations",
   "activeFarmers": "Agriculteurs actifs",
   "verifiedMembers": "{count} membres vérifiés",
   "numberOfLands": "Nombre de parcelles",

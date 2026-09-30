@@ -1,6 +1,9 @@
 {
   "title": "Okulabirira Partner",
   "welcome": "Tukwanirizzaeyo",
+  "welcomeBannerText1": "Tukwanirizza ku NetGecko App - Yambula okulima, gaziya bizinensi yo era oyongere ensimbi z'abalimi nga okozesa",
+  "welcomeBannerLink": "NetGecko service",
+  "welcomeBannerText2": "era nga ofuula emirimu gyo ebya digito",
   "activeFarmers": "Abalimi abakolamu",
   "verifiedMembers": "{count} bamemba abakakase",
   "numberOfLands": "Obungi bw'ettaka",

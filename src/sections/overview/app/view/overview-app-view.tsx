@@ -463,8 +463,7 @@ export function OverviewAppView() {
             }}
           >
             <Typography variant="h5" fontWeight={600} sx={{ lineHeight: 1.6, maxWidth: 960 }}>
-              Welcome to NetGecko App - Boost farm productivity, grow your business and increase
-              farmers&rsquo; incomes by using{' '}
+              {t('welcomeBannerText1')}{' '}
               <MuiLink
                 href="https://www.netgecko.net"
                 target="_blank"
@@ -473,9 +472,9 @@ export function OverviewAppView() {
                 underline="always"
                 sx={{ fontWeight: 700 }}
               >
-                NetGecko service
+                {t('welcomeBannerLink')}
               </MuiLink>{' '}
-              and digitizing your operations
+              {t('welcomeBannerText2')}
             </Typography>
           </Box>
         </Grid>
