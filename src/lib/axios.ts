@@ -42,8 +42,34 @@ axiosInstance.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Airtable computed fields that fail (formula/lookup NaN, errors, Infinity)
+// come back as sentinel objects like {"specialValue": "NaN"}. Rendering one
+// crashes React with error #31 — normalize them to null so views show blank.
+const isSpecialValue = (v: any): boolean => {
+  if (v == null || typeof v !== 'object' || Array.isArray(v)) return false;
+  const keys = Object.keys(v);
+  return keys.length === 1 && keys[0].toLowerCase() === 'specialvalue';
+};
+
+const sanitizeSpecialValues = (value: any): any => {
+  if (isSpecialValue(value)) return null;
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i += 1) value[i] = sanitizeSpecialValues(value[i]);
+  } else if (value != null && typeof value === 'object') {
+    Object.keys(value).forEach((k) => {
+      value[k] = sanitizeSpecialValues(value[k]);
+    });
+  }
+  return value;
+};
+
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data != null && typeof response.data === 'object') {
+      response.data = sanitizeSpecialValues(response.data);
+    }
+    return response;
+  },
   async (error) => {
     const original = error?.config as (InternalAxiosRequestConfig & { __retried?: boolean }) | undefined;
 
