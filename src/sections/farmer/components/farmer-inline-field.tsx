@@ -34,6 +34,9 @@ type InlineEditFieldProps = {
   options?: SelectOption[];
   /** Render the select as a searchable autocomplete for long option lists. */
   searchable?: boolean;
+  /** Server-driven search — parent refetches `options` for each query. */
+  onSearchOptions?: (query: string) => void;
+  optionsLoading?: boolean;
   arrayValue?: boolean;
   readOnly?: boolean;
   required?: boolean;
@@ -51,6 +54,8 @@ export function InlineEditField({
   type = 'text',
   options,
   searchable,
+  onSearchOptions,
+  optionsLoading,
   arrayValue,
   readOnly,
   required,
@@ -169,6 +174,7 @@ export function InlineEditField({
         typeof option === 'string' ? { value: option, label: option } : option
       );
       if (searchable) {
+        const asyncSearch = typeof onSearchOptions === 'function';
         return (
           <Autocomplete
             size="small"
@@ -177,6 +183,15 @@ export function InlineEditField({
             value={normalized.find((o) => o.value === draft) ?? null}
             getOptionLabel={(option) => option.label}
             isOptionEqualToValue={(a, b) => a.value === b.value}
+            filterOptions={asyncSearch ? (opts) => opts : undefined}
+            onInputChange={
+              asyncSearch
+                ? (_e, inputValue, reason) => {
+                    if (reason === 'input') onSearchOptions(inputValue);
+                  }
+                : undefined
+            }
+            loading={optionsLoading}
             onChange={(_e, option) => {
               const next = option?.value ?? '';
               setDraft(next);

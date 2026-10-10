@@ -630,6 +630,9 @@ function buildFpoFilter(fpoName) {
   return `SEARCH('${escaped}', ARRAYJOIN({Name (from FPO)}, ',')) > 0`;
 }
 
+// Farmers' link to FPOs is named differently across bases (prod: FPO).
+const FARMER_FPO_FIELD = process.env.AIRTABLE_FARMER_FPO_FIELD || 'FPO';
+
 function toAirtableFields(input, fpoId) {
   const fields = { ...input };
 
@@ -639,7 +642,7 @@ function toAirtableFields(input, fpoId) {
   }
 
   if (fpoId) {
-    fields.Partner = [fpoId];
+    fields[FARMER_FPO_FIELD] = [fpoId];
   }
 
   return fields;
@@ -952,7 +955,29 @@ const AIRTABLE_VILLAGES_TABLE_ID = process.env.AIRTABLE_VILLAGES_TABLE_ID || 'tb
 
 app.get('/api/v1/villages', requireAuth, async (req, res) => {
   try {
-    const data = await listAllRecords(AIRTABLE_VILLAGES_TABLE_ID);
+    const id = String(req.query.id || '').trim();
+    const q = String(req.query.q || '').trim();
+
+    // Edit forms resolve the currently linked village by record id.
+    if (id) {
+      const { data } = await airtableApi.get(`/${AIRTABLE_VILLAGES_TABLE_ID}/${id}`);
+      return res.json({ records: [data] });
+    }
+
+    // The table lists every village in the country — far too large to send
+    // wholesale. Require a search term and cap the results.
+    if (q.length < 2) {
+      return res.json({ records: [] });
+    }
+
+    const escaped = q.toLowerCase().replace(/'/g, "''");
+    const { data } = await airtableApi.post(`/${AIRTABLE_VILLAGES_TABLE_ID}/listRecords`, {
+      // Airtable SEARCH is case-sensitive in practice — normalise both sides.
+      filterByFormula: `SEARCH(LOWER('${escaped}'), LOWER({Summary})) > 0`,
+      sort: [{ field: 'Summary', direction: 'asc' }],
+      maxRecords: 50,
+      fields: ['Village Name', 'Parish Name', 'Sub-County Name', 'District Name', 'Region', 'Summary'],
+    });
 
     return res.json({ records: data.records || [] });
   } catch (error) {

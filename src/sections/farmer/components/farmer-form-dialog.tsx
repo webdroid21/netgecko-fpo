@@ -3,6 +3,7 @@ import type { Farmer } from '../types';
 
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { debounce } from 'es-toolkit';
 import { useForm } from 'react-hook-form';
 import { useMemo, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -122,7 +123,8 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
   const isEdit = Boolean(farmer);
   const fullScreen = useMediaQuery((theme) => theme.breakpoints.down('md'));
   const [crops, setCrops] = useState<{ id: string; name: string }[]>([]);
-  const [villages, setVillages] = useState<VillageRecord[]>([]);
+  const [villageOptions, setVillageOptions] = useState<VillageRecord[]>([]);
+  const [villageLoading, setVillageLoading] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [pendingReceipts, setPendingReceipts] = useState<File[]>([]);
 
@@ -146,7 +148,8 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
     label: string,
     options: { value: string; label: string }[],
     required?: boolean,
-    helperText?: string
+    helperText?: string,
+    autocompleteProps?: Record<string, any>
   ) => (
     <Field.Autocomplete
       name={name}
@@ -157,11 +160,12 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
       value={options.find((o) => o.value === watch(name)) ?? null}
       onChange={(_e: any, opt: any) => setValue(name, opt?.value ?? '', { shouldValidate: true })}
       slotProps={{ textField: { required, helperText } }}
+      {...autocompleteProps}
     />
   );
 
   const selectedAddress = watch('Address');
-  const selectedVillage = villages.find((v) => v.id === selectedAddress);
+  const selectedVillage = villageOptions.find((v) => v.id === selectedAddress);
 
   // Derived address parts come from the Village/Parish table when a link is
   // picked, otherwise fall back to the farmer's legacy free-text values.
@@ -200,23 +204,41 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
       )
       .catch(() => setCrops([]));
 
-    axios
-      .get('/api/v1/villages')
-      .then(({ data }) =>
-        setVillages(
-          (data.records || []).map((v: any) => ({
-            id: v.id,
-            village: v.fields['Village Name'],
-            parish: v.fields['Parish Name'],
-            subCounty: v.fields['Sub-County Name'],
-            district: v.fields['District Name'],
-            region: v.fields.Region,
-            summary: v.fields.Summary,
-          }))
-        )
-      )
-      .catch(() => setVillages([]));
+    setVillageOptions([]);
   }, [open, farmer, reset]);
+
+  // Villages are searched server-side — the table holds every village in the
+  // country, far too many to download or render at once.
+  const searchVillages = useMemo(
+    () =>
+      debounce((query: string) => {
+        const q = query.trim();
+        if (q.length < 2) {
+          setVillageOptions([]);
+          setVillageLoading(false);
+          return;
+        }
+        setVillageLoading(true);
+        axios
+          .get('/api/v1/villages', { params: { q } })
+          .then(({ data }) =>
+            setVillageOptions(
+              (data.records || []).map((v: any) => ({
+                id: v.id,
+                village: v.fields['Village Name'],
+                parish: v.fields['Parish Name'],
+                subCounty: v.fields['Sub-County Name'],
+                district: v.fields['District Name'],
+                region: v.fields.Region,
+                summary: v.fields.Summary,
+              }))
+            )
+          )
+          .catch(() => setVillageOptions([]))
+          .finally(() => setVillageLoading(false));
+      }, 300),
+    []
+  );
 
   // Uploads straight to Airtable, in parallel; returns how many files
   // failed so the caller can warn without losing the saved farmer.
@@ -235,7 +257,7 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
 
     // Village/Parish record drives the Address link and keeps the legacy
     // text fields in sync.
-    const village = villages.find((v) => v.id === data.Address);
+    const village = villageOptions.find((v) => v.id === data.Address);
     if (village) {
       payload.Address = [village.id];
       payload.Village = village.village;
@@ -446,9 +468,39 @@ export function FarmerFormDialog({ open, farmer, fpoId, onClose, onSaved }: Farm
               {renderAutocomplete(
                 'Address',
                 t('fields.village'),
-                villages.map((v) => ({ value: v.id, label: v.summary || v.village || v.id })),
+                [
+                  ...(selectedAddress
+                    ? [
+                        {
+                          value: selectedAddress,
+                          label:
+                            selectedVillage?.summary ||
+                            selectedVillage?.village ||
+                            lookup('Summary (from Address)') ||
+                            lookup('Village Name') ||
+                            lf?.Village ||
+                            selectedAddress,
+                        },
+                      ]
+                    : []),
+                  ...villageOptions
+                    .filter((v) => v.id !== selectedAddress)
+                    .map((v) => ({ value: v.id, label: v.summary || v.village || v.id })),
+                ],
                 true,
-                t('fields.addressHelper')
+                t('fields.addressHelper'),
+                {
+                  loading: villageLoading,
+                  filterOptions: (opts: any) => opts,
+                  onInputChange: (_e: any, value: string, reason: string) => {
+                    if (reason === 'input') searchVillages(value);
+                    if (reason === 'clear') {
+                      setVillageOptions([]);
+                      setVillageLoading(false);
+                    }
+                  },
+                  noOptionsText: t('form.typeToSearchVillage'),
+                }
               )}
             </Grid>
 

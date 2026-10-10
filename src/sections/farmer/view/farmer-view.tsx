@@ -12,6 +12,7 @@ type Crop = {
 
 import type { ListFilterField, ListFilterValues } from 'src/components/list-filters';
 
+import { debounce } from 'es-toolkit';
 import { useMemo, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
@@ -312,14 +313,29 @@ export function FarmerView() {
     fetchCrops();
   }, [fetchCrops]);
 
-  const [villages, setVillages] = useState<{ id: string; fields: Record<string, any> }[]>([]);
+  const [villageOptions, setVillageOptions] = useState<{ id: string; fields: Record<string, any> }[]>([]);
+  const [villageLoading, setVillageLoading] = useState(false);
 
-  useEffect(() => {
-    axios
-      .get('/api/v1/villages')
-      .then(({ data }) => setVillages(data.records || []))
-      .catch(() => setVillages([]));
-  }, []);
+  // Villages are searched server-side — the table holds every village in the
+  // country, far too many to download on page load.
+  const searchVillages = useMemo(
+    () =>
+      debounce((query: string) => {
+        const q = query.trim();
+        if (q.length < 2) {
+          setVillageOptions([]);
+          setVillageLoading(false);
+          return;
+        }
+        setVillageLoading(true);
+        axios
+          .get('/api/v1/villages', { params: { q } })
+          .then(({ data }) => setVillageOptions(data.records || []))
+          .catch(() => setVillageOptions([]))
+          .finally(() => setVillageLoading(false));
+      }, 300),
+    []
+  );
 
   const cropSelectOptions = useMemo(
     () =>
@@ -965,10 +981,29 @@ export function FarmerView() {
                 type="select"
                 searchable
                 required
-                options={villages.map((v) => ({
-                  value: v.id,
-                  label: String(v.fields.Summary ?? v.fields['Village Name'] ?? v.id),
-                }))}
+                options={[
+                  ...(Array.isArray(f.Address) && f.Address[0]
+                    ? [
+                        {
+                          value: f.Address[0],
+                          label: String(
+                            f['Summary (from Address)']?.[0] ??
+                              f['Village Name']?.[0] ??
+                              f.Village ??
+                              f.Address[0]
+                          ),
+                        },
+                      ]
+                    : []),
+                  ...villageOptions
+                    .filter((v) => v.id !== f.Address?.[0])
+                    .map((v) => ({
+                      value: v.id,
+                      label: String(v.fields.Summary ?? v.fields['Village Name'] ?? v.id),
+                    })),
+                ]}
+                onSearchOptions={searchVillages}
+                optionsLoading={villageLoading}
                 arrayValue
                 helperText={t('fields.addressHelper')}
                 onSaved={handleFieldSaved}

@@ -47,7 +47,7 @@
     "email": "E-mail",
     "address": "Adresse",
     "addressNote": "Sera affiché une fois vérifié par NetGecko",
-    "addressHelper": "Sélectionnez le village — paroisse, sous-comté, district et région sont remplis automatiquement",
+    "addressHelper": "Tapez pour rechercher le village — paroisse, sous-comté, district et région sont remplis automatiquement",
     "village": "Village",
     "parish": "Paroisse",
     "subCounty": "Sous-comté",
@@ -94,6 +94,7 @@
     "filesUploadedOnSave": "Les fichiers sont téléversés lors de l'enregistrement de l'agriculteur",
     "attachmentFallback": "Pièce jointe",
     "saveError": "Échec de l'enregistrement de l'agriculteur",
-    "attachmentsFailed": "Agriculteur enregistré, mais {{count}} pièce(s) jointe(s) n'ont pas pu être téléversées — ajoutez-les depuis la page de l'agriculteur."
+    "attachmentsFailed": "Agriculteur enregistré, mais {{count}} pièce(s) jointe(s) n'ont pas pu être téléversées — ajoutez-les depuis la page de l'agriculteur.",
+    "typeToSearchVillage": "Tapez au moins 2 caractères pour rechercher un village"
   }
 }

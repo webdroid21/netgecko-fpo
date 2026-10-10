@@ -47,7 +47,7 @@
     "email": "Email",
     "address": "Eddereeva",
     "addressNote": "Ejja kulabika ng'ekakasiddwa NetGecko",
-    "addressHelper": "Londa ekyalo — parish, sub-county, district ne region bijjawo otomatikki",
+    "addressHelper": "Wandika okunoonya ekyalo — parish, sub-county, district ne region bijjawo otomatikki",
     "village": "Kyalo",
     "parish": "Parish",
     "subCounty": "Sub-county",
@@ -94,6 +94,7 @@
     "filesUploadedOnSave": "Fayiro zitikka nga omulimi atedde",
     "attachmentFallback": "Attachment",
     "saveError": "Okutereka omulimi kuganye",
-    "attachmentsFailed": "Omulimi atedde, naye attachments {{count}} tezitikka — zongerako ku lupapula lw'omulimi."
+    "attachmentsFailed": "Omulimi atedde, naye attachments {{count}} tezitikka — zongerako ku lupapula lw'omulimi.",
+    "typeToSearchVillage": "Wandika aba'nnukaga 2 oba okusingawo okunoonya ekyalo"
   }
 }

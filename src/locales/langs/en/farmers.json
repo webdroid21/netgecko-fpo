@@ -47,7 +47,7 @@
     "email": "Email",
     "address": "Address",
     "addressNote": "Will appear once verified by NetGecko",
-    "addressHelper": "Select the village — parish, sub-county, district and region are filled in automatically",
+    "addressHelper": "Type to search villages — parish, sub-county, district and region are filled in automatically",
     "village": "Village",
     "parish": "Parish",
     "subCounty": "Sub-county",
@@ -94,6 +94,7 @@
     "filesUploadedOnSave": "Files are uploaded when the farmer is saved",
     "attachmentFallback": "Attachment",
     "saveError": "Failed to save farmer",
-    "attachmentsFailed": "Farmer saved, but {{count}} attachment(s) failed to upload — add them again from the farmer page."
+    "attachmentsFailed": "Farmer saved, but {{count}} attachment(s) failed to upload — add them again from the farmer page.",
+    "typeToSearchVillage": "Type at least 2 characters to search villages"
   }
 }
