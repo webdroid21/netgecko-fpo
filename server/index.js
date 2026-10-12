@@ -2113,6 +2113,33 @@ app.all('/api/v1/jobs/send-sms', async (req, res) => {
   }
 });
 
+// Ops-only schema listing — same auth as the job endpoint. Used to
+// diagnose client-side Airtable renames (tables/fields change names and
+// ids are not knowable from the UI).
+app.get('/api/v1/jobs/meta-tables', async (req, res) => {
+  const auth = String(req.headers.authorization || '');
+  if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
+    return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid cron secret.' });
+  }
+  try {
+    const { data } = await airtableApi.get(
+      `https://api.airtable.com/v0/meta/bases/${AIRTABLE_BASE_ID}/tables`
+    );
+    const tables = (data.tables || []).map((t) => ({
+      id: t.id,
+      name: t.name,
+      fields: (t.fields || []).map((f) => `${f.name} (${f.type})`),
+    }));
+    return res.json({ tables });
+  } catch (error) {
+    console.error('/api/v1/jobs/meta-tables error:', error?.response?.data || error.message);
+    return res.status(500).json({
+      error: 'META_FAILED',
+      message: error?.response?.data?.error?.message || error.message,
+    });
+  }
+});
+
 // ----------------------------------------------------------------------
 // Admin SMS management — NetGecko Admin only, powers the /dashboard/sms page.
 
