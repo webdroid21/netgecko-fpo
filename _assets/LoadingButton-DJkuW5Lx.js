@@ -1,2 +1,0 @@
-import{r,j as e,e as a}from"./index-CVtUIqKO.js";let t=!1;const i=()=>{t||(console.warn(["MUI: The LoadingButton component functionality is now part of the Button component from Material UI.","","You should use `import Button from '@mui/material/Button'`","or `import { Button } from '@mui/material'`"].join(`
-`)),t=!0)},m=r.forwardRef(function(o,n){return i(),e.jsx(a,{ref:n,...o})});export{m as L};
