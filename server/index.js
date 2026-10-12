@@ -1013,6 +1013,7 @@ function isTableNotFound(error) {
   return (
     error?.response?.status === 404 ||
     type === 'TABLE_NOT_FOUND' ||
+    type === 'INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND' ||
     /could not find table|table not found|does not exist/i.test(msg)
   );
 }
