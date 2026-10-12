@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/v1/jobs/send-sms",
+      "schedule": "0 4 * * *"
+    }
+  ]
+}

@@ -342,6 +342,21 @@ const OTP_TTL_MS = 5 * 60 * 1000;
 const OTP_RESEND_MS = 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
 
+// Shared Africa's Talking sender — OTP codes and the scheduled loan SMS job.
+async function sendAtSms(to, message) {
+  const form = new URLSearchParams({ username: AT_USERNAME, to, message });
+  if (AT_SENDER_ID) form.set('from', AT_SENDER_ID);
+
+  const { data } = await axios.post('https://api.africastalking.com/version1/messaging', form.toString(), {
+    headers: {
+      apiKey: AT_API_KEY,
+      Accept: 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+  return { status: data?.SMSMessageData?.Recipients?.[0]?.status, raw: data };
+}
+
 // Best-effort in-memory throttles only — resetting on cold start is acceptable
 // because expiry and code correctness are enforced inside the signed token.
 const otpLastSentAt = new Map(); // e164 -> timestamp
@@ -400,26 +415,10 @@ app.post('/api/v1/auth/phone/request-otp', async (req, res) => {
 
     const code = String(crypto.randomInt(100000, 1000000));
 
-    const form = new URLSearchParams({
-      username: AT_USERNAME,
-      to: e164,
-      message: `Your NetGecko sign-in code is ${code}. It expires in 5 minutes.`,
-    });
-    if (AT_SENDER_ID) form.set('from', AT_SENDER_ID);
-
-    const { data } = await axios.post(
-      'https://api.africastalking.com/version1/messaging',
-      form.toString(),
-      {
-        headers: {
-          apiKey: AT_API_KEY,
-          Accept: 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
+    const { status: smsStatus } = await sendAtSms(
+      e164,
+      `Your NetGecko sign-in code is ${code}. It expires in 5 minutes.`
     );
-
-    const smsStatus = data?.SMSMessageData?.Recipients?.[0]?.status;
     if (smsStatus && !String(smsStatus).startsWith('Success')) {
       return res
         .status(400)
@@ -1702,6 +1701,278 @@ app.post('/api/v1/:resource/:id/attachments', requireAuth, requireEditor, async 
 // ----------------------------------------------------------------------
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// ----------------------------------------------------------------------
+// Scheduled loan SMS
+//
+// The Airtable `SMS` table holds the rules (trigger text + Luganda message
+// template + loan type). Each loan carries `SMS N` (sent message) and
+// `SMS N date` (send timestamp) fields — used both as the audit trail and
+// for deduplication, so a one-shot rule never fires twice on the same loan
+// and the weekly overdue rule fires at most once per day.
+// ----------------------------------------------------------------------
+
+const AIRTABLE_SMS_TABLE_ID = process.env.AIRTABLE_SMS_TABLE_ID || 'tblpQLSLnjSX9fv7M';
+const CRON_SECRET = process.env.CRON_SECRET || '';
+
+// All timestamps compared in East Africa Time (UTC+3).
+const EAT_OFFSET_MS = 3 * 60 * 60 * 1000;
+const todayEAT = () => new Date(Date.now() + EAT_OFFSET_MS).toISOString().slice(0, 10);
+const asDay = (v) => {
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+};
+const addDays = (day, n) => {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const daysBetween = (from, to) => Math.round((new Date(`${to}T00:00:00Z`) - new Date(`${from}T00:00:00Z`)) / 86400000);
+const firstVal = (v) => (Array.isArray(v) ? v[0] : v);
+
+const SMS_LOAN_FIELDS = [
+  'Loan Status',
+  'Loan Type',
+  'Issue Date',
+  'Repayment Due Date',
+  'Last Payment Date',
+  'Total Amount Pending',
+  'Penalty per week',
+  'Verified Mobile Money Number',
+  'Phone Number',
+  'Farmer',
+  'Farmers',
+  'FPO',
+  'FPO Full Name',
+  ...Array.from({ length: 20 }, (_, i) => `SMS ${i + 1}`),
+  ...Array.from({ length: 20 }, (_, i) => `SMS ${i + 1} date`),
+];
+
+// Map the human-readable rule row into an executable trigger.
+function parseSmsRule(fields) {
+  const name = String(fields.Name || '');
+  const idx = name.match(/sms\s*(\d+)/i);
+  if (!idx) return null;
+
+  const what = String(fields['Trigger (What)'] || '').toLowerCase();
+  const when = String(fields['Trigger (When)'] || '').toLowerCase();
+  const combined = `${what} ${when}`;
+
+  const smsRef = what.match(/sms\s*(\d+)/i);
+  const after = when.match(/(\d+)\s*days?\s*after/);
+  const before = when.match(/(\d+)\s*days?\s*before/);
+
+  let trigger = null;
+  if (/has passed|every week|\d+\/\d+/.test(combined)) trigger = { kind: 'overdueWeekly' };
+  else if (/approved to active/.test(combined)) trigger = { kind: 'activation' };
+  else if (smsRef && after) trigger = { kind: 'afterSms', refSms: Number(smsRef[1]), days: Number(after[1]) };
+  else if (/<=\s*0/.test(combined)) trigger = { kind: 'paidOff' };
+  else if (before) trigger = { kind: 'beforeDue', days: Number(before[1]) };
+  if (!trigger) return null;
+
+  return {
+    smsIndex: Number(idx[1]),
+    name,
+    loanTypes: (fields['Loan type'] || []).map((t) => String(t).toLowerCase()),
+    trigger,
+    template: String(fields.Message || ''),
+    fieldSpecs: [1, 2, 3].map((n) => String(fields[`Field ${n}`] || '').trim()),
+  };
+}
+
+function fmtSmsValue(v) {
+  if (v === null || v === undefined || v === '') return '';
+  if (typeof v === 'number') return v.toLocaleString('en-US');
+  const s = String(v);
+  const d = new Date(s);
+  if (/^\d{4}-\d{2}-\d{2}/.test(s) && !Number.isNaN(d.getTime())) {
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  return s;
+}
+
+function renderSmsMessage(rule, loan, weekBoundary) {
+  return rule.template.replace(/\(field\s*(\d)\)/gi, (_, n) => {
+    const spec = rule.fieldSpecs[Number(n) - 1];
+    if (!spec) return '';
+    // "Repayment Due Date + 7/14/21/… days" → end of the current overdue week.
+    if (/\+\s*7\/14/.test(spec) || /\+.*days/i.test(spec)) return fmtSmsValue(weekBoundary);
+    const key = spec.replace(/^loans\//i, '').trim().toLowerCase();
+    const field = Object.keys(loan.fields).find((k) => k.trim().toLowerCase() === key);
+    return fmtSmsValue(field ? firstVal(loan.fields[field]) : undefined);
+  });
+}
+
+// True when the rule's trigger condition holds for this loan today and the
+// SMS N fields show it hasn't already been sent.
+function smsShouldFire(rule, loan, today) {
+  const pending = Number(loan.fields['Total Amount Pending'] ?? 0);
+  const due = asDay(loan.fields['Repayment Due Date']);
+  const issued = asDay(loan.fields['Issue Date']);
+  const lastPaid = asDay(loan.fields['Last Payment Date']);
+  const status = String(loan.fields['Loan Status'] || '');
+  const sentAt = asDay(loan.fields[`SMS ${rule.smsIndex} date`]);
+
+  if (sentAt === today) return false;
+  if (rule.trigger.kind !== 'overdueWeekly' && sentAt) return false;
+
+  switch (rule.trigger.kind) {
+    case 'activation':
+      // Recency guard: without it the first run would welcome every
+      // already-active loan issued months ago.
+      return status === 'Active' && !!issued && daysBetween(issued, today) <= 7;
+    case 'paidOff':
+      // Same guard via Last Payment Date — only congratulate fresh payoffs.
+      return pending <= 0 && !!issued && !!lastPaid && daysBetween(lastPaid, today) <= 7;
+    case 'beforeDue':
+      return pending > 0 && !!due && daysBetween(today, due) === rule.trigger.days;
+    case 'afterSms': {
+      const ref = asDay(loan.fields[`SMS ${rule.trigger.refSms} date`]);
+      return pending > 0 && !!ref && daysBetween(ref, today) === rule.trigger.days;
+    }
+    case 'overdueWeekly': {
+      if (pending <= 0 || !due) return false;
+      const late = daysBetween(due, today);
+      return late >= 1 && late % 7 === 1;
+    }
+    default:
+      return false;
+  }
+}
+
+async function runSmsJob({ dry = false } = {}) {
+  const today = todayEAT();
+  const [rulesData, loansData, loanTypesData] = await Promise.all([
+    listAllRecords(AIRTABLE_SMS_TABLE_ID),
+    listAllRecords(AIRTABLE_LOANS_TABLE_ID, { fields: SMS_LOAN_FIELDS }),
+    listAllRecords(AIRTABLE_LOAN_TYPES_TABLE_ID, { fields: ['Name'] }),
+  ]);
+
+  const typeNameById = {};
+  (loanTypesData.records || []).forEach((r) => {
+    typeNameById[r.id] = String(r.fields?.Name || '');
+  });
+
+  const rules = (rulesData.records || []).map((r) => parseSmsRule(r.fields)).filter(Boolean);
+  const farmerCache = new Map();
+  const farmerPhone = async (loan) => {
+    const direct =
+      firstVal(loan.fields['Verified Mobile Money Number']) || firstVal(loan.fields['Phone Number']);
+    if (direct) return toE164(direct);
+    const farmerId = firstVal(loan.fields.Farmer) || firstVal(loan.fields.Farmers);
+    if (!farmerId) return null;
+    if (!farmerCache.has(farmerId)) {
+      try {
+        const { data } = await airtableApi.get(`/${AIRTABLE_FARMERS_TABLE_ID}/${farmerId}`);
+        farmerCache.set(farmerId, data);
+      } catch {
+        farmerCache.set(farmerId, null);
+      }
+    }
+    const f = farmerCache.get(farmerId)?.fields;
+    const raw = f?.['Mobile Money Number'] || f?.['Phone Number'];
+    return raw ? toE164(raw) : null;
+  };
+
+  const plan = [];
+  const skipped = [];
+  for (const loan of loansData.records || []) {
+    const typeId = firstVal(loan.fields['Loan Type']);
+    const typeName = (typeId && typeNameById[typeId] ? typeNameById[typeId] : '').toLowerCase();
+
+    for (const rule of rules) {
+      if (rule.loanTypes.length && !rule.loanTypes.some((t) => typeName.includes(t) || t.includes(typeName))) {
+        continue;
+      }
+      if (!smsShouldFire(rule, loan, today)) continue;
+
+      const due = asDay(loan.fields['Repayment Due Date']);
+      const late = due ? daysBetween(due, today) : 0;
+      const weekBoundary =
+        rule.trigger.kind === 'overdueWeekly' && due ? addDays(due, Math.ceil(late / 7) * 7) : null;
+
+      const message = renderSmsMessage(rule, loan, weekBoundary).trim();
+      if (!message) {
+        skipped.push({ loan: loan.id, rule: rule.name, reason: 'empty message' });
+        continue;
+      }
+      const to = await farmerPhone(loan);
+      if (!to) {
+        skipped.push({ loan: loan.id, rule: rule.name, reason: 'no phone' });
+        continue;
+      }
+      plan.push({ loan: loan.id, rule: rule.name, smsIndex: rule.smsIndex, to, message });
+    }
+  }
+
+  const errors = [];
+  const delivered = [];
+  if (!dry) {
+    for (const item of plan) {
+      try {
+        const { status } = await sendAtSms(item.to, item.message);
+        if (status && !String(status).startsWith('Success')) {
+          errors.push({ loan: item.loan, rule: item.rule, to: item.to, error: String(status) });
+        } else {
+          delivered.push(item);
+        }
+      } catch (e) {
+        errors.push({
+          loan: item.loan,
+          rule: item.rule,
+          to: item.to,
+          error: e?.response?.data?.SMSMessageData?.Message || e.message,
+        });
+      }
+    }
+
+    // Record the sends on the loans (audit trail + dedup) in batches of 10.
+    for (let i = 0; i < delivered.length; i += 10) {
+      const records = delivered.slice(i, i + 10).map((item) => ({
+        id: item.loan,
+        fields: { [`SMS ${item.smsIndex}`]: item.message, [`SMS ${item.smsIndex} date`]: today },
+      }));
+      try {
+        await airtableApi.patch(`/${AIRTABLE_LOANS_TABLE_ID}`, { records });
+      } catch (e) {
+        errors.push({ batch: records.map((r) => r.id), error: e?.response?.data?.error?.message || e.message });
+      }
+    }
+  }
+
+  return {
+    today,
+    rules: rules.length,
+    loansEvaluated: (loansData.records || []).length,
+    planned: plan.length,
+    sent: dry ? 0 : delivered.length,
+    skipped,
+    errors,
+    messages: dry ? plan : undefined,
+  };
+}
+
+app.all('/api/v1/jobs/send-sms', async (req, res) => {
+  const auth = String(req.headers.authorization || '');
+  if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
+    return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid cron secret.' });
+  }
+  if (!AT_API_KEY || !AT_USERNAME) {
+    return res.status(503).json({ error: 'SMS_NOT_CONFIGURED', message: 'Missing AT credentials.' });
+  }
+
+  const dry = req.query.dry === '1' || req.query.dry === 'true';
+  try {
+    const result = await runSmsJob({ dry });
+    return res.json({ ok: true, dry, ...result });
+  } catch (error) {
+    console.error('/api/v1/jobs/send-sms error:', error?.response?.data || error.message);
+    return res.status(500).json({
+      error: 'JOB_FAILED',
+      message: error?.response?.data?.error?.message || error.message,
+    });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`FPO app server running on http://localhost:${PORT}`);
