@@ -2156,6 +2156,20 @@ app.all('/api/v1/jobs/send-sms', async (req, res) => {
 // diagnose client-side Airtable renames (tables/fields change names and
 // ids are not knowable from the UI).
 app.get('/api/v1/jobs/meta-tables', async (req, res) => {
+  if (req.query.sample) {
+    try {
+      const data = await airtableApi
+        .get(`/${req.query.sample}`, { params: { maxRecords: 3 } })
+        .then((r) => r.data);
+      return res.json({
+        sample: (data.records || []).map((r) => ({ id: r.id, fields: r.fields })),
+      });
+    } catch (error) {
+      return res
+        .status(error?.response?.status || 500)
+        .json({ error: error?.response?.data?.error || String(error) });
+    }
+  }
   const auth = String(req.headers.authorization || '');
   if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
     return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid cron secret.' });
