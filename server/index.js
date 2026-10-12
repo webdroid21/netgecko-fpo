@@ -953,11 +953,60 @@ app.delete('/api/v1/farmers/:id', requireAuth, requireEditor, async (req, res) =
 
 // ----------------------------------------------------------------------
 
+// The crops table was renamed to "Products" in the live base — resolve the
+// table by name when the configured id/name stops working.
+let resolvedCropsTableId = null;
+
+async function resolveTableIdByName(candidates) {
+  const { data } = await airtableApi.get(
+    `https://api.airtable.com/v0/meta/bases/${AIRTABLE_BASE_ID}/tables`
+  );
+  const tables = data.tables || [];
+  const lower = candidates.map((c) => c.toLowerCase());
+  // Exact-name match only — a fuzzy match could pick up "Input Products"
+  // (a different table) and silently serve the wrong list.
+  const exact = tables.find((t) => lower.includes(String(t.name).toLowerCase()));
+  return exact?.id || null;
+}
+
+function isTableNotFound(error) {
+  const type = String(error?.response?.data?.error?.type || '');
+  const msg = String(error?.response?.data?.error?.message || '');
+  return (
+    error?.response?.status === 404 ||
+    type === 'TABLE_NOT_FOUND' ||
+    /could not find table|table not found|does not exist/i.test(msg)
+  );
+}
+
+async function fetchCropsRecords() {
+  try {
+    const data = await listAllRecords(resolvedCropsTableId || AIRTABLE_CROPS_TABLE_ID);
+    return data.records || [];
+  } catch (error) {
+    if (!isTableNotFound(error)) throw error;
+    const resolved = await resolveTableIdByName(['Products', 'Product', 'Crops', 'Crop']);
+    if (!resolved) throw error;
+    resolvedCropsTableId = resolved;
+    const data = await listAllRecords(resolved);
+    return data.records || [];
+  }
+}
+
 app.get('/api/v1/crops', requireAuth, async (req, res) => {
   try {
-    const data = await listAllRecords(AIRTABLE_CROPS_TABLE_ID);
+    const records = await fetchCropsRecords();
 
-    return res.json({ records: data.records || [] });
+    // Normalize the product name onto 'Crop Name' so every consumer keeps
+    // working regardless of what the field is called in Airtable.
+    const normalized = records.map((r) => {
+      const f = r.fields || {};
+      if (f['Crop Name'] !== undefined) return r;
+      const alt = f['Product Name'] ?? f.Name;
+      return alt === undefined ? r : { ...r, fields: { ...f, 'Crop Name': alt } };
+    });
+
+    return res.json({ records: normalized });
   } catch (error) {
     console.error('/api/v1/crops error:', error?.response?.data || error.message);
     const status = error?.response?.status || 500;
