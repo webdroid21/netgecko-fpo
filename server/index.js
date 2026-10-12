@@ -590,6 +590,10 @@ async function resolveUserRole(decoded) {
   if (cached && Date.now() - cached.ts < ROLE_CACHE_TTL_MS) return cached.role;
 
   const email = decoded.email || null;
+  if (email && ADMIN_EMAILS.includes(email.toLowerCase())) {
+    roleCache.set(decoded.uid, { role: 'NetGecko Admin', ts: Date.now() });
+    return 'NetGecko Admin';
+  }
   const phone = decoded.phone_number ? toE164(decoded.phone_number) : null;
   const escapedUid = String(decoded.uid).replace(/'/g, "''");
 
@@ -615,6 +619,22 @@ async function requireEditor(req, res, next) {
       return res.status(403).json({
         error: 'FORBIDDEN',
         message: 'Your account is view-only. Contact NetGecko for edit access.',
+      });
+    }
+    return next();
+  } catch (error) {
+    console.error('Role resolution failed:', error.message);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: 'Unable to verify permissions.' });
+  }
+}
+
+async function requireAdmin(req, res, next) {
+  try {
+    const role = await resolveUserRole(req.user);
+    if (role !== 'NetGecko Admin') {
+      return res.status(403).json({
+        error: 'FORBIDDEN',
+        message: 'This area is restricted to NetGecko administrators.',
       });
     }
     return next();
@@ -1733,12 +1753,14 @@ const firstVal = (v) => (Array.isArray(v) ? v[0] : v);
 const SMS_LOAN_FIELDS = [
   'Loan Status',
   'Loan Type',
+  'Loan ID',
   'Issue Date',
   'Repayment Due Date',
   'Last Payment Date',
   'Total Amount Pending',
   'Penalty per week',
   'Verified Mobile Money Number',
+  'Name (from Farmer)',
   'Farmer',
   'Farmers',
   'FPO',
@@ -1899,7 +1921,15 @@ async function runSmsJob({ dry = false } = {}) {
         skipped.push({ loan: loan.id, rule: rule.name, reason: 'no phone' });
         continue;
       }
-      plan.push({ loan: loan.id, rule: rule.name, smsIndex: rule.smsIndex, to, message });
+      plan.push({
+        loan: loan.id,
+        loanRef: firstVal(loan.fields['Loan ID']) || '',
+        farmer: firstVal(loan.fields['Name (from Farmer)']) || '',
+        rule: rule.name,
+        smsIndex: rule.smsIndex,
+        to,
+        message,
+      });
     }
   }
 
@@ -1965,6 +1995,98 @@ app.all('/api/v1/jobs/send-sms', async (req, res) => {
     return res.json({ ok: true, dry, ...result });
   } catch (error) {
     console.error('/api/v1/jobs/send-sms error:', error?.response?.data || error.message);
+    return res.status(500).json({
+      error: 'JOB_FAILED',
+      message: error?.response?.data?.error?.message || error.message,
+    });
+  }
+});
+
+// ----------------------------------------------------------------------
+// Admin SMS management — NetGecko Admin only, powers the /dashboard/sms page.
+
+app.get('/api/v1/sms/rules', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const data = await listAllRecords(AIRTABLE_SMS_TABLE_ID);
+    const rules = (data.records || [])
+      .map((r) => {
+        const parsed = parseSmsRule(r.fields);
+        if (!parsed) return null;
+        return {
+          id: r.id,
+          name: parsed.name,
+          smsIndex: parsed.smsIndex,
+          triggerWhat: String(r.fields['Trigger (What)'] || ''),
+          triggerWhen: String(r.fields['Trigger (When)'] || ''),
+          loanTypes: r.fields['Loan type'] || [],
+          message: parsed.template,
+          fieldSpecs: parsed.fieldSpecs.filter(Boolean),
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.smsIndex - b.smsIndex || a.name.localeCompare(b.name));
+    return res.json({ rules });
+  } catch (error) {
+    console.error('/api/v1/sms/rules error:', error?.response?.data || error.message);
+    return res.status(500).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch SMS rules.',
+    });
+  }
+});
+
+app.get('/api/v1/sms/log', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const sentFormula = `OR(${Array.from({ length: 20 }, (_, i) => `{SMS ${i + 1} date}`).join(',')})`;
+    const data = await listAllRecords(AIRTABLE_LOANS_TABLE_ID, {
+      filterByFormula: sentFormula,
+      fields: [
+        'Loan ID',
+        'Name (from Farmer)',
+        'Verified Mobile Money Number',
+        ...Array.from({ length: 20 }, (_, i) => `SMS ${i + 1}`),
+        ...Array.from({ length: 20 }, (_, i) => `SMS ${i + 1} date`),
+      ],
+    });
+
+    const entries = [];
+    for (const loan of data.records || []) {
+      for (let n = 1; n <= 20; n += 1) {
+        const sentAt = loan.fields[`SMS ${n} date`];
+        const message = loan.fields[`SMS ${n}`];
+        if (!sentAt || !message) continue;
+        entries.push({
+          loanId: loan.id,
+          loanRef: firstVal(loan.fields['Loan ID']) || '',
+          farmer: firstVal(loan.fields['Name (from Farmer)']) || '',
+          phone: firstVal(loan.fields['Verified Mobile Money Number']) || '',
+          smsIndex: n,
+          message: String(message),
+          sentAt: String(sentAt),
+        });
+      }
+    }
+    entries.sort((a, b) => (a.sentAt < b.sentAt ? 1 : -1));
+    return res.json({ entries: entries.slice(0, 200) });
+  } catch (error) {
+    console.error('/api/v1/sms/log error:', error?.response?.data || error.message);
+    return res.status(500).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch SMS log.',
+    });
+  }
+});
+
+app.post('/api/v1/sms/run', requireAuth, requireAdmin, async (req, res) => {
+  if (!AT_API_KEY || !AT_USERNAME) {
+    return res.status(503).json({ error: 'SMS_NOT_CONFIGURED', message: 'Missing AT credentials.' });
+  }
+  const dry = req.body?.dry === true || req.query.dry === '1' || req.query.dry === 'true';
+  try {
+    const result = await runSmsJob({ dry });
+    return res.json({ ok: true, dry, ...result });
+  } catch (error) {
+    console.error('/api/v1/sms/run error:', error?.response?.data || error.message);
     return res.status(500).json({
       error: 'JOB_FAILED',
       message: error?.response?.data?.error?.message || error.message,

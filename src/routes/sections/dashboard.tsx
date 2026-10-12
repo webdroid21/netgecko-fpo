@@ -23,6 +23,7 @@ const LoansPage = lazy(() => import('src/pages/dashboard/loans'));
 const PaymentsPage = lazy(() => import('src/pages/dashboard/payments'));
 const SalesPage = lazy(() => import('src/pages/dashboard/sales'));
 const AccountPage = lazy(() => import('src/pages/dashboard/account'));
+const SmsPage = lazy(() => import('src/pages/dashboard/sms'));
 // ----------------------------------------------------------------------
 
 function SuspenseOutlet() {
@@ -53,6 +54,7 @@ export const dashboardRoutes: RouteObject[] = [
       { path: 'payments', element: <PaymentsPage /> },
       { path: 'sales', element: <SalesPage /> },
       { path: 'account', element: <AccountPage /> },
+      { path: 'sms', element: <SmsPage /> },
       {
         path: 'subpaths',
         children: [

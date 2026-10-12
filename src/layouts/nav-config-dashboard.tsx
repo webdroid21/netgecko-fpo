@@ -7,6 +7,8 @@ import { CONFIG } from 'src/global-config';
 
 import { SvgColor } from 'src/components/svg-color';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 // ----------------------------------------------------------------------
 
 const icon = (name: string) => (
@@ -16,6 +18,7 @@ const icon = (name: string) => (
 const ICONS = {
   user: icon('ic-user'),
   land: icon('ic-land'),
+  chat: icon('ic-chat'),
   order: icon('ic-order'),
   dollar: icon('ic-dollar'),
   folder: icon('ic-folder'),
@@ -27,6 +30,8 @@ const ICONS = {
 
 export function useDashboardNavData(): NavSectionProps['data'] {
   const { t } = useTranslate('navbar');
+  const { user } = useAuthContext();
+  const isAdmin = user?.role === 'NetGecko Admin';
 
   return [
     {
@@ -39,6 +44,9 @@ export function useDashboardNavData(): NavSectionProps['data'] {
         { title: t('loans'), path: paths.dashboard.fpo.loans, icon: ICONS.banking },
         { title: t('payments'), path: paths.dashboard.fpo.payments, icon: ICONS.dollar },
         { title: t('sales'), path: paths.dashboard.fpo.sales, icon: ICONS.order },
+        ...(isAdmin
+          ? [{ title: t('sms'), path: paths.dashboard.fpo.sms, icon: ICONS.chat }]
+          : []),
       ],
     },
   ];
