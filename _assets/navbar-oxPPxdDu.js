@@ -1,0 +1,1 @@
+const t="تطبيق",o="وظيفة",s="مستخدم",c="السفر",n="فاتورة",e={title:"مدونة",caption:"اختصارات لوحة المفاتيح المخصصة."},a="NetGecko App",p="SMS",r={app:t,job:o,user:s,travel:c,invoice:n,blog:e,subheader:a,sms:p};export{t as app,e as blog,r as default,n as invoice,o as job,p as sms,a as subheader,c as travel,s as user};
