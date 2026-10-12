@@ -1861,13 +1861,47 @@ function smsShouldFire(rule, loan, today) {
   }
 }
 
-async function runSmsJob({ dry = false } = {}) {
-  const today = todayEAT();
+// ----------------------------------------------------------------------
+// Feature config — stored as one special record in the SMS rules table
+// (its Name doesn't parse as a rule, so the job and the rules endpoint
+// ignore it). Managed via /api/v1/sms/config. Defaults keep the feature
+// disabled until an admin explicitly enables it.
+
+const SMS_CONFIG_NAME = 'Z_CONFIG — SMS feature settings (managed in the app)';
+const SMS_CONFIG_DEFAULTS = { enabled: false, mode: 'test', testPhone: '' };
+
+function parseSmsConfigFields(fields) {
+  let extra = {};
+  try {
+    extra = JSON.parse(fields?.Message || '{}');
+  } catch {
+    extra = {};
+  }
+  const merged = { ...SMS_CONFIG_DEFAULTS, ...extra };
+  merged.mode = merged.mode === 'live' ? 'live' : 'test';
+  merged.enabled = merged.enabled === true;
+  merged.testPhone = String(merged.testPhone || '');
+  return merged;
+}
+
+async function getSmsConfig(smsRecords) {
+  const records = smsRecords || (await listAllRecords(AIRTABLE_SMS_TABLE_ID)).records || [];
+  const rec = records.find((r) => r.fields?.Name === SMS_CONFIG_NAME);
+  if (rec) return { id: rec.id, ...parseSmsConfigFields(rec.fields) };
+  const { data } = await airtableApi.post(`/${AIRTABLE_SMS_TABLE_ID}`, {
+    records: [{ fields: { Name: SMS_CONFIG_NAME, Message: JSON.stringify(SMS_CONFIG_DEFAULTS) } }],
+  });
+  return { id: data.records[0].id, ...SMS_CONFIG_DEFAULTS };
+}
+
+async function loadSmsContext() {
   const [rulesData, loansData, loanTypesData] = await Promise.all([
     listAllRecords(AIRTABLE_SMS_TABLE_ID),
     listAllRecords(AIRTABLE_LOANS_TABLE_ID, { fields: SMS_LOAN_FIELDS }),
     listAllRecords(AIRTABLE_LOAN_TYPES_TABLE_ID, { fields: ['Loan Object', 'Loan Type'] }),
   ]);
+
+  const config = await getSmsConfig(rulesData.records);
 
   const typeNameById = {};
   (loanTypesData.records || []).forEach((r) => {
@@ -1894,9 +1928,14 @@ async function runSmsJob({ dry = false } = {}) {
     return raw ? toE164(raw) : null;
   };
 
+  return { config, rules, loans: loansData.records || [], typeNameById, farmerPhone };
+}
+
+// Which messages would fire on a given date ("YYYY-MM-DD").
+async function evaluateSmsDay({ rules, loans, typeNameById, farmerPhone }, today) {
   const plan = [];
   const skipped = [];
-  for (const loan of loansData.records || []) {
+  for (const loan of loans) {
     const typeId = firstVal(loan.fields['Loan Type']);
     const typeName = (typeId && typeNameById[typeId] ? typeNameById[typeId] : '').toLowerCase();
 
@@ -1932,15 +1971,32 @@ async function runSmsJob({ dry = false } = {}) {
       });
     }
   }
+  return { plan, skipped };
+}
+
+async function runSmsJob({ dry = false, forDate } = {}) {
+  const ctx = await loadSmsContext();
+  const today = forDate || todayEAT();
+  const { plan, skipped } = await evaluateSmsDay(ctx, today);
 
   const errors = [];
   const delivered = [];
-  if (!dry) {
+  const disabled = !ctx.config.enabled;
+  const testMode = ctx.config.mode === 'test';
+
+  if (!dry && !disabled) {
+    const testPhone = testMode ? toE164(ctx.config.testPhone) : null;
     for (const item of plan) {
+      const to = testMode ? testPhone : item.to;
+      if (!to) {
+        errors.push({ loan: item.loan, rule: item.rule, error: 'test mode: no test phone configured' });
+        continue;
+      }
+      const body = testMode ? `[TEST] ${item.message}` : item.message;
       try {
-        const { status } = await sendAtSms(item.to, item.message);
+        const { status } = await sendAtSms(to, body);
         if (status && !String(status).startsWith('Success')) {
-          errors.push({ loan: item.loan, rule: item.rule, to: item.to, error: String(status) });
+          errors.push({ loan: item.loan, rule: item.rule, to, error: String(status) });
         } else {
           delivered.push(item);
         }
@@ -1948,32 +2004,38 @@ async function runSmsJob({ dry = false } = {}) {
         errors.push({
           loan: item.loan,
           rule: item.rule,
-          to: item.to,
+          to,
           error: e?.response?.data?.SMSMessageData?.Message || e.message,
         });
       }
     }
 
-    // Record the sends on the loans (audit trail + dedup) in batches of 10.
-    for (let i = 0; i < delivered.length; i += 10) {
-      const records = delivered.slice(i, i + 10).map((item) => ({
-        id: item.loan,
-        fields: { [`SMS ${item.smsIndex}`]: item.message, [`SMS ${item.smsIndex} date`]: today },
-      }));
-      try {
-        await airtableApi.patch(`/${AIRTABLE_LOANS_TABLE_ID}`, { records });
-      } catch (e) {
-        errors.push({ batch: records.map((r) => r.id), error: e?.response?.data?.error?.message || e.message });
+    // Record sends on the loans (audit trail + dedup) in batches of 10 —
+    // live mode only; test sends must not mark loans as sent.
+    if (!testMode) {
+      for (let i = 0; i < delivered.length; i += 10) {
+        const records = delivered.slice(i, i + 10).map((item) => ({
+          id: item.loan,
+          fields: { [`SMS ${item.smsIndex}`]: item.message, [`SMS ${item.smsIndex} date`]: today },
+        }));
+        try {
+          await airtableApi.patch(`/${AIRTABLE_LOANS_TABLE_ID}`, { records });
+        } catch (e) {
+          errors.push({ batch: records.map((r) => r.id), error: e?.response?.data?.error?.message || e.message });
+        }
       }
     }
   }
 
   return {
     today,
-    rules: rules.length,
-    loansEvaluated: (loansData.records || []).length,
+    enabled: ctx.config.enabled,
+    mode: ctx.config.mode,
+    disabled,
+    rules: ctx.rules.length,
+    loansEvaluated: ctx.loans.length,
     planned: plan.length,
-    sent: dry ? 0 : delivered.length,
+    sent: dry || disabled ? 0 : delivered.length,
     skipped,
     errors,
     messages: dry ? plan : undefined,
@@ -2077,13 +2139,73 @@ app.get('/api/v1/sms/log', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
+app.get('/api/v1/sms/config', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const config = await getSmsConfig();
+    return res.json({ config });
+  } catch (error) {
+    console.error('/api/v1/sms/config error:', error?.response?.data || error.message);
+    return res.status(500).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to fetch SMS config.',
+    });
+  }
+});
+
+app.post('/api/v1/sms/config', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const current = await getSmsConfig();
+    const body = req.body || {};
+    const next = {
+      enabled: body.enabled === undefined ? current.enabled : body.enabled === true,
+      mode: body.mode === undefined ? current.mode : body.mode === 'live' ? 'live' : 'test',
+      testPhone: body.testPhone === undefined ? current.testPhone : String(body.testPhone || ''),
+    };
+    await airtableApi.patch(`/${AIRTABLE_SMS_TABLE_ID}`, {
+      records: [{ id: current.id, fields: { Message: JSON.stringify(next) } }],
+    });
+    return res.json({ config: { id: current.id, ...next } });
+  } catch (error) {
+    console.error('/api/v1/sms/config save error:', error?.response?.data || error.message);
+    return res.status(500).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to save SMS config.',
+    });
+  }
+});
+
+// Sends planned for today and the following N days (default 4, max 14).
+app.get('/api/v1/sms/schedule', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 4, 1), 14);
+    const ctx = await loadSmsContext();
+    const base = todayEAT();
+    const schedule = [];
+    for (let i = 0; i < days; i += 1) {
+      const date = addDays(base, i);
+      // eslint-disable-next-line no-await-in-loop
+      const { plan, skipped } = await evaluateSmsDay(ctx, date);
+      schedule.push({ date, planned: plan.length, skipped: skipped.length, messages: plan });
+    }
+    return res.json({ schedule, config: { enabled: ctx.config.enabled, mode: ctx.config.mode } });
+  } catch (error) {
+    console.error('/api/v1/sms/schedule error:', error?.response?.data || error.message);
+    return res.status(500).json({
+      error: 'AIRTABLE_ERROR',
+      message: error?.response?.data?.error?.message || 'Unable to evaluate the SMS schedule.',
+    });
+  }
+});
+
 app.post('/api/v1/sms/run', requireAuth, requireAdmin, async (req, res) => {
   if (!AT_API_KEY || !AT_USERNAME) {
     return res.status(503).json({ error: 'SMS_NOT_CONFIGURED', message: 'Missing AT credentials.' });
   }
   const dry = req.body?.dry === true || req.query.dry === '1' || req.query.dry === 'true';
+  const dateParam = String(req.body?.date || req.query.date || '');
+  const forDate = /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : undefined;
   try {
-    const result = await runSmsJob({ dry });
+    const result = await runSmsJob({ dry, forDate });
     return res.json({ ok: true, dry, ...result });
   } catch (error) {
     console.error('/api/v1/sms/run error:', error?.response?.data || error.message);
