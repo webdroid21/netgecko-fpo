@@ -1845,12 +1845,12 @@ async function runSmsJob({ dry = false } = {}) {
   const [rulesData, loansData, loanTypesData] = await Promise.all([
     listAllRecords(AIRTABLE_SMS_TABLE_ID),
     listAllRecords(AIRTABLE_LOANS_TABLE_ID, { fields: SMS_LOAN_FIELDS }),
-    listAllRecords(AIRTABLE_LOAN_TYPES_TABLE_ID, { fields: ['Name'] }),
+    listAllRecords(AIRTABLE_LOAN_TYPES_TABLE_ID, { fields: ['Loan Object', 'Loan Type'] }),
   ]);
 
   const typeNameById = {};
   (loanTypesData.records || []).forEach((r) => {
-    typeNameById[r.id] = String(r.fields?.Name || '');
+    typeNameById[r.id] = String(r.fields?.['Loan Object'] || r.fields?.['Loan Type'] || '');
   });
 
   const rules = (rulesData.records || []).map((r) => parseSmsRule(r.fields)).filter(Boolean);
