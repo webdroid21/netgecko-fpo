@@ -87,14 +87,32 @@ function SummaryCard({
 
 // ----------------------------------------------------------------------
 
+// The lookup/link field names shifted when the client renamed the Crops
+// table — try explicit candidates, then any "…(from Crop/Product)" lookup.
+const LOOKUP_KEY_RE = /\(from (crop|product)/i;
+const LOOKUP_KEYS = [
+  'Product Name (from Crop)',
+  'Crop Name (from Crop)',
+  'Product Name (from Product)',
+  'Crop Name (from Product)',
+];
+const LINK_KEYS = ['Main Product (1)', 'Main Product', 'Product'];
+
 function getProductNames(land?: Land, allCrops?: Crop[]): string[] {
   if (!land) return [];
-  const names = land.fields['Product Name (from Crop)'];
-  if (names && Array.isArray(names) && names.length) {
-    return names.filter((n) => typeof n === 'string') as string[];
+  const fields = land.fields || {};
+  const lookupKey =
+    LOOKUP_KEYS.find((k) => Array.isArray(fields[k]) && fields[k].length) ??
+    Object.keys(fields).find(
+      (k) => LOOKUP_KEY_RE.test(k) && Array.isArray(fields[k]) && fields[k].length
+    );
+  if (lookupKey) {
+    return (fields[lookupKey] as unknown[]).filter(
+      (n): n is string => typeof n === 'string' && !!n
+    );
   }
-  const ids = (land.fields['Main Product (1)'] || []) as string[];
-  return ids
+  const ids = LINK_KEYS.map((k) => fields[k]).find((v) => Array.isArray(v) && v.length) || [];
+  return (ids as string[])
     .map((id) => {
       const crop = allCrops?.find((c) => c.id === id);
       return crop?.fields['Crop Name'] || crop?.fields['Product Name'] || '';
