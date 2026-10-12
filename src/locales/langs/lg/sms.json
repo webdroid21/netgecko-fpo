@@ -1,6 +1,10 @@
 {
   "title": "Obubaka bwa SMS",
   "adminsOnly": "Kino kkitundu kkiri ba NetGecko Admin bokka.",
+  "tabSettings": "Enteekateeka n'okufuga",
+  "tabQueue": "Ebituumibwa mu maaso",
+  "tabRules": "Ennonkola",
+  "tabLog": "Ebyatumiddwa",
   "statusDisabled": "KYAAYIDDWAAKO",
   "statusLive": "KIKOLA",
   "statusTest": "EKIGEZZA",

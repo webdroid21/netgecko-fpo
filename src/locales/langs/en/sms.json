@@ -1,6 +1,10 @@
 {
   "title": "SMS messaging",
   "adminsOnly": "This area is restricted to NetGecko administrators.",
+  "tabSettings": "Settings & controls",
+  "tabQueue": "Upcoming sends",
+  "tabRules": "Rules",
+  "tabLog": "Send log",
   "statusDisabled": "DISABLED",
   "statusLive": "LIVE",
   "statusTest": "TEST MODE",

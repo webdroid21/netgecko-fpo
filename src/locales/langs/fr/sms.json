@@ -1,6 +1,10 @@
 {
   "title": "Messagerie SMS",
   "adminsOnly": "Cette zone est réservée aux administrateurs NetGecko.",
+  "tabSettings": "Paramètres et contrôles",
+  "tabQueue": "Envois à venir",
+  "tabRules": "Règles",
+  "tabLog": "Journal d'envoi",
   "statusDisabled": "DÉSACTIVÉ",
   "statusLive": "EN DIRECT",
   "statusTest": "MODE TEST",

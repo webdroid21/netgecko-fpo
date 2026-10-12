@@ -1,8 +1,11 @@
+import { useTabs } from 'minimal-shared/hooks';
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
+import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Table from '@mui/material/Table';
@@ -141,6 +144,7 @@ export function SmsView() {
   const { t } = useTranslate('sms');
   const { user } = useAuthContext();
   const isAdmin = user?.role === 'NetGecko Admin';
+  const tabs = useTabs('settings');
 
   const [config, setConfig] = useState<SmsConfig>({ enabled: false, mode: 'test', testPhone: '' });
   const [rules, setRules] = useState<SmsRule[]>([]);
@@ -238,6 +242,18 @@ export function SmsView() {
         />
       </Stack>
 
+      <Tabs
+        value={tabs.value}
+        onChange={tabs.onChange}
+        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Tab value="settings" label={t('tabSettings')} />
+        <Tab value="queue" label={t('tabQueue')} />
+        <Tab value="rules" label={t('tabRules')} />
+        <Tab value="log" label={t('tabLog')} />
+      </Tabs>
+
+      {tabs.value === 'settings' && (
       <Stack spacing={3}>
         <Card>
           <CardContent>
@@ -364,7 +380,10 @@ export function SmsView() {
             )}
           </CardContent>
         </Card>
+      </Stack>
+      )}
 
+      {tabs.value === 'queue' && (
         <Card>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 0.5 }}>
@@ -405,7 +424,9 @@ export function SmsView() {
             )}
           </CardContent>
         </Card>
+      )}
 
+      {tabs.value === 'rules' && (
         <Card>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 0.5 }}>
@@ -459,7 +480,9 @@ export function SmsView() {
             )}
           </CardContent>
         </Card>
+      )}
 
+      {tabs.value === 'log' && (
         <Card>
           <CardContent>
             <Typography variant="h6" sx={{ mb: 0.5 }}>
@@ -504,7 +527,7 @@ export function SmsView() {
             )}
           </CardContent>
         </Card>
-      </Stack>
+      )}
 
       <ConfirmDialog
         open={confirmOpen}
