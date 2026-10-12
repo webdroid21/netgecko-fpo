@@ -685,6 +685,44 @@ function buildLandsFilter(fpoId, fpoName) {
   return `OR(${conditions.join(', ')})`;
 }
 
+// The live Lands table uses "Crop" vocabulary; the app (and dev bases)
+// use "Product". Translate both ways at the API boundary so the frontend
+// always works with its canonical names. Disable with
+// AIRTABLE_LANDS_LEGACY_NAMES=1 for a base that still uses Product names.
+const LANDS_FIELD_MAP = {
+  'Main Product (1)': 'Main Crop (1)',
+  'Other product (2)': 'Other crop (2)',
+  'Number of plants (Product 1)': 'Number of plants (Crop 1)',
+  'Number of plants (Product 2)': 'Number of plants (Crop 2)',
+  'Product 1 Estimated Production Season A (kg, heads, litres, units)':
+    'Crop 1 Estimated Harvest (KG) Season A',
+  'Product 1 Estimated Production Season B (kg, heads, litres, units)':
+    'Crop 1 Estimated Harvest (KG) Season B',
+  'Product 2 Estimated Production Season A (kg, heads, litres, units)':
+    'Crop 2 Estimated Harvest (KG) Season A',
+  'Product 2 Estimated Production Season B (kg, heads, litres, units)':
+    'Crop 2 Estimated Harvest (KG) Season B',
+};
+const LANDS_LEGACY_NAMES = process.env.AIRTABLE_LANDS_LEGACY_NAMES === '1';
+const LANDS_FIELD_MAP_INV = Object.fromEntries(
+  Object.entries(LANDS_FIELD_MAP).map(([a, b]) => [b, a])
+);
+
+function renameLandsKeys(fields, map) {
+  if (LANDS_LEGACY_NAMES) return fields;
+  const out = { ...fields };
+  for (const [from, to] of Object.entries(map)) {
+    if (out[from] !== undefined) {
+      out[to] = out[from];
+      delete out[from];
+    }
+  }
+  return out;
+}
+
+const fromLandsRecord = (record) =>
+  record && { ...record, fields: renameLandsKeys(record.fields || {}, LANDS_FIELD_MAP_INV) };
+
 function toLandsFields(input) {
   const fields = { ...input };
 
@@ -698,7 +736,7 @@ function toLandsFields(input) {
     }
   });
 
-  return fields;
+  return renameLandsKeys(fields, LANDS_FIELD_MAP);
 }
 
 function buildOrdersFilter(fpoId, fpoName) {
@@ -1075,7 +1113,7 @@ app.get('/api/v1/lands', requireAuth, async (req, res) => {
     });
 
     console.log('[Lands result]', data.records?.length, data.error);
-    return res.json({ records: data.records || [] });
+    return res.json({ records: (data.records || []).map(fromLandsRecord) });
   } catch (error) {
     console.error('/api/v1/lands error:', error?.response?.data || error.message);
     const status = error?.response?.status || 500;
@@ -1089,7 +1127,7 @@ app.get('/api/v1/lands', requireAuth, async (req, res) => {
 app.get('/api/v1/lands/:id', requireAuth, async (req, res) => {
   try {
     const { data } = await airtableApi.get(`/${AIRTABLE_LANDS_TABLE_ID}/${req.params.id}`);
-    return res.json({ record: data });
+    return res.json({ record: fromLandsRecord(data) });
   } catch (error) {
     console.error('/api/v1/lands/:id error:', error?.response?.data || error.message);
     const status = error?.response?.status || 500;
@@ -1114,7 +1152,7 @@ app.post('/api/v1/lands', requireAuth, requireEditor, async (req, res) => {
     };
 
     const { data } = await airtableApi.post(`/${AIRTABLE_LANDS_TABLE_ID}`, payload);
-    return res.status(201).json({ record: data.records?.[0] });
+    return res.status(201).json({ record: fromLandsRecord(data.records?.[0]) });
   } catch (error) {
     console.error('/api/v1/lands POST error:', error?.response?.data || error.message);
     const status = error?.response?.status || 500;
@@ -1139,7 +1177,7 @@ app.patch('/api/v1/lands/:id', requireAuth, requireEditor, async (req, res) => {
     };
 
     const { data } = await airtableApi.patch(`/${AIRTABLE_LANDS_TABLE_ID}`, payload);
-    return res.json({ record: data.records?.[0] });
+    return res.json({ record: fromLandsRecord(data.records?.[0]) });
   } catch (error) {
     console.error('/api/v1/lands PATCH error:', error?.response?.data || error.message);
     const status = error?.response?.status || 500;

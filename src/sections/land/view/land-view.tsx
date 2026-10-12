@@ -96,7 +96,7 @@ const LOOKUP_KEYS = [
   'Product Name (from Product)',
   'Crop Name (from Product)',
 ];
-const LINK_KEYS = ['Main Product (1)', 'Main Product', 'Product'];
+const LINK_KEYS = ['Main Product (1)', 'Main Crop (1)', 'Main Product', 'Main Crop', 'Product'];
 
 function getProductNames(land?: Land, allCrops?: Crop[]): string[] {
   if (!land) return [];
