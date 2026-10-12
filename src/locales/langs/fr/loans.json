@@ -44,7 +44,7 @@
     "repaymentDueDate": "Date d’échéance du remboursement",
     "downpaymentDueDate": "Date d'échéance de l'acompte",
     "downpaymentPct": "% acompte",
-    "penaltyAmountDue": "Pénalité due",
+    "penaltyAmountDue": "Pénalité par semaine de retard",
     "penaltyPerWeek": "Pénalité par semaine",
     "flagDownpayment": "Alerte (acompte)",
     "flagRepayment": "Alerte (remboursement)",

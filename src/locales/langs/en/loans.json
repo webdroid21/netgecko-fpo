@@ -51,7 +51,7 @@
     "repaymentDueDate": "Repayment due date",
     "downpaymentDueDate": "Downpayment due date",
     "downpaymentPct": "% Downpayment",
-    "penaltyAmountDue": "Penalty amount due",
+    "penaltyAmountDue": "Penalty per week late",
     "penaltyPerWeek": "Penalty per week",
     "flagDownpayment": "Flag (downpayment)",
     "flagRepayment": "Flag (repayment)",
