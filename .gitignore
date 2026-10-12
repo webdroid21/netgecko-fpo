@@ -1,0 +1,15 @@
+# Deploy branch: only the built bundle belongs here.
+# Ignore everything else so `git add -A` can't sweep in
+# .env, node_modules, dist/, .vercel/, etc.
+*
+!index.html
+!.htaccess
+!.gitignore
+!_assets/
+!_assets/**
+!assets/
+!assets/**
+!fonts/
+!fonts/**
+!logo*
+!favicon.ico
