@@ -1739,7 +1739,6 @@ const SMS_LOAN_FIELDS = [
   'Total Amount Pending',
   'Penalty per week',
   'Verified Mobile Money Number',
-  'Phone Number',
   'Farmer',
   'Farmers',
   'FPO',
@@ -1856,8 +1855,7 @@ async function runSmsJob({ dry = false } = {}) {
   const rules = (rulesData.records || []).map((r) => parseSmsRule(r.fields)).filter(Boolean);
   const farmerCache = new Map();
   const farmerPhone = async (loan) => {
-    const direct =
-      firstVal(loan.fields['Verified Mobile Money Number']) || firstVal(loan.fields['Phone Number']);
+    const direct = firstVal(loan.fields['Verified Mobile Money Number']);
     if (direct) return toE164(direct);
     const farmerId = firstVal(loan.fields.Farmer) || firstVal(loan.fields.Farmers);
     if (!farmerId) return null;
